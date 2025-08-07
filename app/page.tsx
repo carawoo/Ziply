@@ -1,0 +1,173 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { User } from '@supabase/supabase-js'
+
+export default function Home() {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      setLoading(false)
+    }
+
+    getUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null)
+        if (event === 'SIGNED_IN') {
+          window.location.href = '/dashboard'
+        }
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const handleKakaoLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      })
+      if (error) {
+        console.error('카카오 로그인 오류:', error)
+        alert('로그인 중 오류가 발생했습니다. 나중에 다시 시도해주세요.')
+      }
+    } catch (error) {
+      console.error('로그인 오류:', error)
+      alert('로그인 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+  }
+
+  if (loading) {
+    return (
+      <div className="loading">
+        <div className="spinner"></div>
+      </div>
+    )
+  }
+
+  if (user) {
+    return (
+      <div>
+        <header className="header">
+          <div className="container">
+            <nav className="nav">
+              <div className="logo">부동산 뉴스 큐레이터</div>
+              <div>
+                <a href="/dashboard" style={{ marginRight: '16px', color: 'white' }}>
+                  대시보드
+                </a>
+                <a href="/newsletter" style={{ marginRight: '16px', color: 'white' }}>
+                  뉴스레터
+                </a>
+                <button 
+                  onClick={handleLogout}
+                  className="button"
+                  style={{ background: 'rgba(255,255,255,0.2)' }}
+                >
+                  로그아웃
+                </button>
+              </div>
+            </nav>
+          </div>
+        </header>
+
+        <div className="container">
+          <div className="hero">
+            <h1>환영합니다! 🏠</h1>
+            <p>맞춤형 부동산 뉴스로 더 스마트한 결정을 내려보세요</p>
+            <div style={{ marginTop: '32px' }}>
+              <a href="/dashboard" className="button" style={{ marginRight: '16px' }}>
+                📊 대시보드 바로가기
+              </a>
+              <a href="/newsletter" className="button" style={{ background: '#10b981' }}>
+                📧 뉴스레터 구독
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <header className="header">
+        <div className="container">
+          <nav className="nav">
+            <div className="logo">부동산 뉴스 큐레이터</div>
+          </nav>
+        </div>
+      </header>
+
+      <div className="container">
+        <div className="hero">
+          <h1>부동산 뉴스를<br />더 쉽게, 더 스마트하게 📈</h1>
+          <p>
+            초보자도 쉽게 이해할 수 있는<br />
+            맞춤형 부동산 뉴스 요약 서비스
+          </p>
+          
+          <div style={{ marginTop: '40px' }}>
+            <button 
+              onClick={handleKakaoLogin}
+              className="button button-kakao"
+              style={{ 
+                fontSize: '18px', 
+                padding: '16px 32px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              <span>💬</span>
+              카카오로 3초 만에 시작하기
+            </button>
+          </div>
+
+          <div style={{ marginTop: '60px', textAlign: 'left', maxWidth: '800px', margin: '60px auto 0' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
+              <div className="card">
+                <div style={{ fontSize: '32px', marginBottom: '12px' }}>🔰</div>
+                <h3 style={{ marginBottom: '8px', color: '#1f2937' }}>초보자 친화적</h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6' }}>
+                  복잡한 부동산 용어도 쉽게 설명해드려요
+                </p>
+              </div>
+              
+              <div className="card">
+                <div style={{ fontSize: '32px', marginBottom: '12px' }}>🤖</div>
+                <h3 style={{ marginBottom: '8px', color: '#1f2937' }}>AI 맞춤 요약</h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6' }}>
+                  당신의 상황에 맞는 핵심 정보만 골라서
+                </p>
+              </div>
+              
+              <div className="card">
+                <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚡</div>
+                <h3 style={{ marginBottom: '8px', color: '#1f2937' }}>실시간 업데이트</h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6' }}>
+                  중요한 부동산 뉴스를 놓치지 마세요
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

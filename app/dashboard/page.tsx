@@ -172,8 +172,7 @@ export default function Dashboard() {
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 border: '2px solid #e5e7eb',
-                padding: '32px',
-                ':hover': { borderColor: '#4f46e5', transform: 'translateY(-2px)' }
+                padding: '32px'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = '#4f46e5'

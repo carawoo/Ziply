@@ -86,9 +86,10 @@ function generateDefaultSummary(content: string, category: string): string {
   return `${firstTwo} ${categoryMessages[category as keyof typeof categoryMessages] || '부동산 시장의 중요한 변화입니다.'}`
 }
 
-// 샘플 뉴스 데이터 (실제로는 뉴스 API에서 가져올 데이터)
+// 그룹별 맞춤형 샘플 뉴스 데이터
 export function getSampleNews(): NewsItem[] {
   return [
+    // 정책 관련 뉴스
     {
       id: '1',
       title: '2024년 부동산 정책 변화, 주택담보대출 규제 완화',
@@ -98,6 +99,8 @@ export function getSampleNews(): NewsItem[] {
       publishedAt: '2024-01-15',
       url: '#'
     },
+    
+    // 시장 동향 뉴스
     {
       id: '2',
       title: '서울 아파트 전세가율 70% 돌파, 매매 시장 영향은?',
@@ -107,6 +110,8 @@ export function getSampleNews(): NewsItem[] {
       publishedAt: '2024-01-14',
       url: '#'
     },
+    
+    // 신혼부부 지원 뉴스
     {
       id: '3',
       title: '신혼부부 전용 청약통장 출시, 최대 2억원 지원',
@@ -116,6 +121,8 @@ export function getSampleNews(): NewsItem[] {
       publishedAt: '2024-01-13',
       url: '#'
     },
+    
+    // 투자 관련 뉴스
     {
       id: '4',
       title: '부동산 투자 트렌드 변화, REITs 관심 급증',
@@ -124,6 +131,64 @@ export function getSampleNews(): NewsItem[] {
       category: 'investment',
       publishedAt: '2024-01-12',
       url: '#'
+    },
+    
+    // 추가 초보자용 뉴스
+    {
+      id: '5',
+      title: '처음 집 사는 사람을 위한 부동산 기초 가이드',
+      content: '부동산 구매가 처음인 분들이 알아야 할 필수 정보들을 정리했습니다. 전세권, 근저당권, 중도금 대출 등의 기본 용어부터 실제 계약 과정까지 단계별로 설명합니다.',
+      summary: '',
+      category: 'beginner',
+      publishedAt: '2024-01-16',
+      url: '#'
+    },
+    
+    // 추가 신혼부부용 뉴스
+    {
+      id: '6',
+      title: '신혼부부 특별공급, 2024년 새로운 신청 조건 공개',
+      content: '2024년 신혼부부 특별공급 신청 조건이 일부 완화됩니다. 혼인 기간이 7년에서 8년으로 연장되며, 소득 기준도 상향 조정됩니다. 또한 맞벌이 부부에 대한 추가 혜택도 신설됩니다.',
+      summary: '',
+      category: 'newlywed',
+      publishedAt: '2024-01-11',
+      url: '#'
+    },
+    
+    // 추가 투자자용 뉴스
+    {
+      id: '7',
+      title: '2024년 부동산 투자 전략, 지역별 수익률 분석',
+      content: '2024년 부동산 투자 유망 지역과 예상 수익률을 분석했습니다. 수도권 외곽 지역의 개발 호재와 교통망 확충이 투자 포인트로 떠오르고 있으며, 상업용 부동산의 임대 수익률도 상승세를 보이고 있습니다.',
+      summary: '',
+      category: 'investment',
+      publishedAt: '2024-01-10',
+      url: '#'
     }
   ]
+}
+
+// 그룹별 필터링된 뉴스 가져오기
+export function getNewsForGroup(userGroup: string): NewsItem[] {
+  const allNews = getSampleNews()
+  
+  switch (userGroup) {
+    case '초보자':
+      return allNews.filter(news => 
+        ['policy', 'beginner', 'support'].includes(news.category)
+      ).slice(0, 4)
+      
+    case '신혼부부·초년생':
+      return allNews.filter(news => 
+        ['support', 'newlywed', 'policy', 'market'].includes(news.category)
+      ).slice(0, 4)
+      
+    case '투자자':
+      return allNews.filter(news => 
+        ['investment', 'market', 'policy'].includes(news.category)
+      ).slice(0, 4)
+      
+    default:
+      return allNews.slice(0, 4)
+  }
 }

@@ -3,12 +3,15 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
-import { getSampleNews, summarizeNews, NewsItem } from '@/lib/ai'
+import { getSampleNews, getNewsForGroup, summarizeNews, NewsItem } from '@/lib/ai'
+
+type UserGroup = '초보자' | '신혼부부·초년생' | '투자자' | null
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [newsLoading, setNewsLoading] = useState(false)
+  const [userGroup, setUserGroup] = useState<UserGroup>(null)
   const [activeTab, setActiveTab] = useState('초보자용')
   const [news, setNews] = useState<NewsItem[]>([])
 
@@ -24,19 +27,84 @@ export default function Dashboard() {
       }
       
       setUser(user)
-      setLoading(false)
       
-      // 뉴스 로드
-      await loadNews('초보자용')
+      // 사용자 그룹 체크
+      await checkUserGroup(user.id)
+      
+      setLoading(false)
     }
 
     getUser()
   }, [])
 
-  const loadNews = async (category: string) => {
+  const checkUserGroup = async (userId: string) => {
+    try {
+      // localStorage에서 먼저 확인
+      const savedGroup = localStorage.getItem('userGroup') as UserGroup
+      if (savedGroup) {
+        setUserGroup(savedGroup)
+        await loadNews(getTabFromGroup(savedGroup))
+        return
+      }
+
+      // Supabase에서 사용자 선호도 확인
+      const { data, error } = await supabase
+        .from('user_preferences')
+        .select('category')
+        .eq('user_id', userId)
+        .single()
+
+      if (data && !error) {
+        setUserGroup(data.category)
+        localStorage.setItem('userGroup', data.category)
+        await loadNews(getTabFromGroup(data.category))
+      }
+    } catch (error) {
+      console.error('사용자 그룹 확인 오류:', error)
+    }
+  }
+
+  const getTabFromGroup = (group: UserGroup): string => {
+    switch (group) {
+      case '초보자': return '초보자용'
+      case '신혼부부·초년생': return '신혼부부용'
+      case '투자자': return '투자자용'
+      default: return '초보자용'
+    }
+  }
+
+  const saveUserGroup = async (group: UserGroup) => {
+    if (!user || !group) return
+
+    try {
+      // localStorage에 저장
+      localStorage.setItem('userGroup', group)
+      
+      // Supabase에 저장
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          category: group
+        })
+
+      if (error) {
+        console.error('사용자 선호도 저장 오류:', error)
+      }
+
+      setUserGroup(group)
+      await loadNews(getTabFromGroup(group), group)
+    } catch (error) {
+      console.error('사용자 그룹 저장 오류:', error)
+    }
+  }
+
+  const loadNews = async (category: string, group?: UserGroup) => {
     setNewsLoading(true)
     try {
-      const sampleNews = getSampleNews()
+      // 그룹에 따른 맞춤형 뉴스 가져오기
+      const targetGroup = group || userGroup
+      const sampleNews = targetGroup ? getNewsForGroup(targetGroup) : getSampleNews()
       
       // AI 요약 생성
       const newsWithSummaries = await Promise.all(
@@ -64,12 +132,168 @@ export default function Dashboard() {
     window.location.href = '/'
   }
 
+  // 사용자 그룹 선택 UI 컴포넌트
+  const UserGroupSelection = () => (
+    <div>
+      <header className="header">
+        <div className="container">
+          <nav className="nav">
+            <div className="logo">부동산 뉴스 큐레이터</div>
+            <div>
+              <button 
+                onClick={handleLogout}
+                className="button"
+                style={{ background: 'rgba(255,255,255,0.2)' }}
+              >
+                로그아웃
+              </button>
+            </div>
+          </nav>
+        </div>
+      </header>
+
+      <div className="container" style={{ paddingTop: '40px', paddingBottom: '40px' }}>
+        <div className="card" style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ marginBottom: '32px' }}>
+            <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '16px', color: '#1f2937' }}>
+              맞춤형 서비스를 위해<br />그룹을 선택해주세요 🎯
+            </h1>
+            <p style={{ color: '#6b7280', fontSize: '18px', lineHeight: '1.6' }}>
+              선택하신 그룹에 따라 최적화된 부동산 정보를 제공해드립니다
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gap: '24px', marginBottom: '32px' }}>
+            {/* 초보자 그룹 */}
+            <div 
+              onClick={() => saveUserGroup('초보자')}
+              className="card"
+              style={{ 
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                border: '2px solid #e5e7eb',
+                padding: '32px',
+                ':hover': { borderColor: '#4f46e5', transform: 'translateY(-2px)' }
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#4f46e5'
+                e.currentTarget.style.transform = 'translateY(-2px)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#e5e7eb'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
+            >
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔰</div>
+              <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: '#1f2937' }}>
+                초보자
+              </h3>
+              <p style={{ color: '#6b7280', lineHeight: '1.6' }}>
+                부동산 투자나 구매가 처음이신 분들을 위한<br />
+                기초적이고 이해하기 쉬운 정보를 제공합니다
+              </p>
+              <ul style={{ textAlign: 'left', marginTop: '16px', color: '#6b7280' }}>
+                <li>• 부동산 기초 용어 설명</li>
+                <li>• 주택 구매 프로세스 가이드</li>
+                <li>• 기본적인 시장 동향 해석</li>
+              </ul>
+            </div>
+
+            {/* 신혼부부·초년생 그룹 */}
+            <div 
+              onClick={() => saveUserGroup('신혼부부·초년생')}
+              className="card"
+              style={{ 
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                border: '2px solid #e5e7eb',
+                padding: '32px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#10b981'
+                e.currentTarget.style.transform = 'translateY(-2px)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#e5e7eb'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
+            >
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>💑</div>
+              <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: '#1f2937' }}>
+                신혼부부·초년생
+              </h3>
+              <p style={{ color: '#6b7280', lineHeight: '1.6' }}>
+                내 집 마련을 준비하는 신혼부부와 사회초년생을 위한<br />
+                실용적인 주거 관련 정보를 제공합니다
+              </p>
+              <ul style={{ textAlign: 'left', marginTop: '16px', color: '#6b7280' }}>
+                <li>• 신혼부부 특별공급 정보</li>
+                <li>• 생애 첫 주택 구입 혜택</li>
+                <li>• 전세/월세 관련 팁</li>
+              </ul>
+            </div>
+
+            {/* 투자자 그룹 */}
+            <div 
+              onClick={() => saveUserGroup('투자자')}
+              className="card"
+              style={{ 
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                border: '2px solid #e5e7eb',
+                padding: '32px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#f59e0b'
+                e.currentTarget.style.transform = 'translateY(-2px)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#e5e7eb'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
+            >
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>💼</div>
+              <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: '#1f2937' }}>
+                투자자
+              </h3>
+              <p style={{ color: '#6b7280', lineHeight: '1.6' }}>
+                부동산 투자 경험이 있거나 관심이 많은 분들을 위한<br />
+                심층적인 시장 분석과 투자 인사이트를 제공합니다
+              </p>
+              <ul style={{ textAlign: 'left', marginTop: '16px', color: '#6b7280' }}>
+                <li>• 시장 동향 심층 분석</li>
+                <li>• 투자 수익률 및 전략</li>
+                <li>• 정책 변화의 투자 영향</li>
+              </ul>
+            </div>
+          </div>
+
+          <div style={{ 
+            padding: '20px', 
+            background: '#f8fafc', 
+            borderRadius: '8px',
+            marginTop: '24px'
+          }}>
+            <p style={{ color: '#475569', fontSize: '14px' }}>
+              💡 <strong>언제든지 변경 가능</strong>: 선택하신 그룹은 나중에 설정에서 변경할 수 있습니다
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
   if (loading) {
     return (
       <div className="loading">
         <div className="spinner"></div>
       </div>
     )
+  }
+
+  // 사용자 그룹이 선택되지 않았다면 선택 화면 표시
+  if (!userGroup) {
+    return <UserGroupSelection />
   }
 
   return (
@@ -100,11 +324,34 @@ export default function Dashboard() {
       <div className="container" style={{ paddingTop: '40px', paddingBottom: '40px' }}>
         <div className="card">
           <div style={{ marginBottom: '24px' }}>
-            <h1 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '8px', color: '#1f2937' }}>
-              안녕하세요! 📊
-            </h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#1f2937' }}>
+                {userGroup === '초보자' && '🔰 초보자'} 
+                {userGroup === '신혼부부·초년생' && '💑 신혼부부·초년생'} 
+                {userGroup === '투자자' && '💼 투자자'} 맞춤 뉴스
+              </h1>
+              <button 
+                onClick={() => {
+                  localStorage.removeItem('userGroup')
+                  setUserGroup(null)
+                }}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  padding: '8px 12px',
+                  fontSize: '12px',
+                  color: '#6b7280',
+                  cursor: 'pointer'
+                }}
+              >
+                그룹 변경
+              </button>
+            </div>
             <p style={{ color: '#6b7280', fontSize: '16px' }}>
-              오늘의 부동산 뉴스를 맞춤형으로 요약해드립니다
+              {userGroup === '초보자' && '이해하기 쉬운 부동산 정보를 제공합니다'}
+              {userGroup === '신혼부부·초년생' && '내 집 마련에 도움이 되는 실용적인 정보를 제공합니다'}
+              {userGroup === '투자자' && '시장 분석과 투자 인사이트를 제공합니다'}
             </p>
           </div>
 

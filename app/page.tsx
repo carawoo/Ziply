@@ -11,6 +11,13 @@ export default function Home() {
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
+      
+      // 이미 로그인된 사용자는 대시보드로 리다이렉트
+      if (user) {
+        window.location.href = '/dashboard'
+        return
+      }
+      
       setUser(user)
       setLoading(false)
     }
@@ -60,49 +67,7 @@ export default function Home() {
     )
   }
 
-  if (user) {
-    return (
-      <div>
-        <header className="header">
-          <div className="container">
-            <nav className="nav">
-              <div className="logo">부동산 뉴스 큐레이터</div>
-              <div>
-                <a href="/dashboard" style={{ marginRight: '16px', color: 'white' }}>
-                  대시보드
-                </a>
-                <a href="/newsletter" style={{ marginRight: '16px', color: 'white' }}>
-                  뉴스레터
-                </a>
-                <button 
-                  onClick={handleLogout}
-                  className="button"
-                  style={{ background: 'rgba(255,255,255,0.2)' }}
-                >
-                  로그아웃
-                </button>
-              </div>
-            </nav>
-          </div>
-        </header>
-
-        <div className="container">
-          <div className="hero">
-            <h1>환영합니다! 🏠</h1>
-            <p>맞춤형 부동산 뉴스로 더 스마트한 결정을 내려보세요</p>
-            <div style={{ marginTop: '32px' }}>
-              <a href="/dashboard" className="button" style={{ marginRight: '16px' }}>
-                📊 대시보드 바로가기
-              </a>
-              <a href="/newsletter" className="button" style={{ background: '#10b981' }}>
-                📧 뉴스레터 구독
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // 로그인된 사용자는 이미 대시보드로 리다이렉트됨
 
   return (
     <div>

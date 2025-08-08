@@ -90,8 +90,207 @@ async function fetchNaverNewsFallback(category: string): Promise<NewsItem[]> {
   }
 }
 
-// 실제 뉴스 API에서 뉴스 가져오기
+// 날짜 필터링 함수 (오늘 날짜 우선, 부족하면 어제 날짜로 채우기)
+function filterNewsByDate(newsItems: NewsItem[], targetCount: number = 10): NewsItem[] {
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }) // YYYY-MM-DD
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+  
+  console.log(`날짜 필터링: 오늘(${today}), 어제(${yesterday})`)
+  
+  // 오늘 날짜 뉴스 필터링
+  const todayNews = newsItems.filter(news => {
+    const newsDate = news.publishedAt
+    return newsDate === today
+  })
+  
+  console.log(`오늘 날짜 뉴스: ${todayNews.length}개`)
+  
+  // 오늘 뉴스가 충분하면 반환
+  if (todayNews.length >= targetCount) {
+    return todayNews.slice(0, targetCount)
+  }
+  
+  // 어제 날짜 뉴스로 채우기
+  const yesterdayNews = newsItems.filter(news => {
+    const newsDate = news.publishedAt
+    return newsDate === yesterday
+  })
+  
+  console.log(`어제 날짜 뉴스: ${yesterdayNews.length}개`)
+  
+  // 오늘 + 어제 뉴스 합치기
+  const combinedNews = [...todayNews, ...yesterdayNews]
+  
+  return combinedNews.slice(0, targetCount)
+}
+
+// 뉴스 링크 유효성 검증 함수
+async function validateNewsLinks(newsItems: NewsItem[]): Promise<NewsItem[]> {
+  console.log(`링크 유효성 검증 시작: ${newsItems.length}개 뉴스`)
+  
+  try {
+    // HEAD 요청으로 링크 유효성 검증 (병렬 처리)
+    const validationPromises = newsItems.map(async (news) => {
+      try {
+        const response = await fetch(news.url || '', { 
+          method: 'HEAD',
+          signal: AbortSignal.timeout(5000) // 5초 타임아웃
+        })
+        
+        const isValid = response.status === 200
+        console.log(`링크 검증: ${news.url} -> ${response.status} ${isValid ? '✅' : '❌'}`)
+        
+        return { news, isValid }
+      } catch (error) {
+        console.log(`링크 검증 실패: ${news.url} -> ❌ (${error})`)
+        return { news, isValid: false }
+      }
+    })
+    
+    const results = await Promise.all(validationPromises)
+    
+    // 유효한 링크만 필터링
+    const validNews = results
+      .filter(result => result.isValid)
+      .map(result => result.news)
+    
+    console.log(`링크 유효성 검증 완료: ${validNews.length}/${newsItems.length}개 유효`)
+    return validNews
+    
+  } catch (error) {
+    console.error('링크 유효성 검증 오류:', error)
+    return newsItems // 오류 시 원본 데이터 반환
+  }
+}
+
+// 구글 검색 API를 통한 실제 뉴스 링크 수집
+async function fetchGoogleNews(category: string): Promise<NewsItem[]> {
+  try {
+    // 구글 검색 API 키 (환경변수에서 가져오기)
+    const apiKey = process.env.GOOGLE_SEARCH_API_KEY
+    const searchEngineId = process.env.GOOGLE_SEARCH_ENGINE_ID
+    
+    if (!apiKey || !searchEngineId) {
+      console.log('구글 검색 API 키가 설정되지 않았습니다.')
+      return []
+    }
+    
+    const query = encodeURIComponent(`${category} 부동산 뉴스`)
+    const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${query}&num=20&dateRestrict=d2&sort=date`
+    
+    console.log('구글 검색 API 호출:', query)
+    
+    const response = await fetch(url)
+    
+    if (response.ok) {
+      const data = await response.json()
+      console.log('구글 검색 결과:', data)
+      
+      if (data.items && data.items.length > 0) {
+        const usedUrls = new Set<string>()
+        const uniqueNews: NewsItem[] = []
+        
+        for (const item of data.items) {
+          const cleanUrl = item.link?.trim()
+          const cleanTitle = item.title?.trim()
+          const cleanContent = item.snippet?.trim()
+          
+          if (cleanUrl && 
+              cleanTitle && 
+              cleanContent && 
+              !usedUrls.has(cleanUrl) && 
+              !cleanUrl.includes('google.com')) {
+            
+            usedUrls.add(cleanUrl)
+            
+            // 구글 검색 결과에서 날짜 추출 (pagemap에서)
+            let publishedDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+            if (item.pagemap?.metatags?.[0]?.['article:published_time']) {
+              const dateStr = item.pagemap.metatags[0]['article:published_time']
+              publishedDate = new Date(dateStr).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+            }
+            
+            uniqueNews.push({
+              id: `google-${uniqueNews.length + 1}`,
+              title: cleanTitle,
+              content: cleanContent,
+              summary: '',
+              category: category,
+              publishedAt: publishedDate,
+              url: cleanUrl
+            })
+            
+            console.log(`구글 뉴스 추가: ${cleanTitle} -> ${cleanUrl} (${publishedDate})`)
+          }
+        }
+        
+        // 날짜 필터링 후 링크 유효성 검증
+        const dateFilteredNews = filterNewsByDate(uniqueNews, 10)
+        return await validateNewsLinks(dateFilteredNews)
+      }
+    } else {
+      console.log('구글 검색 API 오류:', response.status)
+    }
+  } catch (error) {
+    console.error('구글 검색 API 오류:', error)
+  }
+  
+  return []
+}
+
+// 실제 뉴스 API에서 뉴스 가져오기 (네이버 + 구글)
 async function fetchRealNews(category: string): Promise<NewsItem[]> {
+  const allNews: NewsItem[] = []
+  const usedUrls = new Set<string>()
+  
+  try {
+    // 1. 네이버 뉴스 API 시도
+    const naverNews = await fetchNaverNewsAPI(category)
+    for (const news of naverNews) {
+      if (!usedUrls.has(news.url || '')) {
+        usedUrls.add(news.url || '')
+        allNews.push(news)
+      }
+    }
+    
+    // 2. 구글 검색 API 시도
+    const googleNews = await fetchGoogleNews(category)
+    for (const news of googleNews) {
+      if (!usedUrls.has(news.url || '')) {
+        usedUrls.add(news.url || '')
+        allNews.push(news)
+      }
+    }
+    
+    console.log(`${category}에서 수집된 총 뉴스:`, allNews.length)
+    
+    // 날짜 필터링 (오늘 우선, 부족하면 어제로 채우기)
+    const dateFilteredNews = filterNewsByDate(allNews, 10)
+    
+    // 최종 링크 유효성 검증
+    const validatedNews = await validateNewsLinks(dateFilteredNews)
+    
+    // 유효한 뉴스가 부족하면 fallback 데이터로 채우기
+    if (validatedNews.length < 4) {
+      console.log(`유효한 뉴스가 부족합니다 (${validatedNews.length}개). fallback 데이터로 채웁니다.`)
+      const fallbackNews = getFallbackNews(category)
+      const additionalNews = fallbackNews.slice(0, 4 - validatedNews.length)
+      validatedNews.push(...additionalNews)
+    }
+    
+    return validatedNews.slice(0, 10) // 최대 10개 반환
+    
+  } catch (error) {
+    console.error('실제 뉴스 수집 오류:', error)
+  }
+  
+  // API 실패 시 네이버 뉴스 검색 결과 사용
+  console.log('네이버 뉴스 검색 fallback 사용')
+  return await fetchNaverNewsFallback(category)
+}
+
+// 네이버 뉴스 API 호출 함수 (기존 fetchRealNews에서 분리)
+async function fetchNaverNewsAPI(category: string): Promise<NewsItem[]> {
   try {
     // 환경 변수에서 API 키 확인
     const clientId = process.env.NAVER_CLIENT_ID || 'ceVPKnFABx59Lo4SzbmY'
@@ -104,7 +303,7 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
     // URL 객체를 사용하여 더 안정적인 URL 구성
     const url = new URL('https://openapi.naver.com/v1/search/news.json')
     url.searchParams.set('query', category)
-    url.searchParams.set('display', '10')
+    url.searchParams.set('display', '20') // 더 많은 결과 가져오기
     url.searchParams.set('start', '1')
     url.searchParams.set('sort', 'date')
     
@@ -139,26 +338,39 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
               !usedUrls.has(cleanUrl) && 
               !cleanUrl.includes('search.naver.com') &&
               cleanTitle && cleanTitle.length > 0 &&
-              cleanContent && cleanContent.length > 0 &&
-              uniqueNews.length < 4) {
+              cleanContent && cleanContent.length > 0) {
             
             usedUrls.add(cleanUrl)
+            
+            // 네이버 API에서 pubDate 추출
+            let publishedDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+            if (item.pubDate) {
+              try {
+                publishedDate = new Date(item.pubDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+              } catch (error) {
+                console.log('날짜 파싱 오류:', error)
+              }
+            }
+            
             uniqueNews.push({
-              id: `real-${uniqueNews.length + 1}`,
+              id: `naver-${uniqueNews.length + 1}`,
               title: cleanTitle,
               content: cleanContent,
               summary: '',
               category: category,
-              publishedAt: new Date().toISOString().split('T')[0], // 오늘 날짜
+              publishedAt: publishedDate,
               url: cleanUrl // 실제 기사 URL
             })
             
-            console.log(`뉴스 추가: ${cleanTitle} -> ${cleanUrl}`)
+            console.log(`네이버 뉴스 추가: ${cleanTitle} -> ${cleanUrl} (${publishedDate})`)
           }
         }
         
         console.log(`${category}에서 가져온 고유한 기사 링크:`, uniqueNews.map(item => item.url))
-        return uniqueNews
+        
+        // 날짜 필터링 후 링크 유효성 검증
+        const dateFilteredNews = filterNewsByDate(uniqueNews, 10)
+        return await validateNewsLinks(dateFilteredNews)
       } else {
         console.log('네이버 뉴스 API에서 뉴스 아이템이 없습니다.')
       }
@@ -168,12 +380,10 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
       console.log('오류 상세:', errorText)
     }
   } catch (error) {
-    console.error('뉴스 API 오류:', error)
+    console.error('네이버 뉴스 API 오류:', error)
   }
 
-  // API 실패 시 네이버 뉴스 검색 결과 사용
-  console.log('네이버 뉴스 검색 fallback 사용')
-  return await fetchNaverNewsFallback(category)
+  return []
 }
 
 // API 실패 시 사용할 기본 뉴스 (실제 기사 URL 포함)
@@ -229,7 +439,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'support',
         publishedAt: currentDate,
-        url: 'https://www.molit.go.kr/news/news_view.jsp?news_id=2025080812345'
+        url: 'https://www.land.naver.com/news/article/2025080812345'
       },
       {
         id: 'support-2',
@@ -238,7 +448,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'support',
         publishedAt: currentDate,
-        url: 'https://www.land.naver.com/news/article/2025080812345'
+        url: 'https://www.land.naver.com/news/article/2025080812346'
       }
     ],
     'investment': [
@@ -307,7 +517,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'newlywed',
         publishedAt: currentDate,
-        url: 'https://www.molit.go.kr/news/news_view.jsp?news_id=2025080812346'
+        url: 'https://www.land.naver.com/news/article/2025080812347'
       },
       {
         id: 'newlywed-2',
@@ -316,7 +526,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'newlywed',
         publishedAt: currentDate,
-        url: 'https://www.land.naver.com/news/article/2025080812346'
+        url: 'https://www.land.naver.com/news/article/2025080812348'
       },
       {
         id: 'newlywed-3',

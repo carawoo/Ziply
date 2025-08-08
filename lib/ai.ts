@@ -6,7 +6,11 @@ export interface NewsItem {
   summary: string
   category: string
   publishedAt: string
-  url?: string
+  url?: string | {
+    naver: string
+    google: string
+    youtube: string
+  }
 }
 
 // 현재 날짜 기준으로 동적 날짜 생성
@@ -35,17 +39,53 @@ function buildNewsSearchUrl(title: string): string {
   return `https://search.naver.com/search.naver?where=news&sm=tab_jum&query=${query}`
 }
 
-// 실제 기사 URL들 (최신 기사 기준)
+// 실제 기사 URL들 (최신 기사 기준) - 다양한 소스
 const REAL_NEWS_URLS = {
-  '2024년 부동산 정책 변화, 주택담보대출 규제 완화': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=2024년+부동산+정책+변화+주택담보대출+규제+완화',
-  '서울 아파트 전세가율 70% 돌파, 매매 시장 영향은?': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=서울+아파트+전세가율+70%+돌파+매매+시장+영향',
-  '신혼부부 전용 청약통장 출시, 최대 2억원 지원': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=신혼부부+전용+청약통장+출시+최대+2억원+지원',
-  '부동산 투자 트렌드 변화, REITs 관심 급증': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=부동산+투자+트렌드+REITs+관심+급증',
-  '처음 집 사는 사람을 위한 부동산 기초 가이드': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=처음+집+사는+사람+부동산+기초+가이드',
-  '신혼부부 특별공급, 2024년 새로운 신청 조건 공개': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=신혼부부+특별공급+2024년+신청+조건',
-  '2024년 부동산 투자 전략, 지역별 수익률 분석': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=2024년+부동산+투자+전략+지역별+수익률',
-  '토지거래허가제 일부 해제, 투자 시장에 미치는 영향': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=토지거래허가제+일부+해제+투자+시장+영향',
-  '2024년 1분기 부동산 시장 전망, 금리 인하 기대감': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=2024년+1분기+부동산+시장+전망+금리+인하'
+  '2024년 부동산 정책 변화, 주택담보대출 규제 완화': {
+    naver: 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=2024년+부동산+정책+변화+주택담보대출+규제+완화',
+    google: 'https://news.google.com/search?q=2024년+부동산+정책+변화+주택담보대출+규제+완화&hl=ko&gl=KR&ceid=KR:ko',
+    youtube: 'https://www.youtube.com/results?search_query=2024년+부동산+정책+변화+주택담보대출+규제+완화'
+  },
+  '서울 아파트 전세가율 70% 돌파, 매매 시장 영향은?': {
+    naver: 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=서울+아파트+전세가율+70%+돌파+매매+시장+영향',
+    google: 'https://news.google.com/search?q=서울+아파트+전세가율+70%+돌파+매매+시장+영향&hl=ko&gl=KR&ceid=KR:ko',
+    youtube: 'https://www.youtube.com/results?search_query=서울+아파트+전세가율+70%+돌파+매매+시장+영향'
+  },
+  '신혼부부 전용 청약통장 출시, 최대 2억원 지원': {
+    naver: 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=신혼부부+전용+청약통장+출시+최대+2억원+지원',
+    google: 'https://news.google.com/search?q=신혼부부+전용+청약통장+출시+최대+2억원+지원&hl=ko&gl=KR&ceid=KR:ko',
+    youtube: 'https://www.youtube.com/results?search_query=신혼부부+전용+청약통장+출시+최대+2억원+지원'
+  },
+  '부동산 투자 트렌드 변화, REITs 관심 급증': {
+    naver: 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=부동산+투자+트렌드+REITs+관심+급증',
+    google: 'https://news.google.com/search?q=부동산+투자+트렌드+REITs+관심+급증&hl=ko&gl=KR&ceid=KR:ko',
+    youtube: 'https://www.youtube.com/results?search_query=부동산+투자+트렌드+REITs+관심+급증'
+  },
+  '처음 집 사는 사람을 위한 부동산 기초 가이드': {
+    naver: 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=처음+집+사는+사람+부동산+기초+가이드',
+    google: 'https://news.google.com/search?q=처음+집+사는+사람+부동산+기초+가이드&hl=ko&gl=KR&ceid=KR:ko',
+    youtube: 'https://www.youtube.com/results?search_query=처음+집+사는+사람+부동산+기초+가이드'
+  },
+  '신혼부부 특별공급, 2024년 새로운 신청 조건 공개': {
+    naver: 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=신혼부부+특별공급+2024년+신청+조건',
+    google: 'https://news.google.com/search?q=신혼부부+특별공급+2024년+신청+조건&hl=ko&gl=KR&ceid=KR:ko',
+    youtube: 'https://www.youtube.com/results?search_query=신혼부부+특별공급+2024년+신청+조건'
+  },
+  '2024년 부동산 투자 전략, 지역별 수익률 분석': {
+    naver: 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=2024년+부동산+투자+전략+지역별+수익률',
+    google: 'https://news.google.com/search?q=2024년+부동산+투자+전략+지역별+수익률&hl=ko&gl=KR&ceid=KR:ko',
+    youtube: 'https://www.youtube.com/results?search_query=2024년+부동산+투자+전략+지역별+수익률'
+  },
+  '토지거래허가제 일부 해제, 투자 시장에 미치는 영향': {
+    naver: 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=토지거래허가제+일부+해제+투자+시장+영향',
+    google: 'https://news.google.com/search?q=토지거래허가제+일부+해제+투자+시장+영향&hl=ko&gl=KR&ceid=KR:ko',
+    youtube: 'https://www.youtube.com/results?search_query=토지거래허가제+일부+해제+투자+시장+영향'
+  },
+  '2024년 1분기 부동산 시장 전망, 금리 인하 기대감': {
+    naver: 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=2024년+1분기+부동산+시장+전망+금리+인하',
+    google: 'https://news.google.com/search?q=2024년+1분기+부동산+시장+전망+금리+인하&hl=ko&gl=KR&ceid=KR:ko',
+    youtube: 'https://www.youtube.com/results?search_query=2024년+1분기+부동산+시장+전망+금리+인하'
+  }
 }
 
 export async function summarizeNews(content: string, category: string): Promise<string> {

@@ -37,27 +37,21 @@ export default function Home() {
   }, [])
 
   const handleKakaoLogin = async () => {
-    console.log('카카오 로그인 버튼 클릭됨')
     try {
-      console.log('Supabase 카카오 로그인 시도 중...')
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
           redirectTo: `${window.location.origin}/dashboard`
         }
       })
       
-      console.log('Supabase 응답:', { data, error })
-      
       if (error) {
         console.error('카카오 로그인 오류:', error)
-        alert(`로그인 오류: ${error.message}`)
-      } else {
-        console.log('카카오 로그인 성공, 리다이렉트 중...')
+        alert('로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
       }
     } catch (error) {
-      console.error('예외 발생:', error)
-      alert(`예외 오류: ${error}`)
+      console.error('로그인 오류:', error)
+      alert('로그인 중 오류가 발생했습니다.')
     }
   }
 
@@ -96,11 +90,7 @@ export default function Home() {
           
           <div style={{ marginTop: '40px' }}>
             <button 
-              onClick={() => {
-                console.log('🔥 버튼 클릭 이벤트 발생!')
-                alert('버튼이 클릭되었습니다!')
-                handleKakaoLogin()
-              }}
+              onClick={handleKakaoLogin}
               className="button button-kakao"
               style={{ 
                 fontSize: '18px', 

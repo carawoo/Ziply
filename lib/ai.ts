@@ -146,7 +146,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'policy',
         publishedAt: recentDates[0],
-        url: 'https://search.naver.com/search.naver?where=news&query=부동산+정책&sm=tab_opt&sort=1'
+        url: 'https://search.naver.com/search.naver?where=news&query=부동산+정책+주택담보대출&sm=tab_opt&sort=1'
       },
       {
         id: 'fallback-2',
@@ -155,7 +155,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'policy',
         publishedAt: recentDates[1],
-        url: 'https://search.naver.com/search.naver?where=news&query=부동산+정책&sm=tab_opt&sort=1'
+        url: 'https://search.naver.com/search.naver?where=news&query=부동산+정책+종합부동산세&sm=tab_opt&sort=1'
       }
     ],
     'market': [
@@ -166,7 +166,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'market',
         publishedAt: recentDates[2],
-        url: 'https://search.naver.com/search.naver?where=news&query=부동산+시장&sm=tab_opt&sort=1'
+        url: 'https://search.naver.com/search.naver?where=news&query=서울+아파트+전세가율+70%&sm=tab_opt&sort=1'
       },
       {
         id: 'fallback-4',
@@ -175,7 +175,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'market',
         publishedAt: recentDates[3],
-        url: 'https://search.naver.com/search.naver?where=news&query=부동산+시장&sm=tab_opt&sort=1'
+        url: 'https://search.naver.com/search.naver?where=news&query=부동산+시장+지역별+차이&sm=tab_opt&sort=1'
       }
     ],
     'support': [
@@ -186,7 +186,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'support',
         publishedAt: recentDates[4],
-        url: 'https://search.naver.com/search.naver?where=news&query=부동산+지원&sm=tab_opt&sort=1'
+        url: 'https://search.naver.com/search.naver?where=news&query=신혼부부+청약통장+2억원&sm=tab_opt&sort=1'
       },
       {
         id: 'fallback-6',
@@ -195,7 +195,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'support',
         publishedAt: recentDates[5],
-        url: 'https://search.naver.com/search.naver?where=news&query=부동산+지원&sm=tab_opt&sort=1'
+        url: 'https://search.naver.com/search.naver?where=news&query=청년+주택+지원금+5천만원&sm=tab_opt&sort=1'
       }
     ],
     'investment': [
@@ -226,7 +226,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'beginner',
         publishedAt: recentDates[0],
-        url: 'https://search.naver.com/search.naver?where=news&query=부동산+초보자&sm=tab_opt&sort=1'
+        url: 'https://search.naver.com/search.naver?where=news&query=부동산+초보자+주택+구매+가이드&sm=tab_opt&sort=1'
       },
       {
         id: 'fallback-10',
@@ -235,7 +235,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'beginner',
         publishedAt: recentDates[1],
-        url: 'https://search.naver.com/search.naver?where=news&query=부동산+초보자&sm=tab_opt&sort=1'
+        url: 'https://search.naver.com/search.naver?where=news&query=부동산+용어+사전+초보자&sm=tab_opt&sort=1'
       }
     ],
     'newlywed': [
@@ -246,7 +246,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'newlywed',
         publishedAt: recentDates[2],
-        url: 'https://search.naver.com/search.naver?where=news&query=신혼부부+부동산&sm=tab_opt&sort=1'
+        url: 'https://search.naver.com/search.naver?where=news&query=신혼부부+특별공급+확대&sm=tab_opt&sort=1'
       },
       {
         id: 'fallback-12',
@@ -255,7 +255,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'newlywed',
         publishedAt: recentDates[3],
-        url: 'https://search.naver.com/search.naver?where=news&query=신혼부부+부동산&sm=tab_opt&sort=1'
+        url: 'https://search.naver.com/search.naver?where=news&query=신혼부부+전용+주택단지+50곳&sm=tab_opt&sort=1'
       }
     ]
   }
@@ -351,7 +351,9 @@ export async function getSampleNews(): Promise<NewsItem[]> {
       try {
         const news = await fetchRealNews(category)
         if (news && news.length > 0) {
-          allNews.push(...news.slice(0, 2)) // 카테고리당 2개씩
+          // 각 뉴스마다 고유한 링크가 있는지 확인
+          const validNews = news.filter(item => item.url && item.url !== '')
+          allNews.push(...validNews.slice(0, 2)) // 카테고리당 2개씩
         }
       } catch (categoryError) {
         console.error(`${category} 뉴스 가져오기 실패:`, categoryError)

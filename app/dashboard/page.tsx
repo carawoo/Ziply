@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
-import { getSampleNews, getNewsForGroup, getNewsForTab, summarizeNews, NewsItem } from '@/lib/ai'
+import { getSampleNews, getNewsForGroup, getNewsForTab, summarizeNews, NewsItem, getFallbackNews, generateDefaultSummary } from '@/lib/ai'
 
 type UserGroup = '초보자' | '신혼부부·초년생' | '투자자' | null
 
@@ -123,20 +123,55 @@ export default function Dashboard() {
   const loadNews = async (tab: string, group?: UserGroup) => {
     setNewsLoading(true)
     try {
+      console.log('뉴스 로딩 시작:', tab)
+      
       // 탭에 따른 맞춤형 뉴스 가져오기
       const sampleNews = await getNewsForTab(tab)
+      console.log('가져온 뉴스 개수:', sampleNews.length)
       
-      // AI 요약 생성
+      if (sampleNews.length === 0) {
+        console.log('뉴스가 없습니다. fallback 뉴스 사용')
+        // fallback 뉴스 사용
+        const fallbackCategory = tab === '초보자용' ? 'beginner' : 
+                                tab === '신혼부부용' ? 'newlywed' : 
+                                tab === '투자자용' ? 'investment' : 
+                                tab === '정책뉴스' ? 'policy' : 
+                                tab === '시장분석' ? 'market' : 'support'
+        
+        const fallbackNews = getFallbackNews(fallbackCategory)
+        setNews(fallbackNews)
+        setNewsLoading(false)
+        return
+      }
+      
+      // AI 요약 생성 (에러 처리 포함)
       const newsWithSummaries = await Promise.all(
         sampleNews.map(async (item) => {
-          const summary = await summarizeNews(item.content, tab)
-          return { ...item, summary }
+          try {
+            const summary = await summarizeNews(item.content, tab)
+            return { ...item, summary }
+          } catch (summaryError) {
+            console.error('요약 생성 실패:', summaryError)
+            // 요약 실패 시 기본 요약 사용
+            const defaultSummary = generateDefaultSummary(item.content, tab)
+            return { ...item, summary: defaultSummary }
+          }
         })
       )
       
+      console.log('요약 완료된 뉴스 개수:', newsWithSummaries.length)
       setNews(newsWithSummaries)
     } catch (error) {
       console.error('뉴스 로딩 오류:', error)
+      // 에러 시 fallback 뉴스 사용
+      const fallbackCategory = tab === '초보자용' ? 'beginner' : 
+                              tab === '신혼부부용' ? 'newlywed' : 
+                              tab === '투자자용' ? 'investment' : 
+                              tab === '정책뉴스' ? 'policy' : 
+                              tab === '시장분석' ? 'market' : 'support'
+      
+      const fallbackNews = getFallbackNews(fallbackCategory)
+      setNews(fallbackNews)
     } finally {
       setNewsLoading(false)
     }

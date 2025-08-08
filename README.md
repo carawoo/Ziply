@@ -1,198 +1,168 @@
 # 부동산 뉴스 큐레이터
 
-매일 아침 7시, 맞춤형 부동산 뉴스 요약을 이메일과 카카오톡으로 받아보세요!
+부동산 뉴스 큐레이터는 사용자 그룹별로 맞춤형 부동산 뉴스를 제공하는 웹 애플리케이션입니다.
 
-## 📱 뉴스레터 발송 방식
+## 🚀 실배포 가이드
 
-### 1. 이메일 발송 (기본)
-- **비용**: 무료 (Gmail SMTP 사용 시)
-- **설정**: Gmail 앱 비밀번호 필요
-- **장점**: 안정적이고 신뢰성 높음
+### 1. Vercel 배포 준비
 
-### 2. 카카오톡 메시지 발송 (유료)
-- **비용**: 메시지당 약 3.3원
-- **필요 정보**:
-  - 카카오 비즈니스 계정
-  - 카카오 비즈니스 API 키
-  - 메시지 템플릿 승인
-- **설정 방법**:
-  1. [카카오 비즈니스](https://business.kakao.com) 가입
-  2. 비즈니스 계정 인증
-  3. 메시지 템플릿 등록 및 승인
-  4. API 키 발급
+1. **Vercel 계정 생성**
+   - [Vercel](https://vercel.com)에 가입
+   - GitHub 계정으로 로그인 권장
 
-### 3. 웹 푸시 알림 (무료)
-- **비용**: 무료
-- **특징**: 사용자가 웹사이트를 방문할 때만 표시
-- **설정**: 브라우저 권한만 필요
+2. **프로젝트 연결**
+   ```bash
+   # Vercel CLI 설치
+   npm install -g vercel
+   
+   # 로그인
+   vercel login
+   
+   # 프로젝트 배포
+   vercel
+   ```
 
-## 🚀 빠른 시작
+### 2. 환경 변수 설정
 
-### 1. 의존성 설치
-```bash
-npm install
+Vercel 대시보드에서 다음 환경 변수들을 설정하세요:
+
+#### 필수 환경 변수
 ```
-
-### 2. 환경변수 설정
-`.env.local` 파일을 생성하고 다음 정보를 입력:
-
-```env
-# Supabase 설정
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-# AI API 키 (선택사항)
+#### AI API 키 (선택사항)
+```
 OPENAI_API_KEY=your_openai_api_key
-# 또는
 GEMINI_API_KEY=your_gemini_api_key
+```
 
-# 카카오 로그인
-NEXT_PUBLIC_KAKAO_CLIENT_ID=your_kakao_client_id
+#### 네이버 뉴스 API (선택사항)
+```
+NAVER_CLIENT_ID=your_naver_client_id
+NAVER_CLIENT_SECRET=your_naver_client_secret
+```
 
-# 이메일 발송 (Gmail)
+#### 이메일 설정 (뉴스레터용)
+```
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USER=your_email@gmail.com
 EMAIL_PASS=your_app_password
 EMAIL_FROM=your_email@gmail.com
-
-# 카카오 비즈니스 메시지 (유료)
-KAKAO_BUSINESS_API_KEY=your_kakao_business_api_key
-KAKAO_SENDER_NUMBER=your_sender_number
-KAKAO_PFID=your_pfid
 ```
 
-### 3. 개발 서버 실행
-```bash
-npm run dev
+### 3. 배포 후 설정
+
+1. **도메인 설정**: Vercel에서 제공하는 도메인 또는 커스텀 도메인 사용
+2. **SSL 인증서**: Vercel에서 자동으로 제공
+3. **CDN**: 전 세계 CDN으로 빠른 로딩
+
+### 4. 배포 확인
+
+배포가 완료되면 다음을 확인하세요:
+- [ ] 메인 페이지 로딩
+- [ ] 사용자 그룹 선택
+- [ ] 뉴스 리스트 표시
+- [ ] 뉴스레터 구독 기능
+
+## 📋 기존 기능
+
+### 사용자 그룹별 맞춤 뉴스
+- **초보자**: 부동산 기초 정보와 쉬운 설명
+- **신혼부부·초년생**: 내 집 마련 관련 실용 정보
+- **투자자**: 시장 분석과 투자 인사이트
+
+### 뉴스레터 구독
+- 매일 아침 맞춤 뉴스 발송
+- 이메일, 카카오톡, 웹 푸시 알림 지원
+
+### 실시간 뉴스
+- 네이버 뉴스 API 연동
+- AI 요약 기능
+- 카테고리별 필터링
+
+## 🛠 기술 스택
+
+- **Frontend**: Next.js 13, React 18, TypeScript
+- **Backend**: Next.js API Routes
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **Deployment**: Vercel
+- **Email**: Nodemailer
+- **Push Notifications**: Web Push API
+
+## 📁 프로젝트 구조
+
+```
+SP/
+├── app/                    # Next.js 13 App Router
+│   ├── api/               # API Routes
+│   ├── dashboard/         # 대시보드 페이지
+│   ├── newsletter/        # 뉴스레터 페이지
+│   └── layout.tsx         # 루트 레이아웃
+├── components/            # React 컴포넌트
+├── lib/                   # 유틸리티 함수
+├── cron/                  # 스케줄링 작업
+└── public/                # 정적 파일
 ```
 
-### 4. 뉴스레터 스케줄러 실행
-```bash
-# 백그라운드에서 실행
-npm run cron
+## 🔧 개발 환경 설정
 
-# 테스트 발송
-npm run cron test
-```
-
-## 💰 비용 분석
-
-### 카카오 비즈니스 메시지 비용
-- **초기 설정**: 무료
-- **메시지당 비용**: 약 3.3원
-- **월 100명 구독자 기준**: 약 3,300원/월
-- **월 1,000명 구독자 기준**: 약 33,000원/월
-
-### 대안 비교
-| 방식 | 비용 | 도달률 | 설정 난이도 |
-|------|------|--------|-------------|
-| 이메일 | 무료 | 높음 | 쉬움 |
-| 카카오톡 | 유료 | 매우 높음 | 어려움 |
-| 웹 푸시 | 무료 | 낮음 | 쉬움 |
-
-## 🔧 고급 설정
-
-### 카카오 비즈니스 메시지 설정
-
-1. **카카오 비즈니스 계정 생성**
-   - [카카오 비즈니스](https://business.kakao.com) 접속
-   - 사업자 인증 완료
-   - 비즈니스 계정 승인 대기
-
-2. **메시지 템플릿 등록**
-   ```json
-   {
-     "templateId": "newsletter_template",
-     "content": "📈 {{date}} 오늘의 부동산 뉴스\n\n{{news_summary}}\n\n총 {{news_count}}개의 뉴스가 도착했습니다!",
-     "buttons": [
-       {
-         "name": "웹사이트 방문",
-         "type": "WL",
-         "url": "https://your-app.vercel.app"
-       }
-     ]
-   }
-   ```
-
-3. **API 키 발급**
-   - 비즈니스 대시보드에서 API 키 생성
-   - 발신번호 등록
-   - PFID 확인
-
-### 웹 푸시 알림 설정
-
-1. **VAPID 키 생성**
+1. **의존성 설치**
    ```bash
-   npx web-push generate-vapid-keys
+   npm install
    ```
 
-2. **환경변수 추가**
-   ```env
-   NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
-   VAPID_PRIVATE_KEY=your_vapid_private_key
+2. **환경 변수 설정**
+   ```bash
+   cp env.example .env.local
+   # .env.local 파일에 실제 값 입력
    ```
 
-## 📊 모니터링
+3. **개발 서버 실행**
+   ```bash
+   npm run dev
+   ```
 
-### 발송 통계 확인
-```bash
-# 실시간 로그 확인
-npm run cron
+4. **빌드 테스트**
+   ```bash
+   npm run build
+   ```
 
-# 발송 결과 확인
-tail -f logs/newsletter.log
-```
+## 📝 API 키 발급 방법
 
-### 성공률 모니터링
-- 이메일: Gmail 발송 통계
-- 카카오톡: 비즈니스 대시보드
-- 웹 푸시: 브라우저 개발자 도구
+### Supabase 설정
+1. [Supabase](https://supabase.com) 가입
+2. 새 프로젝트 생성
+3. Settings > API에서 URL과 Anon Key 복사
 
-## 🛠️ 문제 해결
+### 네이버 뉴스 API
+1. [네이버 개발자 센터](https://developers.naver.com) 가입
+2. 애플리케이션 등록
+3. 뉴스 검색 API 신청
 
-### 이메일 발송 실패
-- Gmail 앱 비밀번호 확인
-- SMTP 설정 재확인
-- 발송 한도 확인
+### OpenAI API
+1. [OpenAI](https://platform.openai.com) 가입
+2. API 키 발급
+3. 크레딧 충전
 
-### 카카오톡 발송 실패
-- 비즈니스 계정 승인 상태 확인
-- 메시지 템플릿 승인 상태 확인
-- API 키 유효성 확인
+## 🚀 배포 완료 후
 
-### 웹 푸시 알림 안됨
-- 브라우저 권한 확인
-- HTTPS 설정 확인
-- Service Worker 등록 확인
-
-## 📈 성능 최적화
-
-### 발송 최적화
-- 배치 발송으로 API 호출 최소화
-- 재시도 로직 구현
-- 실패한 발송 건별 관리
-
-### 비용 최적화
-- 카카오톡 메시지는 중요 뉴스만 발송
-- 이메일과 웹 푸시 조합 사용
-- 구독자 활성도에 따른 발송 분기
-
-## 🔒 보안 고려사항
-
-- API 키는 환경변수로 관리
-- 사용자 개인정보 암호화
-- 발송 로그 보안 관리
-- GDPR 준수
+배포가 완료되면 다음 URL로 접속할 수 있습니다:
+- **Vercel 도메인**: `https://your-project.vercel.app`
+- **커스텀 도메인**: 설정한 도메인
 
 ## 📞 지원
 
-문제가 발생하면 다음을 확인해주세요:
-1. 환경변수 설정
-2. API 키 유효성
-3. 네트워크 연결
-4. 서비스 상태
+문제가 발생하면 다음을 확인하세요:
+1. 환경 변수 설정
+2. Supabase 연결 상태
+3. API 키 유효성
+4. Vercel 로그 확인
 
 ---
 
-**참고**: 카카오 비즈니스 메시지는 유료 서비스입니다. 실제 사용 전에 비용을 고려해주세요.
+**배포 완료!** 🎉
+이제 전 세계 어디서나 부동산 뉴스 큐레이터에 접속할 수 있습니다.

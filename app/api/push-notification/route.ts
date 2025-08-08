@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import webpush from 'web-push'
-
-// VAPID 키 설정
-webpush.setVapidDetails(
-  'mailto:ziply2025@gmail.com',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-)
 
 // 푸시 알림 발송
 export async function POST(request: NextRequest) {
   try {
+    // VAPID 키가 설정되어 있는지 확인
+    if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+      return NextResponse.json(
+        { error: 'VAPID 키가 설정되지 않았습니다. 푸시 알림 기능을 사용할 수 없습니다.' },
+        { status: 503 }
+      )
+    }
+
+    // 동적 import로 서버 사이드에서만 실행
+    const webpush = await import('web-push')
+    
+    // VAPID 키 설정
+    webpush.default.setVapidDetails(
+      'mailto:ziply2025@gmail.com',
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    )
+
     const { subscription, title, body, data } = await request.json()
     
     if (!subscription) {
@@ -30,7 +40,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    const result = await webpush.sendNotification(subscription, payload)
+    const result = await webpush.default.sendNotification(subscription, payload)
     
     return NextResponse.json({ 
       success: true, 

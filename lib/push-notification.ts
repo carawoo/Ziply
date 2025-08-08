@@ -10,14 +10,20 @@ export const sendServerPushNotification = async (
   }
 
   try {
+    // VAPID 키가 설정되어 있는지 확인
+    if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+      console.warn('VAPID 키가 설정되지 않았습니다. 푸시 알림을 발송할 수 없습니다.')
+      return false
+    }
+
     // 동적 import로 서버 사이드에서만 실행
     const webpush = await import('web-push')
     
     // VAPID 키 설정
     webpush.default.setVapidDetails(
       'mailto:your-email@example.com',
-      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
-      process.env.VAPID_PRIVATE_KEY || ''
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
     )
     
     await webpush.default.sendNotification(subscription, JSON.stringify(payload))

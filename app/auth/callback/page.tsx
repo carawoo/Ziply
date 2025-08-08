@@ -10,30 +10,33 @@ export default function AuthCallbackPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    const handleExchange = async () => {
+    const handleCallback = async () => {
       try {
-        const code = searchParams.get('code')
         const next = searchParams.get('next') || '/dashboard'
 
-        if (!code) {
-          // 코드가 없으면 홈으로 반환
-          router.replace('/')
-          return
-        }
+        // Supabase가 자동으로 URL의 code를 처리하도록 getSession 사용
+        const { data, error } = await supabase.auth.getSession()
 
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
+          console.error('Error getting session:', error)
           setErrorMessage(error.message)
           return
         }
 
-        router.replace(next)
+        if (data.session) {
+          // 세션이 성공적으로 생성됨, 다음 페이지로 이동
+          router.replace(next)
+        } else {
+          // 세션이 없으면 홈으로 반환
+          router.replace('/')
+        }
       } catch (err: any) {
+        console.error('Callback error:', err)
         setErrorMessage(err?.message || '로그인 처리 중 오류가 발생했습니다.')
       }
     }
 
-    handleExchange()
+    handleCallback()
   }, [router, searchParams])
 
   return (

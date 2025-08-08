@@ -75,6 +75,73 @@ function isTitleUrlMatch(title: string, url: string): boolean {
   }
 }
 
+// 실제 페이지의 title 태그와 제목 비교 검증
+async function validatePageTitle(newsTitle: string, url: string): Promise<boolean> {
+  try {
+    // HEAD 요청으로 먼저 페이지 존재 여부 확인
+    const headResponse = await fetch(url, { 
+      method: 'HEAD',
+      signal: AbortSignal.timeout(5000)
+    })
+    
+    if (headResponse.status !== 200) {
+      console.log(`페이지 접근 불가: ${url} -> ${headResponse.status}`)
+      return false
+    }
+    
+    // GET 요청으로 실제 페이지 내용 가져오기
+    const response = await fetch(url, { 
+      signal: AbortSignal.timeout(10000) // 10초 타임아웃
+    })
+    
+    if (!response.ok) {
+      console.log(`페이지 로드 실패: ${url} -> ${response.status}`)
+      return false
+    }
+    
+    const html = await response.text()
+    
+    // title 태그 추출
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
+    if (!titleMatch) {
+      console.log(`title 태그 없음: ${url}`)
+      return false
+    }
+    
+    const pageTitle = titleMatch[1].trim()
+    const cleanNewsTitle = newsTitle.replace(/<[^>]*>/g, '').trim()
+    
+    // 제목 유사도 계산 (간단한 키워드 매칭)
+    const newsKeywords = cleanNewsTitle
+      .split(/[\s,\.!?]+/)
+      .filter(word => word.length >= 2)
+      .map(word => word.toLowerCase())
+    
+    const pageKeywords = pageTitle
+      .split(/[\s,\.!?]+/)
+      .filter(word => word.length >= 2)
+      .map(word => word.toLowerCase())
+    
+    // 공통 키워드 수 계산
+    const commonKeywords = newsKeywords.filter(keyword => 
+      pageKeywords.some(pageKeyword => 
+        pageKeyword.includes(keyword) || keyword.includes(pageKeyword)
+      )
+    )
+    
+    // 유사도 계산 (공통 키워드 / 전체 키워드)
+    const similarity = commonKeywords.length / Math.max(newsKeywords.length, 1)
+    
+    console.log(`제목 비교: "${cleanNewsTitle}" vs "${pageTitle}" (유사도: ${(similarity * 100).toFixed(1)}%)`)
+    
+    return similarity >= 0.5 // 50% 이상 일치해야 함
+    
+  } catch (error) {
+    console.log(`페이지 제목 검증 실패: ${url} -> ${error}`)
+    return false
+  }
+}
+
 // 현재 연도 가져오기
 function getCurrentYear(): string {
   return new Date().getFullYear().toString()
@@ -339,14 +406,252 @@ async function fetchGoogleNews(category: string): Promise<NewsItem[]> {
   return []
 }
 
-// 실제 뉴스 API에서 뉴스 가져오기 (네이버 + 구글)
+// 네이버 뉴스 API에서 오늘 날짜 기사만 가져오기 (엄격한 필터링)
+async function fetchNaverNewsStrict(category: string): Promise<NewsItem[]> {
+  try {
+    const clientId = process.env.NAVER_CLIENT_ID || 'ceVPKnFABx59Lo4SzbmY'
+    const clientSecret = process.env.NAVER_CLIENT_SECRET || 'FUfJ_TnwL6'
+    
+    const query = encodeURIComponent(category)
+    const today = getTodayDate()
+    
+    console.log(`네이버 뉴스 엄격 필터링 시작: ${category} (오늘: ${today})`)
+    
+    // 네이버 뉴스 API 호출
+    const url = new URL('https://openapi.naver.com/v1/search/news.json')
+    url.searchParams.set('query', category)
+    url.searchParams.set('display', '50') // 더 많은 결과 가져오기
+    url.searchParams.set('start', '1')
+    url.searchParams.set('sort', 'date')
+    
+    const response = await fetch(url.toString(), {
+      headers: {
+        'X-Naver-Client-Id': clientId,
+        'X-Naver-Client-Secret': clientSecret
+      }
+    })
+
+    if (!response.ok) {
+      console.log('네이버 뉴스 API 오류:', response.status)
+      return []
+    }
+
+    const data = await response.json()
+    console.log(`네이버 뉴스 API 결과: ${data.items?.length || 0}개`)
+    
+    if (!data.items || data.items.length === 0) {
+      console.log('네이버 뉴스 API에서 결과가 없습니다.')
+      return []
+    }
+
+    const validNews: NewsItem[] = []
+    const usedUrls = new Set<string>()
+
+    for (const item of data.items) {
+      try {
+        const cleanUrl = item.link?.replace(/<[^>]*>/g, '').trim()
+        const cleanTitle = item.title?.replace(/<[^>]*>/g, '').trim()
+        const cleanContent = item.description?.replace(/<[^>]*>/g, '').trim()
+
+        // 기본 유효성 검사
+        if (!cleanUrl || !cleanTitle || !cleanContent || 
+            usedUrls.has(cleanUrl) || 
+            cleanUrl.includes('search.naver.com')) {
+          continue
+        }
+
+        // 1. 오늘 날짜 필터
+        let publishedDate = getTodayDate()
+        if (item.pubDate) {
+          try {
+            publishedDate = new Date(item.pubDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+          } catch (error) {
+            console.log('날짜 파싱 오류:', error)
+          }
+        }
+
+        if (publishedDate !== today) {
+          console.log(`날짜 불일치 제외: ${cleanTitle} (${publishedDate} != ${today})`)
+          continue
+        }
+
+        // 2. URL 유효성 검사 (HEAD 요청)
+        const urlValid = await isValidUrl(cleanUrl)
+        if (!urlValid) {
+          console.log(`URL 유효하지 않음 제외: ${cleanTitle} -> ${cleanUrl}`)
+          continue
+        }
+
+        // 3. 페이지 제목과 기사 제목 비교 검증
+        const titleMatch = await validatePageTitle(cleanTitle, cleanUrl)
+        if (!titleMatch) {
+          console.log(`제목 불일치 제외: ${cleanTitle} -> ${cleanUrl}`)
+          continue
+        }
+
+        // 모든 조건 통과
+        usedUrls.add(cleanUrl)
+        validNews.push({
+          id: `naver-strict-${validNews.length + 1}`,
+          title: cleanTitle,
+          content: cleanContent,
+          summary: '',
+          category: category,
+          publishedAt: publishedDate,
+          url: cleanUrl
+        })
+
+        console.log(`✅ 엄격 필터 통과: ${cleanTitle} -> ${cleanUrl}`)
+
+        // 충분한 뉴스가 수집되면 중단
+        if (validNews.length >= 10) {
+          break
+        }
+
+      } catch (error) {
+        console.log(`뉴스 처리 오류: ${item.title} -> ${error}`)
+      }
+    }
+
+    console.log(`네이버 뉴스 엄격 필터링 완료: ${validNews.length}개 유효`)
+    return validNews
+
+  } catch (error) {
+    console.error('네이버 뉴스 엄격 필터링 오류:', error)
+    return []
+  }
+}
+
+// 구글 뉴스 API로 보완 (네이버 결과가 부족할 때)
+async function fetchGoogleNewsStrict(category: string): Promise<NewsItem[]> {
+  try {
+    const apiKey = process.env.GOOGLE_SEARCH_API_KEY
+    const searchEngineId = process.env.GOOGLE_SEARCH_ENGINE_ID
+    
+    if (!apiKey || !searchEngineId) {
+      console.log('구글 검색 API 키가 설정되지 않았습니다.')
+      return []
+    }
+    
+    const query = encodeURIComponent(`${category} 부동산 뉴스`)
+    const today = getTodayDate()
+    
+    console.log(`구글 뉴스 엄격 필터링 시작: ${category} (오늘: ${today})`)
+    
+    const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${query}&num=20&dateRestrict=d1&sort=date`
+    
+    const response = await fetch(url)
+    
+    if (!response.ok) {
+      console.log('구글 검색 API 오류:', response.status)
+      return []
+    }
+    
+    const data = await response.json()
+    console.log(`구글 검색 결과: ${data.items?.length || 0}개`)
+    
+    if (!data.items || data.items.length === 0) {
+      return []
+    }
+    
+    const validNews: NewsItem[] = []
+    const usedUrls = new Set<string>()
+    
+    for (const item of data.items) {
+      try {
+        const cleanUrl = item.link?.trim()
+        const cleanTitle = item.title?.trim()
+        const cleanContent = item.snippet?.trim()
+        
+        if (!cleanUrl || !cleanTitle || !cleanContent || 
+            usedUrls.has(cleanUrl) || 
+            cleanUrl.includes('google.com')) {
+          continue
+        }
+        
+        // 1. 오늘 날짜 필터
+        let publishedDate = getTodayDate()
+        if (item.pagemap?.metatags?.[0]?.['article:published_time']) {
+          const dateStr = item.pagemap.metatags[0]['article:published_time']
+          publishedDate = new Date(dateStr).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+        }
+        
+        if (publishedDate !== today) {
+          console.log(`날짜 불일치 제외: ${cleanTitle} (${publishedDate} != ${today})`)
+          continue
+        }
+        
+        // 2. URL 유효성 검사
+        const urlValid = await isValidUrl(cleanUrl)
+        if (!urlValid) {
+          console.log(`URL 유효하지 않음 제외: ${cleanTitle} -> ${cleanUrl}`)
+          continue
+        }
+        
+        // 3. 페이지 제목과 기사 제목 비교 검증
+        const titleMatch = await validatePageTitle(cleanTitle, cleanUrl)
+        if (!titleMatch) {
+          console.log(`제목 불일치 제외: ${cleanTitle} -> ${cleanUrl}`)
+          continue
+        }
+        
+        // 모든 조건 통과
+        usedUrls.add(cleanUrl)
+        validNews.push({
+          id: `google-strict-${validNews.length + 1}`,
+          title: cleanTitle,
+          content: cleanContent,
+          summary: '',
+          category: category,
+          publishedAt: publishedDate,
+          url: cleanUrl
+        })
+        
+        console.log(`✅ 구글 엄격 필터 통과: ${cleanTitle} -> ${cleanUrl}`)
+        
+        // 충분한 뉴스가 수집되면 중단
+        if (validNews.length >= 10) {
+          break
+        }
+        
+      } catch (error) {
+        console.log(`구글 뉴스 처리 오류: ${item.title} -> ${error}`)
+      }
+    }
+    
+    console.log(`구글 뉴스 엄격 필터링 완료: ${validNews.length}개 유효`)
+    return validNews
+    
+  } catch (error) {
+    console.error('구글 뉴스 엄격 필터링 오류:', error)
+    return []
+  }
+}
+
+// 실제 뉴스 API에서 뉴스 가져오기 (엄격한 필터링 적용)
 async function fetchRealNews(category: string): Promise<NewsItem[]> {
-  const allNews: NewsItem[] = []
-  const usedUrls = new Set<string>()
+  console.log(`실제 뉴스 수집 시작: ${category}`)
   
   try {
-    // 1. 네이버 뉴스 API 시도
-    const naverNews = await fetchNaverNewsAPI(category)
+    // 1. 네이버 뉴스 API 엄격 필터링 시도
+    const naverNews = await fetchNaverNewsStrict(category)
+    console.log(`네이버 뉴스 결과: ${naverNews.length}개`)
+    
+    // 네이버 결과가 충분하면 반환
+    if (naverNews.length >= 4) {
+      return naverNews.slice(0, 10)
+    }
+    
+    // 2. 네이버 결과가 부족하면 구글 뉴스로 보완
+    console.log(`네이버 결과 부족 (${naverNews.length}개). 구글 뉴스로 보완합니다.`)
+    const googleNews = await fetchGoogleNewsStrict(category)
+    console.log(`구글 뉴스 결과: ${googleNews.length}개`)
+    
+    // 중복 URL 제거하면서 합치기
+    const usedUrls = new Set<string>()
+    const allNews: NewsItem[] = []
+    
+    // 네이버 뉴스 먼저 추가
     for (const news of naverNews) {
       if (!usedUrls.has(news.url || '')) {
         usedUrls.add(news.url || '')
@@ -354,8 +659,7 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
       }
     }
     
-    // 2. 구글 검색 API 시도
-    const googleNews = await fetchGoogleNews(category)
+    // 구글 뉴스 추가
     for (const news of googleNews) {
       if (!usedUrls.has(news.url || '')) {
         usedUrls.add(news.url || '')
@@ -363,28 +667,25 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
       }
     }
     
-    console.log(`${category}에서 수집된 총 뉴스:`, allNews.length)
+    console.log(`총 수집된 뉴스: ${allNews.length}개`)
     
-    // 최종 종합 필터링
-    const finalValidNews = await filterValidNews(allNews)
-    
-    // 유효한 뉴스가 부족하면 fallback 데이터로 채우기
-    if (finalValidNews.length < 4) {
-      console.log(`유효한 뉴스가 부족합니다 (${finalValidNews.length}개). fallback 데이터로 채웁니다.`)
+    // 3. 여전히 부족하면 fallback 데이터로 채우기
+    if (allNews.length < 4) {
+      console.log(`API 결과 부족 (${allNews.length}개). fallback 데이터로 채웁니다.`)
       const fallbackNews = getFallbackNews(category)
-      const additionalNews = fallbackNews.slice(0, 4 - finalValidNews.length)
-      finalValidNews.push(...additionalNews)
+      const additionalNews = fallbackNews.slice(0, 4 - allNews.length)
+      allNews.push(...additionalNews)
     }
     
-    return finalValidNews.slice(0, 10) // 최대 10개 반환
+    return allNews.slice(0, 10)
     
   } catch (error) {
     console.error('실제 뉴스 수집 오류:', error)
   }
   
-  // API 실패 시 네이버 뉴스 검색 결과 사용
-  console.log('네이버 뉴스 검색 fallback 사용')
-  return await fetchNaverNewsFallback(category)
+  // 모든 API 실패 시 fallback 사용
+  console.log('모든 API 실패. fallback 데이터 사용.')
+  return getFallbackNews(category).slice(0, 10)
 }
 
 // 네이버 뉴스 API 호출 함수 (기존 fetchRealNews에서 분리)

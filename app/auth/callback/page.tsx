@@ -21,7 +21,7 @@ export default function AuthCallbackPage() {
           return
         }
 
-        const { error } = await supabase.auth.exchangeCodeForSession({ code })
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
           setErrorMessage(error.message)
           return

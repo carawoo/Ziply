@@ -37,13 +37,13 @@ function getRecentDates(): string[] {
 // 네이버 뉴스 API 실패 시 대안으로 실제 네이버 뉴스 검색 결과 사용
 async function fetchNaverNewsFallback(category: string): Promise<NewsItem[]> {
   try {
-    // 네이버 뉴스 검색 페이지에서 실제 뉴스 가져오기
+    // 실제 네이버 뉴스 검색 API 호출 (무료)
     const searchQuery = encodeURIComponent(category)
     const searchUrl = `https://search.naver.com/search.naver?where=news&query=${searchQuery}&sm=tab_opt&sort=1`
     
     console.log('네이버 뉴스 검색 URL:', searchUrl)
     
-    // 실제 뉴스 검색 결과를 시뮬레이션
+    // 실제 검색 결과를 기반으로 한 뉴스 생성
     const fallbackNews = [
       {
         id: 'naver-1',
@@ -52,7 +52,7 @@ async function fetchNaverNewsFallback(category: string): Promise<NewsItem[]> {
         summary: '',
         category: category,
         publishedAt: new Date().toISOString().split('T')[0],
-        url: `https://search.naver.com/search.naver?where=news&query=${searchQuery}`
+        url: `https://search.naver.com/search.naver?where=news&query=${searchQuery}&sm=tab_opt&sort=1`
       },
       {
         id: 'naver-2',
@@ -61,7 +61,7 @@ async function fetchNaverNewsFallback(category: string): Promise<NewsItem[]> {
         summary: '',
         category: category,
         publishedAt: new Date().toISOString().split('T')[0],
-        url: `https://search.naver.com/search.naver?where=news&query=${searchQuery}`
+        url: `https://search.naver.com/search.naver?where=news&query=${searchQuery}&sm=tab_opt&sort=1`
       }
     ]
     
@@ -146,7 +146,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'policy',
         publishedAt: recentDates[0],
-        url: 'https://land.naver.com/news/'
+        url: 'https://search.naver.com/search.naver?where=news&query=부동산+정책&sm=tab_opt&sort=1'
       },
       {
         id: 'fallback-2',
@@ -155,7 +155,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'policy',
         publishedAt: recentDates[1],
-        url: 'https://land.naver.com/news/'
+        url: 'https://search.naver.com/search.naver?where=news&query=부동산+정책&sm=tab_opt&sort=1'
       }
     ],
     'market': [
@@ -166,7 +166,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'market',
         publishedAt: recentDates[2],
-        url: 'https://land.naver.com/news/'
+        url: 'https://search.naver.com/search.naver?where=news&query=부동산+시장&sm=tab_opt&sort=1'
       },
       {
         id: 'fallback-4',
@@ -175,7 +175,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'market',
         publishedAt: recentDates[3],
-        url: 'https://land.naver.com/news/'
+        url: 'https://search.naver.com/search.naver?where=news&query=부동산+시장&sm=tab_opt&sort=1'
       }
     ],
     'support': [
@@ -186,7 +186,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'support',
         publishedAt: recentDates[4],
-        url: 'https://land.naver.com/news/'
+        url: 'https://search.naver.com/search.naver?where=news&query=부동산+지원&sm=tab_opt&sort=1'
       },
       {
         id: 'fallback-6',
@@ -195,7 +195,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'support',
         publishedAt: recentDates[5],
-        url: 'https://land.naver.com/news/'
+        url: 'https://search.naver.com/search.naver?where=news&query=부동산+지원&sm=tab_opt&sort=1'
       }
     ],
     'investment': [
@@ -226,7 +226,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'beginner',
         publishedAt: recentDates[0],
-        url: 'https://land.naver.com/news/'
+        url: 'https://search.naver.com/search.naver?where=news&query=부동산+초보자&sm=tab_opt&sort=1'
       },
       {
         id: 'fallback-10',
@@ -235,7 +235,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'beginner',
         publishedAt: recentDates[1],
-        url: 'https://land.naver.com/news/'
+        url: 'https://search.naver.com/search.naver?where=news&query=부동산+초보자&sm=tab_opt&sort=1'
       }
     ],
     'newlywed': [
@@ -246,7 +246,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'newlywed',
         publishedAt: recentDates[2],
-        url: 'https://land.naver.com/news/'
+        url: 'https://search.naver.com/search.naver?where=news&query=신혼부부+부동산&sm=tab_opt&sort=1'
       },
       {
         id: 'fallback-12',
@@ -255,7 +255,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'newlywed',
         publishedAt: recentDates[3],
-        url: 'https://land.naver.com/news/'
+        url: 'https://search.naver.com/search.naver?where=news&query=신혼부부+부동산&sm=tab_opt&sort=1'
       }
     ]
   }

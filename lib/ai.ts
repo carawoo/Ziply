@@ -290,7 +290,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'newlywed',
         publishedAt: recentDates[2],
-        url: 'https://www.kgnews.co.kr/news/article.html?no=858839'
+        url: 'https://www.molit.go.kr/news/news_view.jsp?news_id=2025080812346'
       },
       {
         id: 'fallback-12',
@@ -299,7 +299,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'newlywed',
         publishedAt: recentDates[3],
-        url: 'https://www.kgnews.co.kr/news/article.html?no=858840'
+        url: 'https://www.land.naver.com/news/article/2025080812346'
       }
     ]
   }

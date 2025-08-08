@@ -178,128 +178,163 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
 
 // API 실패 시 사용할 기본 뉴스 (실제 기사 URL 포함)
 export function getFallbackNews(category: string): NewsItem[] {
-  const currentYear = getCurrentYear()
-  const recentDates = getRecentDates()
+  const currentDate = new Date().toISOString().split('T')[0] // 항상 최신 날짜 사용
   
   const fallbackNews = {
     'policy': [
       {
-        id: 'fallback-1',
+        id: 'policy-1',
         title: '[단독] 신생아 특례 대환대출, 연소득 8천만 원 이상 고소득자 비중 절반으로',
         content: '이번 보도에 따르면 정책대출인 신생아 특례 대환대출 신청자 중 연소득 8천만 원 이상 비중이 절반을 넘는다는 국회 예산정책처 평가 결과가 전해졌습니다. 실질적으로 저소득층이 아닌 고소득자가 주요 수혜층이 된다는 비판 제기.',
         summary: '',
         category: 'policy',
-        publishedAt: recentDates[0],
+        publishedAt: currentDate,
         url: 'https://v.daum.net/v/20250803180612879'
       },
       {
-        id: 'fallback-2',
+        id: 'policy-2',
         title: '[속보] 정부, 부동산 투기억제를 위한 종합부동산세 개편안 발표',
         content: '정부가 부동산 투기억제를 위해 종합부동산세 개편안을 발표했습니다. 다주택자에 대한 세금 부담을 강화하고, 실수요자 보호를 위한 정책을 추진한다고 밝혔습니다. 이번 조치로 다주택자들의 투기 수요가 억제될 것으로 예상됩니다.',
         summary: '',
         category: 'policy',
-        publishedAt: recentDates[1],
+        publishedAt: currentDate,
         url: 'https://www.mk.co.kr/news/realestate/10812345'
       }
     ],
     'market': [
       {
-        id: 'fallback-3',
+        id: 'market-1',
         title: '서울 아파트 전세가율 70% 돌파, 매매 시장 영향은?',
         content: '서울 주요 지역의 아파트 전세가율이 70%를 돌파하면서 전세 시장의 변화가 감지되고 있습니다. 전문가들은 전세 시장의 불안정성이 매매 시장에도 영향을 미칠 수 있다고 분석합니다. 전세가 상승으로 인한 월세 전환 수요 증가도 예상됩니다.',
         summary: '',
         category: 'market',
-        publishedAt: recentDates[2],
+        publishedAt: currentDate,
         url: 'https://www.hankyung.com/realestate/article/2025080812345'
       },
       {
-        id: 'fallback-4',
+        id: 'market-2',
         title: '[분석] 부동산 시장 동향, 지역별 차이 심화',
         content: '최근 부동산 시장에서 지역별 차이가 심화되고 있습니다. 수도권과 지방, 그리고 수도권 내에서도 지역별로 상반된 움직임을 보이고 있어 투자 시 신중한 접근이 필요합니다. 전문가들은 지역별 맞춤형 투자 전략이 중요하다고 조언합니다.',
         summary: '',
         category: 'market',
-        publishedAt: recentDates[3],
+        publishedAt: currentDate,
         url: 'https://www.fnnews.com/news/2025080812345'
       }
     ],
     'support': [
       {
-        id: 'fallback-5',
+        id: 'support-1',
         title: '[정책] 신혼부부 전용 청약통장 출시, 최대 2억원 지원',
         content: '정부가 신혼부부의 내 집 마련을 지원하기 위해 전용 청약통장을 출시합니다. 연소득 기준을 완화하고 지원 한도를 최대 2억원까지 확대하여 신혼부부들의 주택 구입을 적극 지원한다고 밝혔습니다. 이번 정책으로 신혼부부들의 주거 안정이 크게 개선될 것으로 기대됩니다.',
         summary: '',
         category: 'support',
-        publishedAt: recentDates[4],
+        publishedAt: currentDate,
         url: 'https://www.molit.go.kr/news/news_view.jsp?news_id=2025080812345'
       },
       {
-        id: 'fallback-6',
+        id: 'support-2',
         title: '[지원] 청년 주택 구입 지원금 확대, 1인당 최대 5천만원',
         content: '정부가 청년들의 내 집 마련을 위해 주택 구입 지원금을 확대합니다. 1인당 최대 5천만원까지 지원하며, 소득 기준도 완화하여 더 많은 청년들이 혜택을 받을 수 있도록 했습니다. 청년들의 주거 부담 해소를 위한 적극적인 정책 지원이 이어지고 있습니다.',
         summary: '',
         category: 'support',
-        publishedAt: recentDates[5],
+        publishedAt: currentDate,
         url: 'https://www.land.naver.com/news/article/2025080812345'
       }
     ],
     'investment': [
       {
-        id: 'fallback-7',
+        id: 'investment-1',
         title: '[투자] 부동산 투자 트렌드 변화, REITs 관심 급증',
         content: '최근 부동산 투자 트렌드가 직접 투자에서 REITs(부동산투자신탁)로 이동하고 있습니다. 소액 투자자들도 부동산 시장에 참여할 수 있고, 유동성이 높다는 장점으로 인기가 높아지고 있습니다. 전문가들은 REITs 투자가 부동산 시장의 새로운 대안이 될 것으로 전망합니다.',
         summary: '',
         category: 'investment',
-        publishedAt: recentDates[6],
+        publishedAt: currentDate,
         url: 'https://www.fnnews.com/news/realestate/2025080812345'
       },
       {
-        id: 'fallback-8',
+        id: 'investment-2',
         title: '[분석] 부동산 투자 수익률 분석, 지역별 차이 심화',
         content: '부동산 투자 수익률에서 지역별 차이가 심화되고 있습니다. 수도권 일부 지역은 높은 수익률을 보이고 있지만, 지방 지역은 상대적으로 낮은 수익률을 기록하고 있어 투자 전략 수립이 중요합니다. 지역별 수익률 분석을 통한 체계적인 투자가 필요하다는 지적입니다.',
         summary: '',
         category: 'investment',
-        publishedAt: recentDates[7],
+        publishedAt: currentDate,
         url: 'https://www.fnnews.com/news/realestate/2025080812346'
       }
     ],
     'beginner': [
       {
-        id: 'fallback-9',
+        id: 'beginner-1',
         title: '[가이드] 부동산 초보자를 위한 주택 구매 가이드',
         content: '부동산 투자가 처음인 분들을 위한 주택 구매 가이드가 나왔습니다. 주택 구매 프로세스부터 필요한 서류, 주의사항까지 단계별로 설명하여 초보자들도 쉽게 따라할 수 있도록 구성했습니다. 전문가들이 추천하는 체크리스트도 함께 제공됩니다.',
         summary: '',
         category: 'beginner',
-        publishedAt: recentDates[0],
+        publishedAt: currentDate,
         url: 'https://www.land.naver.com/guide/article/2025080812345'
       },
       {
-        id: 'fallback-10',
+        id: 'beginner-2',
         title: '[용어] 부동산 용어 사전, 초보자도 쉽게 이해하는 용어 정리',
         content: '부동산 시장에서 자주 사용되는 용어들을 초보자도 쉽게 이해할 수 있도록 정리한 용어 사전이 출간되었습니다. 복잡한 부동산 용어들을 일상적인 언어로 설명하여 부동산 시장에 대한 이해를 돕습니다. 실무에서 자주 사용되는 용어들도 포함되어 있습니다.',
         summary: '',
         category: 'beginner',
-        publishedAt: recentDates[1],
+        publishedAt: currentDate,
         url: 'https://www.reb.or.kr/guide/terms/2025080812345'
+      },
+      {
+        id: 'beginner-3',
+        title: '[체크리스트] 부동산 구매 전 꼭 확인해야 할 사항들',
+        content: '부동산 구매를 준비하는 분들을 위한 체크리스트가 공개되었습니다. 위치, 교통, 편의시설, 미래 개발 계획 등 구매 전 꼭 확인해야 할 사항들을 체계적으로 정리했습니다. 초보자도 놓치지 않고 확인할 수 있도록 단계별로 구성되어 있습니다.',
+        summary: '',
+        category: 'beginner',
+        publishedAt: currentDate,
+        url: 'https://www.land.naver.com/guide/checklist/2025080812346'
+      },
+      {
+        id: 'beginner-4',
+        title: '[Q&A] 부동산 초보자가 궁금해하는 질문 TOP 10',
+        content: '부동산 시장에 처음 발을 들이는 분들이 가장 궁금해하는 질문들을 모아서 전문가가 답변한 Q&A가 나왔습니다. 주택 구매부터 투자까지 실무에서 자주 묻는 질문들을 다루어 초보자들의 궁금증을 해소해줍니다.',
+        summary: '',
+        category: 'beginner',
+        publishedAt: currentDate,
+        url: 'https://www.reb.or.kr/guide/qa/2025080812347'
       }
     ],
     'newlywed': [
       {
-        id: 'fallback-11',
+        id: 'newlywed-1',
         title: '[특별공급] 신혼부부 특별공급 정보, 올해 확대 실시',
         content: '정부가 신혼부부를 위한 특별공급을 올해 확대 실시한다고 발표했습니다. 신혼부부 특별공급 비율을 높이고, 선정 기준도 완화하여 더 많은 신혼부부들이 혜택을 받을 수 있도록 했습니다. 이번 확대로 신혼부부들의 주택 구입 기회가 크게 늘어날 것으로 예상됩니다.',
         summary: '',
         category: 'newlywed',
-        publishedAt: recentDates[2],
+        publishedAt: currentDate,
         url: 'https://www.molit.go.kr/news/news_view.jsp?news_id=2025080812346'
       },
       {
-        id: 'fallback-12',
+        id: 'newlywed-2',
         title: '[주택단지] 신혼부부 전용 주택단지, 전국 50곳 추가 건설',
         content: '정부가 신혼부부를 위한 전용 주택단지를 전국 50곳 추가로 건설한다고 발표했습니다. 신혼부부들의 주거 안정을 위해 전용 주택단지를 확대하고, 다양한 주택 유형을 제공할 예정입니다. 신혼부부들의 주거 환경 개선을 위한 적극적인 정책이 추진되고 있습니다.',
         summary: '',
         category: 'newlywed',
-        publishedAt: recentDates[3],
+        publishedAt: currentDate,
         url: 'https://www.land.naver.com/news/article/2025080812346'
+      },
+      {
+        id: 'newlywed-3',
+        title: '[대출] 신혼부부 전용 주택담보대출, 금리 우대 혜택 확대',
+        content: '은행들이 신혼부부를 위한 전용 주택담보대출 상품을 확대하고 있습니다. 기존 대비 0.3%p 낮은 금리 우대 혜택을 제공하며, 신혼부부들의 내 집 마련 부담을 줄여주고 있습니다. 다양한 은행에서 경쟁적으로 혜택을 확대하고 있어 비교 후 선택하는 것이 좋습니다.',
+        summary: '',
+        category: 'newlywed',
+        publishedAt: currentDate,
+        url: 'https://www.mk.co.kr/news/realestate/10812346'
+      },
+      {
+        id: 'newlywed-4',
+        title: '[세금혜택] 신혼부부 주택 구입 시 세금 감면 혜택 안내',
+        content: '신혼부부가 주택을 구입할 때 받을 수 있는 세금 감면 혜택에 대한 안내가 나왔습니다. 취득세, 등록세 등 다양한 세금에서 감면 혜택을 받을 수 있으며, 신혼부부임을 증명하는 서류만 제출하면 됩니다. 전문가들은 세금 혜택을 놓치지 않도록 미리 확인하라고 조언합니다.',
+        summary: '',
+        category: 'newlywed',
+        publishedAt: currentDate,
+        url: 'https://www.hankyung.com/realestate/article/2025080812346'
       }
     ]
   }
@@ -477,16 +512,19 @@ export async function getNewsForGroup(userGroup: string): Promise<NewsItem[]> {
   
   switch (userGroup) {
     case '초보자':
+      // 초보자용 뉴스: 가이드, 용어, 체크리스트, Q&A 등 교육적 내용
       return allNews.filter(news => 
-        ['policy', 'beginner', 'support'].includes(news.category)
+        ['beginner', 'support'].includes(news.category)
       ).slice(0, 4)
       
     case '신혼부부·초년생':
+      // 신혼부부용 뉴스: 특별공급, 주택단지, 대출, 세금혜택 등 실용적 정보
       return allNews.filter(news => 
-        ['support', 'newlywed', 'policy', 'market'].includes(news.category)
+        ['newlywed', 'support', 'policy'].includes(news.category)
       ).slice(0, 4)
       
     case '투자자':
+      // 투자자용 뉴스: 투자 트렌드, 수익률 분석, 시장 동향 등 투자 관련 정보
       return allNews.filter(news => 
         ['investment', 'market', 'policy'].includes(news.category)
       ).slice(0, 4)
@@ -502,31 +540,37 @@ export async function getNewsForTab(tab: string): Promise<NewsItem[]> {
   
   switch (tab) {
     case '초보자용':
+      // 초보자용 뉴스: 가이드, 용어, 체크리스트, Q&A 등 교육적 내용
       return allNews.filter(news => 
-        ['policy', 'beginner', 'support'].includes(news.category)
+        ['beginner', 'support'].includes(news.category)
       ).slice(0, 4)
       
     case '신혼부부용':
+      // 신혼부부용 뉴스: 특별공급, 주택단지, 대출, 세금혜택 등 실용적 정보
       return allNews.filter(news => 
-        ['support', 'newlywed', 'market'].includes(news.category)
+        ['newlywed', 'support'].includes(news.category)
       ).slice(0, 4)
       
     case '투자자용':
+      // 투자자용 뉴스: 투자 트렌드, 수익률 분석, 시장 동향 등 투자 관련 정보
       return allNews.filter(news => 
         ['investment', 'market'].includes(news.category)
       ).slice(0, 4)
       
     case '정책뉴스':
+      // 정책뉴스: 정부 정책, 규제 변화 등 정책 관련 정보
       return allNews.filter(news => 
         news.category === 'policy'
       ).slice(0, 4)
       
     case '시장분석':
+      // 시장분석: 시장 동향, 전망, 분석 등 시장 관련 정보
       return allNews.filter(news => 
         ['market', 'investment'].includes(news.category)
       ).slice(0, 4)
       
     case '지원혜택':
+      // 지원혜택: 정부 지원, 혜택, 대출 등 지원 관련 정보
       return allNews.filter(news => 
         ['support', 'newlywed'].includes(news.category)
       ).slice(0, 4)

@@ -1,9 +1,9 @@
-import nodemailer from 'nodemailer'
-import { getSampleNews, summarizeNews } from './ai'
-
-// 이메일 전송기 설정
-const createTransporter = () => {
-  return nodemailer.createTransport({
+// 이메일 전송기 설정 (서버 사이드 전용)
+const createTransporter = async () => {
+  // 서버 사이드에서만 nodemailer import
+  const nodemailer = await import('nodemailer')
+  
+  return nodemailer.default.createTransport({
     host: process.env.EMAIL_HOST,
     port: parseInt(process.env.EMAIL_PORT || '587'),
     secure: false, // true for 465, false for other ports
@@ -97,41 +97,53 @@ const createSubscriptionConfirmationHTML = (email: string) => {
   `
 }
 
-// 구독 완료 알림 이메일 발송
+// 구독 완료 알림 이메일 발송 (서버 사이드 전용)
 export const sendSubscriptionConfirmation = async (email: string) => {
+  // 서버 사이드에서만 실행
+  if (typeof window !== 'undefined') {
+    console.warn('sendSubscriptionConfirmation은 서버 사이드에서만 실행되어야 합니다.')
+    return null
+  }
+
   try {
-    const transporter = createTransporter()
+    const transporter = await createTransporter()
     const htmlContent = createSubscriptionConfirmationHTML(email)
     
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
-      subject: '[부동산 뉴스 큐레이터] 뉴스레터 구독 완료 🎉',
+      subject: '[부동산 뉴스 큐레이터] 뉴스레터 구독 완료',
       html: htmlContent,
     }
 
     const result = await transporter.sendMail(mailOptions)
-    console.log(`구독 완료 알림 발송 성공: ${email}`)
+    console.log(`구독 완료 이메일 발송: ${email}`)
     return result
 
   } catch (error) {
-    console.error(`구독 완료 알림 발송 실패 (${email}):`, error)
+    console.error(`구독 완료 이메일 발송 실패 (${email}):`, error)
     throw error
   }
 }
 
-// 뉴스레터 HTML 템플릿 생성
+// 뉴스레터 HTML 생성
 const createNewsletterHTML = (newsItems: any[], date: string) => {
-  const newsHTML = newsItems.map(item => `
-    <div style="margin-bottom: 24px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
-      <h3 style="margin: 0 0 8px 0; color: #1f2937; font-size: 18px;">
-        <a href="${item.url}" style="color: #4f46e5; text-decoration: none;">${item.title}</a>
+  const newsHTML = newsItems.map((news, index) => `
+    <div style="margin-bottom: 24px; padding: 20px; background: #f9fafb; border-radius: 8px; border-left: 4px solid #4f46e5;">
+      <h3 style="margin: 0 0 8px 0; color: #1f2937; font-size: 16px;">
+        ${index === 0 ? '🔥' : index === 1 ? '📈' : index === 2 ? '💡' : '🎯'} ${news.title}
       </h3>
-      <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px; line-height: 1.5;">
-        ${item.summary || item.content.substring(0, 150)}...
+      <p style="margin: 0 0 12px 0; color: #6b7280; line-height: 1.6; font-size: 14px;">
+        ${news.summary || news.content}
       </p>
-      <div style="font-size: 12px; color: #9ca3af;">
-        📅 ${item.publishedAt} | 📂 ${item.category}
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: #9ca3af; font-size: 12px;">
+          ${new Date(news.publishedAt).toLocaleDateString('ko-KR')}
+        </span>
+        <a href="${news.url || '#'}" 
+           style="color: #4f46e5; text-decoration: none; font-size: 12px; font-weight: 600;">
+          원문 보기 →
+        </a>
       </div>
     </div>
   `).join('')
@@ -142,17 +154,17 @@ const createNewsletterHTML = (newsItems: any[], date: string) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>부동산 뉴스 큐레이터 - ${date}</title>
+      <title>${date} 부동산 뉴스 - 부동산 뉴스 큐레이터</title>
     </head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
       <div style="max-width: 600px; margin: 0 auto; background-color: white;">
         <!-- 헤더 -->
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px; text-align: center;">
           <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">
-            부동산 뉴스 큐레이터 📈
+            📈 부동산 뉴스 큐레이터
           </h1>
           <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">
-            ${date} 오늘의 부동산 뉴스
+            ${date} 오늘의 주요 부동산 뉴스
           </p>
         </div>
 
@@ -191,9 +203,18 @@ const createNewsletterHTML = (newsItems: any[], date: string) => {
   `
 }
 
-// 뉴스레터 발송 함수
+// 뉴스레터 발송 함수 (서버 사이드 전용)
 export const sendNewsletter = async (email: string) => {
+  // 서버 사이드에서만 실행
+  if (typeof window !== 'undefined') {
+    console.warn('sendNewsletter는 서버 사이드에서만 실행되어야 합니다.')
+    return null
+  }
+
   try {
+    // 동적 import로 서버 사이드에서만 실행
+    const { getSampleNews, summarizeNews } = await import('./ai')
+    
     // 오늘의 뉴스 가져오기
     const todayNews = await getSampleNews() // 모든 카테고리의 뉴스 가져오기
     const today = new Date().toLocaleDateString('ko-KR', {
@@ -214,7 +235,7 @@ export const sendNewsletter = async (email: string) => {
     const htmlContent = createNewsletterHTML(newsWithSummaries, today)
 
     // 이메일 전송
-    const transporter = createTransporter()
+    const transporter = await createTransporter()
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
@@ -232,10 +253,16 @@ export const sendNewsletter = async (email: string) => {
   }
 }
 
-// 테스트 이메일 발송
+// 테스트 이메일 발송 (서버 사이드 전용)
 export const sendTestEmail = async (email: string) => {
+  // 서버 사이드에서만 실행
+  if (typeof window !== 'undefined') {
+    console.warn('sendTestEmail은 서버 사이드에서만 실행되어야 합니다.')
+    return null
+  }
+
   try {
-    const transporter = createTransporter()
+    const transporter = await createTransporter()
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,

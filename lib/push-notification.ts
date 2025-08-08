@@ -1,14 +1,41 @@
-import webpush from 'web-push'
+// 서버 사이드 푸시 알림 발송 (서버 사이드 전용)
+export const sendServerPushNotification = async (
+  subscription: any,
+  payload: any
+) => {
+  // 서버 사이드에서만 실행
+  if (typeof window !== 'undefined') {
+    console.warn('sendServerPushNotification은 서버 사이드에서만 실행되어야 합니다.')
+    return false
+  }
 
-// VAPID 키 설정
-webpush.setVapidDetails(
-  'mailto:your-email@example.com',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
-  process.env.VAPID_PRIVATE_KEY || ''
-)
+  try {
+    // 동적 import로 서버 사이드에서만 실행
+    const webpush = await import('web-push')
+    
+    // VAPID 키 설정
+    webpush.default.setVapidDetails(
+      'mailto:your-email@example.com',
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
+      process.env.VAPID_PRIVATE_KEY || ''
+    )
+    
+    await webpush.default.sendNotification(subscription, JSON.stringify(payload))
+    return true
+  } catch (error) {
+    console.error('서버 푸시 알림 발송 실패:', error)
+    return false
+  }
+}
 
-// 푸시 알림 권한 요청
+// 푸시 알림 권한 요청 (클라이언트 사이드 전용)
 export const requestNotificationPermission = async (): Promise<boolean> => {
+  // 클라이언트 사이드에서만 실행
+  if (typeof window === 'undefined') {
+    console.warn('requestNotificationPermission은 클라이언트 사이드에서만 실행되어야 합니다.')
+    return false
+  }
+
   try {
     if (!('Notification' in window)) {
       return false
@@ -22,13 +49,19 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
   }
 }
 
-// 푸시 알림 발송
+// 푸시 알림 발송 (클라이언트 사이드 전용)
 export const sendPushNotification = (
   title: string,
   options: NotificationOptions = {}
 ) => {
+  // 클라이언트 사이드에서만 실행
+  if (typeof window === 'undefined') {
+    console.warn('sendPushNotification은 클라이언트 사이드에서만 실행되어야 합니다.')
+    return null
+  }
+
   try {
-    if (typeof window !== 'undefined' && Notification.permission === 'granted') {
+    if (Notification.permission === 'granted') {
       const notification = new Notification(title, {
         icon: '/favicon.ico',
         badge: '/favicon.ico',
@@ -54,8 +87,14 @@ export const sendPushNotification = (
   }
 }
 
-// 뉴스레터 푸시 알림 발송
+// 뉴스레터 푸시 알림 발송 (클라이언트 사이드 전용)
 export const sendNewsletterPushNotification = (newsItems: any[]) => {
+  // 클라이언트 사이드에서만 실행
+  if (typeof window === 'undefined') {
+    console.warn('sendNewsletterPushNotification은 클라이언트 사이드에서만 실행되어야 합니다.')
+    return null
+  }
+
   const title = '📈 오늘의 부동산 뉴스'
   const body = `${newsItems.length}개의 새로운 부동산 뉴스가 도착했습니다!`
   
@@ -69,10 +108,16 @@ export const sendNewsletterPushNotification = (newsItems: any[]) => {
   })
 }
 
-// Service Worker 등록 (브라우저에서만 실행)
+// Service Worker 등록 (클라이언트 사이드 전용)
 export const registerServiceWorker = async () => {
+  // 클라이언트 사이드에서만 실행
+  if (typeof window === 'undefined') {
+    console.warn('registerServiceWorker는 클라이언트 사이드에서만 실행되어야 합니다.')
+    return null
+  }
+
   try {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.register('/sw.js')
       console.log('Service Worker 등록 성공:', registration)
       return registration
@@ -82,24 +127,15 @@ export const registerServiceWorker = async () => {
   }
 }
 
-// 푸시 알림 설정 상태 확인
+// 푸시 알림 설정 상태 확인 (클라이언트 사이드 전용)
 export const getNotificationStatus = () => {
-  if (typeof window === 'undefined' || !('Notification' in window)) {
+  // 클라이언트 사이드에서만 실행
+  if (typeof window === 'undefined') {
+    return 'not-supported'
+  }
+
+  if (!('Notification' in window)) {
     return 'not-supported'
   }
   return Notification.permission
-}
-
-// 서버 사이드 푸시 알림 발송
-export const sendServerPushNotification = async (
-  subscription: any,
-  payload: any
-) => {
-  try {
-    await webpush.sendNotification(subscription, JSON.stringify(payload))
-    return true
-  } catch (error) {
-    console.error('서버 푸시 알림 발송 실패:', error)
-    return false
-  }
 }

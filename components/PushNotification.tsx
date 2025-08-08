@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { requestNotificationPermission, getNotificationStatus } from '@/lib/push-notification'
+import { requestNotificationPermission, getNotificationStatus } from '@/lib/client-notification'
 
 // 푸시 알림 설정 UI 컴포넌트용 훅
 export const useNotificationPermission = () => {

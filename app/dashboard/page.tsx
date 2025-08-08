@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
-import { getSampleNews, getNewsForGroup, getNewsForTab, summarizeNews, NewsItem, getFallbackNews, generateDefaultSummary } from '@/lib/ai'
+import { NewsItem, getFallbackNews } from '@/lib/ai'
 
 type UserGroup = '초보자' | '신혼부부·초년생' | '투자자' | null
 
@@ -125,11 +125,17 @@ export default function Dashboard() {
     try {
       console.log('뉴스 로딩 시작:', tab)
       
-      // 탭에 따른 맞춤형 뉴스 가져오기
-      const sampleNews = await getNewsForTab(tab)
-      console.log('가져온 뉴스 개수:', sampleNews.length)
+      // 내부 API를 통해 뉴스 가져오기
+      const response = await fetch(`/api/news?tab=${encodeURIComponent(tab)}`)
+      const data = await response.json()
       
-      if (sampleNews.length === 0) {
+      if (!data.success) {
+        throw new Error(data.error || '뉴스 로딩 실패')
+      }
+      
+      console.log('가져온 뉴스 개수:', data.news.length)
+      
+      if (data.news.length === 0) {
         console.log('뉴스가 없습니다. fallback 뉴스 사용')
         // fallback 뉴스 사용
         const fallbackCategory = tab === '초보자용' ? 'beginner' : 
@@ -144,23 +150,8 @@ export default function Dashboard() {
         return
       }
       
-      // AI 요약 생성 (에러 처리 포함)
-      const newsWithSummaries = await Promise.all(
-        sampleNews.map(async (item) => {
-          try {
-            const summary = await summarizeNews(item.content, tab)
-            return { ...item, summary }
-          } catch (summaryError) {
-            console.error('요약 생성 실패:', summaryError)
-            // 요약 실패 시 기본 요약 사용
-            const defaultSummary = generateDefaultSummary(item.content, tab)
-            return { ...item, summary: defaultSummary }
-          }
-        })
-      )
-      
-      console.log('요약 완료된 뉴스 개수:', newsWithSummaries.length)
-      setNews(newsWithSummaries)
+      console.log('요약 완료된 뉴스 개수:', data.news.length)
+      setNews(data.news)
     } catch (error) {
       console.error('뉴스 로딩 오류:', error)
       // 에러 시 fallback 뉴스 사용

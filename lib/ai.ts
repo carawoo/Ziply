@@ -1819,14 +1819,14 @@ export async function getNewsForTab(tab: string): Promise<NewsItem[]> {
 export async function testNewsLinks(): Promise<{ url: string; valid: boolean; error?: string }[]> {
   console.log('뉴스 링크 테스트 시작')
   
-  // 테스트용 뉴스 URL들
-  const testUrls = [
-    'https://www.mk.co.kr/news/realestate/10812345',
-    'https://www.hankyung.com/realestate/article/2025080812345',
-    'https://www.fnnews.com/news/realestate/2025080812345',
-    'https://land.naver.com/news/article/2025080812345',
-    'https://www.reb.or.kr/news/article/2025080812345'
-  ]
+  // 현재 fallback 뉴스에 있는 실제 URL들로 테스트
+  const fallbackNews = getFallbackNews('policy')
+  const testUrls = fallbackNews
+    .filter(news => news.url)
+    .map(news => news.url!)
+    .slice(0, 5)
+  
+  console.log('테스트할 fallback 뉴스 URL들:', testUrls)
   
   const results = []
   

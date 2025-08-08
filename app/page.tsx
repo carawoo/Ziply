@@ -96,7 +96,11 @@ export default function Home() {
           
           <div style={{ marginTop: '40px' }}>
             <button 
-              onClick={handleKakaoLogin}
+              onClick={() => {
+                console.log('🔥 버튼 클릭 이벤트 발생!')
+                alert('버튼이 클릭되었습니다!')
+                handleKakaoLogin()
+              }}
               className="button button-kakao"
               style={{ 
                 fontSize: '18px', 

@@ -41,7 +41,8 @@ export default function Home() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          // OAuth 완료 후 Supabase가 code를 콜백으로 전달 → 우리 콜백 페이지에서 세션 교환
+          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`
         }
       })
       

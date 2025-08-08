@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
-import { getSampleNews, getNewsForGroup, summarizeNews, NewsItem } from '@/lib/ai'
+import { getSampleNews, getNewsForGroup, getNewsForTab, summarizeNews, NewsItem } from '@/lib/ai'
 
 type UserGroup = '초보자' | '신혼부부·초년생' | '투자자' | null
 
@@ -12,10 +12,22 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [newsLoading, setNewsLoading] = useState(false)
   const [userGroup, setUserGroup] = useState<UserGroup>(null)
-  const [activeTab, setActiveTab] = useState('초보자용')
+  const [activeTab, setActiveTab] = useState('')
   const [news, setNews] = useState<NewsItem[]>([])
 
-  const tabs = ['초보자용', '신혼부부용', '투자자용']
+  // 선택된 그룹에 따른 동적 탭 생성
+  const getTabsForGroup = (group: UserGroup) => {
+    switch (group) {
+      case '초보자':
+        return ['초보자용', '정책뉴스']
+      case '신혼부부·초년생':
+        return ['신혼부부용', '정책뉴스', '지원혜택']
+      case '투자자':
+        return ['투자자용', '시장분석', '정책뉴스']
+      default:
+        return ['초보자용', '신혼부부용', '투자자용']
+    }
+  }
 
   useEffect(() => {
     const getUser = async () => {
@@ -43,7 +55,9 @@ export default function Dashboard() {
       const savedGroup = localStorage.getItem('userGroup') as UserGroup
       if (savedGroup) {
         setUserGroup(savedGroup)
-        await loadNews(getTabFromGroup(savedGroup))
+        const defaultTab = getTabsForGroup(savedGroup)[0]
+        setActiveTab(defaultTab)
+        await loadNews(defaultTab, savedGroup)
         return
       }
 
@@ -55,9 +69,14 @@ export default function Dashboard() {
         .single()
 
       if (data && !error) {
-        setUserGroup(data.category)
-        localStorage.setItem('userGroup', data.category)
-        await loadNews(getTabFromGroup(data.category))
+        const group = data.category
+        setUserGroup(group)
+        localStorage.setItem('userGroup', group)
+        
+        // 그룹에 맞는 기본 탭 설정
+        const defaultTab = getTabsForGroup(group)[0]
+        setActiveTab(defaultTab)
+        await loadNews(defaultTab, group)
       }
     } catch (error) {
       console.error('사용자 그룹 확인 오류:', error)
@@ -93,23 +112,24 @@ export default function Dashboard() {
       }
 
       setUserGroup(group)
-      await loadNews(getTabFromGroup(group), group)
+      const defaultTab = getTabsForGroup(group)[0]
+      setActiveTab(defaultTab)
+      await loadNews(defaultTab, group)
     } catch (error) {
       console.error('사용자 그룹 저장 오류:', error)
     }
   }
 
-  const loadNews = async (category: string, group?: UserGroup) => {
+  const loadNews = async (tab: string, group?: UserGroup) => {
     setNewsLoading(true)
     try {
-      // 그룹에 따른 맞춤형 뉴스 가져오기
-      const targetGroup = group || userGroup
-      const sampleNews = targetGroup ? getNewsForGroup(targetGroup) : getSampleNews()
+      // 탭에 따른 맞춤형 뉴스 가져오기
+      const sampleNews = getNewsForTab(tab)
       
       // AI 요약 생성
       const newsWithSummaries = await Promise.all(
         sampleNews.map(async (item) => {
-          const summary = await summarizeNews(item.content, category)
+          const summary = await summarizeNews(item.content, tab)
           return { ...item, summary }
         })
       )
@@ -333,6 +353,8 @@ export default function Dashboard() {
                 onClick={() => {
                   localStorage.removeItem('userGroup')
                   setUserGroup(null)
+                  setActiveTab('')
+                  setNews([])
                 }}
                 style={{
                   background: 'transparent',
@@ -355,7 +377,7 @@ export default function Dashboard() {
           </div>
 
           <div className="tabs">
-            {tabs.map((tab) => (
+            {getTabsForGroup(userGroup).map((tab) => (
               <button
                 key={tab}
                 className={`tab ${activeTab === tab ? 'active' : ''}`}
@@ -363,7 +385,10 @@ export default function Dashboard() {
               >
                 {tab === '초보자용' && '🔰'} 
                 {tab === '신혼부부용' && '💑'} 
-                {tab === '투자자용' && '💼'} 
+                {tab === '투자자용' && '💼'}
+                {tab === '정책뉴스' && '📋'}
+                {tab === '시장분석' && '📈'}
+                {tab === '지원혜택' && '🎁'}
                 {tab}
               </button>
             ))}
@@ -389,6 +414,9 @@ export default function Dashboard() {
                     {activeTab === '초보자용' && '🔰 부동산 초보자를 위한 쉬운 설명과 핵심 포인트'}
                     {activeTab === '신혼부부용' && '💑 내 집 마련을 준비하는 신혼부부를 위한 실용 정보'}
                     {activeTab === '투자자용' && '💼 투자 관점에서 분석한 시장 동향과 기회'}
+                    {activeTab === '정책뉴스' && '📋 부동산 관련 정책 변화와 규제 동향'}
+                    {activeTab === '시장분석' && '📈 시장 동향과 투자 기회 분석'}
+                    {activeTab === '지원혜택' && '🎁 신혼부부와 청년을 위한 지원 혜택 정보'}
                   </p>
                 </div>
               </div>

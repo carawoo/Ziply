@@ -164,6 +164,28 @@ export function getSampleNews(): NewsItem[] {
       category: 'investment',
       publishedAt: '2024-01-10',
       url: '#'
+    },
+    
+    // 추가 정책 뉴스
+    {
+      id: '8',
+      title: '토지거래허가제 일부 해제, 투자 시장에 미치는 영향',
+      content: '정부가 부동산 시장 정상화를 위해 토지거래허가제를 일부 지역에서 해제한다고 발표했습니다. 수도권 일부 지역과 광역시 외곽 지역이 대상이며, 이로 인한 토지 거래 활성화가 예상됩니다.',
+      summary: '',
+      category: 'policy',
+      publishedAt: '2024-01-09',
+      url: '#'
+    },
+    
+    // 추가 시장 분석 뉴스
+    {
+      id: '9',
+      title: '2024년 1분기 부동산 시장 전망, 금리 인하 기대감',
+      content: '올해 1분기 부동산 시장이 금리 인하 기대감으로 활기를 찾을 것으로 전망됩니다. 한국은행의 기준금리 인하 가능성이 높아지면서 주택담보대출 금리도 하락세를 보일 것으로 예상됩니다.',
+      summary: '',
+      category: 'market',
+      publishedAt: '2024-01-08',
+      url: '#'
     }
   ]
 }
@@ -186,6 +208,46 @@ export function getNewsForGroup(userGroup: string): NewsItem[] {
     case '투자자':
       return allNews.filter(news => 
         ['investment', 'market', 'policy'].includes(news.category)
+      ).slice(0, 4)
+      
+    default:
+      return allNews.slice(0, 4)
+  }
+}
+
+// 탭별 맞춤형 뉴스 가져오기
+export function getNewsForTab(tab: string): NewsItem[] {
+  const allNews = getSampleNews()
+  
+  switch (tab) {
+    case '초보자용':
+      return allNews.filter(news => 
+        ['policy', 'beginner', 'support'].includes(news.category)
+      ).slice(0, 4)
+      
+    case '신혼부부용':
+      return allNews.filter(news => 
+        ['support', 'newlywed', 'market'].includes(news.category)
+      ).slice(0, 4)
+      
+    case '투자자용':
+      return allNews.filter(news => 
+        ['investment', 'market'].includes(news.category)
+      ).slice(0, 4)
+      
+    case '정책뉴스':
+      return allNews.filter(news => 
+        news.category === 'policy'
+      ).slice(0, 4)
+      
+    case '시장분석':
+      return allNews.filter(news => 
+        ['market', 'investment'].includes(news.category)
+      ).slice(0, 4)
+      
+    case '지원혜택':
+      return allNews.filter(news => 
+        ['support', 'newlywed'].includes(news.category)
       ).slice(0, 4)
       
     default:

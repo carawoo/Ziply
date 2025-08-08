@@ -628,39 +628,221 @@ async function fetchGoogleNewsStrict(category: string): Promise<NewsItem[]> {
   }
 }
 
-// 실제 뉴스 API에서 뉴스 가져오기 (엄격한 필터링 적용)
+// 타겟별 키워드 설정
+const TARGET_KEYWORDS: Record<string, string[]> = {
+  '초보자': ['부동산 기초', '내집마련', '주택 매매', '부동산 용어', '부동산 가이드', '주택 구매'],
+  '신혼부부': ['청약', '신혼부부 특별공급', '전세', '신축 아파트', '신혼부부', '특별공급'],
+  '투자자': ['수익률', '투자', 'REITs', '상업용 부동산', '부동산 시장 분석', '부동산 투자'],
+  'policy': ['정책', '부동산 정책', '규제', '법안', '정부 발표'],
+  'market': ['시장', '부동산 시장', '가격', '동향', '분석'],
+  'support': ['지원', '혜택', '대출', '보조금', '정부 지원'],
+  'investment': ['투자', '수익률', 'REITs', '상업용', '투자 전략'],
+  'beginner': ['기초', '가이드', '용어', '체크리스트', '초보자'],
+  'newlywed': ['신혼부부', '특별공급', '청약', '신축', '혜택']
+}
+
+// 날짜가 오늘인지 체크
+function isToday(dateString: string): boolean {
+  try {
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+    const date = new Date(dateString).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+    return date === today
+  } catch (error) {
+    console.log('날짜 파싱 오류:', error)
+    return false
+  }
+}
+
+// 간단한 유사도 체크 (70% 이상)
+function similarity(a: string, b: string): number {
+  const setA = new Set(a.split(/[\s,\.!?]+/).filter(word => word.length >= 2))
+  const setB = new Set(b.split(/[\s,\.!?]+/).filter(word => word.length >= 2))
+  const intersection = new Set(Array.from(setA).filter((x) => setB.has(x)))
+  return (intersection.size / Math.max(setA.size, setB.size)) * 100
+}
+
+// URL이 실제로 존재하는지 HEAD 요청으로 체크
+async function isUrlValid(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { 
+      method: 'HEAD',
+      signal: AbortSignal.timeout(5000)
+    })
+    return res.ok
+  } catch (error) {
+    console.log(`URL 유효성 검사 실패: ${url} -> ${error}`)
+    return false
+  }
+}
+
+// 페이지 HTML에서 title 태그 추출
+async function fetchPageTitle(url: string): Promise<string> {
+  try {
+    const res = await fetch(url, { 
+      signal: AbortSignal.timeout(10000)
+    })
+    const html = await res.text()
+    const match = html.match(/<title[^>]*>(.*?)<\/title>/i)
+    return match ? match[1].trim() : ''
+  } catch (error) {
+    console.log(`페이지 제목 추출 실패: ${url} -> ${error}`)
+    return ''
+  }
+}
+
+// 타겟별 키워드 매칭 검증
+function hasTargetKeywords(title: string, description: string, target: string): boolean {
+  const keywords = TARGET_KEYWORDS[target] || []
+  const text = `${title} ${description}`.toLowerCase()
+  
+  const keywordMatch = keywords.some(keyword => 
+    text.includes(keyword.toLowerCase())
+  )
+  
+  console.log(`키워드 매칭: ${target} -> ${keywordMatch} (${keywords.join(', ')})`)
+  return keywordMatch
+}
+
+// 네이버 뉴스에서 타겟별 + 최신 + 내용일치 기사만 가져오기
+async function fetchNaverNewsByTarget(target: string): Promise<NewsItem[]> {
+  const keywords = TARGET_KEYWORDS[target] || ['부동산']
+  const query = encodeURIComponent(keywords.join(' OR '))
+  
+  console.log(`네이버 뉴스 타겟별 검색: ${target} (${query})`)
+  
+  try {
+    const clientId = process.env.NAVER_CLIENT_ID || 'ceVPKnFABx59Lo4SzbmY'
+    const clientSecret = process.env.NAVER_CLIENT_SECRET || 'FUfJ_TnwL6'
+    
+    const res = await fetch(
+      `https://openapi.naver.com/v1/search/news.json?query=${query}&display=30&sort=date`,
+      {
+        headers: {
+          'X-Naver-Client-Id': clientId,
+          'X-Naver-Client-Secret': clientSecret,
+        },
+      }
+    )
+
+    if (!res.ok) {
+      console.error('네이버 뉴스 API 오류:', res.statusText)
+      return []
+    }
+
+    const data = await res.json()
+    const results: NewsItem[] = []
+    const usedUrls = new Set<string>()
+
+    console.log(`네이버 뉴스 API 결과: ${data.items?.length || 0}개`)
+
+    for (const item of data.items) {
+      try {
+        const cleanTitle = item.title.replace(/<[^>]*>/g, '')
+        const cleanDesc = item.description.replace(/<[^>]*>/g, '')
+        const cleanUrl = item.link?.replace(/<[^>]*>/g, '').trim()
+
+        // 기본 유효성 검사
+        if (!cleanUrl || !cleanTitle || !cleanDesc || 
+            usedUrls.has(cleanUrl) || 
+            cleanUrl.includes('search.naver.com')) {
+          continue
+        }
+
+        // 1. 최신성 체크
+        if (!isToday(item.pubDate)) {
+          console.log(`날짜 불일치 제외: ${cleanTitle} (${item.pubDate})`)
+          continue
+        }
+
+        // 2. URL 유효성 체크
+        if (!(await isUrlValid(cleanUrl))) {
+          console.log(`URL 유효하지 않음 제외: ${cleanTitle} -> ${cleanUrl}`)
+          continue
+        }
+
+        // 3. 제목과 실제 페이지 title 비교 (70% 이상 유사)
+        const pageTitle = await fetchPageTitle(cleanUrl)
+        if (pageTitle) {
+          const sim = similarity(cleanTitle, pageTitle)
+          if (sim < 70) {
+            console.log(`제목 유사도 부족 제외: ${cleanTitle} vs ${pageTitle} (${sim.toFixed(1)}%)`)
+            continue
+          }
+          console.log(`제목 유사도 통과: ${cleanTitle} vs ${pageTitle} (${sim.toFixed(1)}%)`)
+        }
+
+        // 4. 부동산 서비스 타겟 키워드 포함 여부
+        if (!hasTargetKeywords(cleanTitle, cleanDesc, target)) {
+          console.log(`키워드 불일치 제외: ${cleanTitle}`)
+          continue
+        }
+
+        // 모든 조건 통과
+        usedUrls.add(cleanUrl)
+        results.push({
+          id: `naver-target-${results.length + 1}`,
+          title: cleanTitle,
+          content: cleanDesc,
+          summary: '',
+          category: target,
+          publishedAt: new Date(item.pubDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }),
+          url: cleanUrl
+        })
+
+        console.log(`✅ 타겟별 필터 통과: ${cleanTitle} -> ${cleanUrl}`)
+
+        // 충분한 뉴스가 수집되면 중단
+        if (results.length >= 10) {
+          break
+        }
+
+      } catch (error) {
+        console.log(`뉴스 처리 오류: ${item.title} -> ${error}`)
+      }
+    }
+
+    console.log(`네이버 뉴스 타겟별 필터링 완료: ${results.length}개 유효`)
+    return results
+
+  } catch (error) {
+    console.error('네이버 뉴스 타겟별 검색 오류:', error)
+    return []
+  }
+}
+
+// 실제 뉴스 API에서 뉴스 가져오기 (타겟별 필터링 적용)
 async function fetchRealNews(category: string): Promise<NewsItem[]> {
   console.log(`실제 뉴스 수집 시작: ${category}`)
   
   try {
-    // 1. 네이버 뉴스 API 엄격 필터링 시도
-    const naverNews = await fetchNaverNewsStrict(category)
-    console.log(`네이버 뉴스 결과: ${naverNews.length}개`)
+    // 1. 타겟별 네이버 뉴스 API 시도
+    const targetNews = await fetchNaverNewsByTarget(category)
+    console.log(`타겟별 뉴스 결과: ${targetNews.length}개`)
     
-    // 네이버 결과가 충분하면 반환
-    if (naverNews.length >= 4) {
-      return naverNews.slice(0, 10)
+    // 타겟별 결과가 충분하면 반환
+    if (targetNews.length >= 4) {
+      return targetNews.slice(0, 10)
     }
     
-    // 2. 네이버 결과가 부족하면 구글 뉴스로 보완
-    console.log(`네이버 결과 부족 (${naverNews.length}개). 구글 뉴스로 보완합니다.`)
-    const googleNews = await fetchGoogleNewsStrict(category)
-    console.log(`구글 뉴스 결과: ${googleNews.length}개`)
+    // 2. 타겟별 결과가 부족하면 일반 엄격 필터링 시도
+    console.log(`타겟별 결과 부족 (${targetNews.length}개). 일반 엄격 필터링으로 보완합니다.`)
+    const strictNews = await fetchNaverNewsStrict(category)
+    console.log(`엄격 필터링 결과: ${strictNews.length}개`)
     
     // 중복 URL 제거하면서 합치기
     const usedUrls = new Set<string>()
     const allNews: NewsItem[] = []
     
-    // 네이버 뉴스 먼저 추가
-    for (const news of naverNews) {
+    // 타겟별 뉴스 먼저 추가
+    for (const news of targetNews) {
       if (!usedUrls.has(news.url || '')) {
         usedUrls.add(news.url || '')
         allNews.push(news)
       }
     }
     
-    // 구글 뉴스 추가
-    for (const news of googleNews) {
+    // 엄격 필터링 뉴스 추가
+    for (const news of strictNews) {
       if (!usedUrls.has(news.url || '')) {
         usedUrls.add(news.url || '')
         allNews.push(news)
@@ -669,9 +851,22 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
     
     console.log(`총 수집된 뉴스: ${allNews.length}개`)
     
-    // 3. 여전히 부족하면 fallback 데이터로 채우기
+    // 3. 여전히 부족하면 구글 뉴스로 보완
     if (allNews.length < 4) {
-      console.log(`API 결과 부족 (${allNews.length}개). fallback 데이터로 채웁니다.`)
+      console.log(`API 결과 부족 (${allNews.length}개). 구글 뉴스로 보완합니다.`)
+      const googleNews = await fetchGoogleNewsStrict(category)
+      
+      for (const news of googleNews) {
+        if (!usedUrls.has(news.url || '')) {
+          usedUrls.add(news.url || '')
+          allNews.push(news)
+        }
+      }
+    }
+    
+    // 4. 최종적으로 부족하면 fallback 데이터로 채우기
+    if (allNews.length < 4) {
+      console.log(`최종 결과 부족 (${allNews.length}개). fallback 데이터로 채웁니다.`)
       const fallbackNews = getFallbackNews(category)
       const additionalNews = fallbackNews.slice(0, 4 - allNews.length)
       allNews.push(...additionalNews)

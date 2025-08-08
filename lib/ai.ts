@@ -9,6 +9,12 @@ export interface NewsItem {
   url?: string
 }
 
+// 제목으로 네이버 뉴스 검색 URL 생성 (실제 기사 링크 대체)
+function buildNewsSearchUrl(title: string): string {
+  const query = encodeURIComponent(title)
+  return `https://search.naver.com/search.naver?where=news&sm=tab_jum&query=${query}`
+}
+
 export async function summarizeNews(content: string, category: string): Promise<string> {
   try {
     // OpenAI API 사용
@@ -97,7 +103,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'policy',
       publishedAt: '2024-01-15',
-      url: 'https://land.naver.com/news/'
+      url: buildNewsSearchUrl('2024년 부동산 정책 변화, 주택담보대출 규제 완화')
     },
     
     // 시장 동향 뉴스
@@ -108,7 +114,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'market',
       publishedAt: '2024-01-14',
-      url: 'https://land.naver.com/news/'
+      url: buildNewsSearchUrl('서울 아파트 전세가율 70% 돌파, 매매 시장 영향은?')
     },
     
     // 신혼부부 지원 뉴스
@@ -119,7 +125,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'support',
       publishedAt: '2024-01-13',
-      url: 'https://land.naver.com/news/'
+      url: buildNewsSearchUrl('신혼부부 전용 청약통장 출시, 최대 2억원 지원')
     },
     
     // 투자 관련 뉴스
@@ -130,7 +136,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'investment',
       publishedAt: '2024-01-12',
-      url: 'https://land.naver.com/news/'
+      url: buildNewsSearchUrl('부동산 투자 트렌드 변화, REITs 관심 급증')
     },
     
     // 추가 초보자용 뉴스
@@ -141,7 +147,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'beginner',
       publishedAt: '2024-01-16',
-      url: 'https://land.naver.com/news/'
+      url: buildNewsSearchUrl('처음 집 사는 사람을 위한 부동산 기초 가이드')
     },
     
     // 추가 신혼부부용 뉴스
@@ -152,7 +158,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'newlywed',
       publishedAt: '2024-01-11',
-      url: 'https://land.naver.com/news/'
+      url: buildNewsSearchUrl('신혼부부 특별공급, 2024년 새로운 신청 조건 공개')
     },
     
     // 추가 투자자용 뉴스
@@ -163,7 +169,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'investment',
       publishedAt: '2024-01-10',
-      url: 'https://land.naver.com/news/'
+      url: buildNewsSearchUrl('2024년 부동산 투자 전략, 지역별 수익률 분석')
     },
     
     // 추가 정책 뉴스
@@ -174,7 +180,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'policy',
       publishedAt: '2024-01-09',
-      url: 'https://land.naver.com/news/'
+      url: buildNewsSearchUrl('토지거래허가제 일부 해제, 투자 시장에 미치는 영향')
     },
     
     // 추가 시장 분석 뉴스
@@ -185,7 +191,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'market',
       publishedAt: '2024-01-08',
-      url: 'https://land.naver.com/news/'
+      url: buildNewsSearchUrl('2024년 1분기 부동산 시장 전망, 금리 인하 기대감')
     }
   ]
 }

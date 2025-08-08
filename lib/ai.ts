@@ -41,8 +41,8 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
     const query = encodeURIComponent(category)
     const response = await fetch(`https://openapi.naver.com/v1/search/news.json?query=${query}&display=10&start=1&sort=date`, {
       headers: {
-        'X-Naver-Client-Id': process.env.NAVER_CLIENT_ID || '',
-        'X-Naver-Client-Secret': process.env.NAVER_CLIENT_SECRET || ''
+        'X-Naver-Client-Id': 'ceVPKnFABx59Lo4SzbmY',
+        'X-Naver-Client-Secret': 'FUfJ_TnwL6'
       }
     })
 

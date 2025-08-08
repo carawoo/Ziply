@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     
     // AI 요약 생성 (에러 처리 포함)
     const newsWithSummaries = await Promise.all(
-      news.map(async (item) => {
+      news.map(async (item: any) => {
         try {
           const summary = await summarizeNews(item.content, tab)
           return { ...item, summary }

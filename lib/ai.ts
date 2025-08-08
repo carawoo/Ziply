@@ -146,7 +146,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'policy',
         publishedAt: recentDates[0],
-        url: 'https://www.molit.go.kr/news/news_list.jsp'
+        url: 'https://land.naver.com/news/'
       },
       {
         id: 'fallback-2',
@@ -155,7 +155,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'policy',
         publishedAt: recentDates[1],
-        url: 'https://www.molit.go.kr/news/news_list.jsp'
+        url: 'https://land.naver.com/news/'
       }
     ],
     'market': [
@@ -186,7 +186,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'support',
         publishedAt: recentDates[4],
-        url: 'https://www.molit.go.kr/news/news_list.jsp'
+        url: 'https://land.naver.com/news/'
       },
       {
         id: 'fallback-6',
@@ -195,7 +195,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'support',
         publishedAt: recentDates[5],
-        url: 'https://www.molit.go.kr/news/news_list.jsp'
+        url: 'https://land.naver.com/news/'
       }
     ],
     'investment': [
@@ -246,7 +246,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'newlywed',
         publishedAt: recentDates[2],
-        url: 'https://www.molit.go.kr/news/news_list.jsp'
+        url: 'https://land.naver.com/news/'
       },
       {
         id: 'fallback-12',
@@ -255,7 +255,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'newlywed',
         publishedAt: recentDates[3],
-        url: 'https://www.molit.go.kr/news/news_list.jsp'
+        url: 'https://land.naver.com/news/'
       }
     ]
   }

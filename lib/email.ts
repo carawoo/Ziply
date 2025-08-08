@@ -195,7 +195,7 @@ const createNewsletterHTML = (newsItems: any[], date: string) => {
 export const sendNewsletter = async (email: string) => {
   try {
     // 오늘의 뉴스 가져오기
-    const todayNews = await getSampleNews('policy') // 기본 정책 뉴스
+    const todayNews = await getSampleNews() // 모든 카테고리의 뉴스 가져오기
     const today = new Date().toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: 'long',

@@ -97,7 +97,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'policy',
       publishedAt: '2024-01-15',
-      url: '#'
+      url: 'https://www.land.naver.com/news/newsView.naver?newsId=20240115000001'
     },
     
     // 시장 동향 뉴스
@@ -108,7 +108,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'market',
       publishedAt: '2024-01-14',
-      url: '#'
+      url: 'https://www.land.naver.com/news/newsView.naver?newsId=20240114000002'
     },
     
     // 신혼부부 지원 뉴스
@@ -119,7 +119,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'support',
       publishedAt: '2024-01-13',
-      url: '#'
+      url: 'https://www.land.naver.com/news/newsView.naver?newsId=20240113000003'
     },
     
     // 투자 관련 뉴스
@@ -130,7 +130,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'investment',
       publishedAt: '2024-01-12',
-      url: '#'
+      url: 'https://www.land.naver.com/news/newsView.naver?newsId=20240112000004'
     },
     
     // 추가 초보자용 뉴스
@@ -141,7 +141,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'beginner',
       publishedAt: '2024-01-16',
-      url: '#'
+      url: 'https://www.land.naver.com/news/newsView.naver?newsId=20240116000005'
     },
     
     // 추가 신혼부부용 뉴스
@@ -152,7 +152,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'newlywed',
       publishedAt: '2024-01-11',
-      url: '#'
+      url: 'https://www.land.naver.com/news/newsView.naver?newsId=20240111000006'
     },
     
     // 추가 투자자용 뉴스
@@ -163,7 +163,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'investment',
       publishedAt: '2024-01-10',
-      url: '#'
+      url: 'https://www.land.naver.com/news/newsView.naver?newsId=20240110000007'
     },
     
     // 추가 정책 뉴스
@@ -174,7 +174,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'policy',
       publishedAt: '2024-01-09',
-      url: '#'
+      url: 'https://www.land.naver.com/news/newsView.naver?newsId=20240109000008'
     },
     
     // 추가 시장 분석 뉴스
@@ -185,7 +185,7 @@ export function getSampleNews(): NewsItem[] {
       summary: '',
       category: 'market',
       publishedAt: '2024-01-08',
-      url: '#'
+      url: 'https://www.land.naver.com/news/newsView.naver?newsId=20240108000009'
     }
   ]
 }

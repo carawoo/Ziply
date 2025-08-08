@@ -440,17 +440,21 @@ export default function Dashboard() {
                       <div className="news-date">
                         {new Date(item.publishedAt).toLocaleDateString('ko-KR')}
                       </div>
-                      <button 
+                      <a 
+                        href={item.url || '#'} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
                         className="button"
                         style={{ 
                           fontSize: '12px', 
                           padding: '6px 12px',
-                          background: '#6b7280'
+                          background: '#6b7280',
+                          textDecoration: 'none',
+                          display: 'inline-block'
                         }}
-                        onClick={() => alert('원문 보기 기능은 실제 뉴스 API 연동 후 활성화됩니다.')}
                       >
                         원문 보기
-                      </button>
+                      </a>
                     </div>
                   </div>
                 ))}

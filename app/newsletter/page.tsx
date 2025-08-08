@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import PushNotification from '@/components/PushNotification'
 
 export default function Newsletter() {
   const [email, setEmail] = useState('')
@@ -36,7 +37,26 @@ export default function Newsletter() {
           throw error
         }
       } else {
-        setMessage('뉴스레터 구독이 완료되었습니다! 매일 아침 유용한 부동산 정보를 받아보세요.')
+        // 구독 완료 알림 이메일 발송
+        try {
+          const response = await fetch('/api/send-subscription-confirmation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email })
+          })
+
+          if (response.ok) {
+            setMessage('뉴스레터 구독이 완료되었습니다! 확인 이메일을 발송했습니다. 매일 아침 유용한 부동산 정보를 받아보세요.')
+          } else {
+            setMessage('뉴스레터 구독이 완료되었습니다! (확인 이메일 발송에 실패했습니다.)')
+          }
+        } catch (emailError) {
+          console.error('구독 완료 이메일 발송 실패:', emailError)
+          setMessage('뉴스레터 구독이 완료되었습니다! (확인 이메일 발송에 실패했습니다.)')
+        }
+
         setIsSuccess(true)
         setEmail('')
       }
@@ -120,6 +140,9 @@ export default function Newsletter() {
               </div>
             )}
 
+            {/* 웹 푸시 알림 설정 */}
+            <PushNotification />
+
             <div style={{ marginTop: '32px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#1f2937' }}>
                 뉴스레터에서 받을 수 있는 내용
@@ -163,13 +186,25 @@ export default function Newsletter() {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                  <span style={{ fontSize: '20px' }}>🎯</span>
+                  <span style={{ fontSize: '20px' }}>🔔</span>
                   <div>
                     <h3 style={{ fontWeight: '600', marginBottom: '4px', color: '#374151' }}>
-                      맞춤 추천
+                      즉시 구독 확인
                     </h3>
                     <p style={{ color: '#6b7280', fontSize: '14px' }}>
-                      당신의 관심사에 맞는 부동산 정보 큐레이션
+                      구독 완료 시 즉시 확인 이메일 발송
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                  <span style={{ fontSize: '20px' }}>📱</span>
+                  <div>
+                    <h3 style={{ fontWeight: '600', marginBottom: '4px', color: '#374151' }}>
+                      웹 푸시 알림
+                    </h3>
+                    <p style={{ color: '#6b7280', fontSize: '14px' }}>
+                      브라우저를 닫아도 데스크톱에 알림 표시
                     </p>
                   </div>
                 </div>

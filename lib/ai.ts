@@ -9,10 +9,70 @@ export interface NewsItem {
   url?: string
 }
 
-// 현재 날짜 기준으로 동적 날짜 생성
-function getCurrentDate(): string {
-  const today = new Date()
-  return today.toISOString().split('T')[0]
+// 오늘 날짜를 YYYY-MM-DD로 반환
+function getTodayDate(): string {
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+  return today
+}
+
+// URL 유효성 검사 (HEAD 요청)
+async function isValidUrl(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, { 
+      method: 'HEAD',
+      signal: AbortSignal.timeout(5000) // 5초 타임아웃
+    })
+    return response.status === 200
+  } catch (error) {
+    console.log(`URL 유효성 검사 실패: ${url} -> ${error}`)
+    return false
+  }
+}
+
+// 제목과 URL 내용 매칭 검증
+function isTitleUrlMatch(title: string, url: string): boolean {
+  try {
+    // HTML 태그 제거
+    const cleanTitle = title.replace(/<[^>]*>/g, '').trim()
+    
+    // 제목에서 키워드 추출 (2글자 이상의 단어들)
+    const titleKeywords = cleanTitle
+      .split(/[\s,\.!?]+/)
+      .filter(word => word.length >= 2)
+      .map(word => word.toLowerCase())
+    
+    // URL에서 도메인 제거하고 경로만 추출
+    const urlPath = new URL(url).pathname + new URL(url).search
+    const urlLower = urlPath.toLowerCase()
+    
+    // 제목 키워드가 URL에 포함되는지 확인
+    const keywordMatch = titleKeywords.some(keyword => 
+      urlLower.includes(keyword)
+    )
+    
+    // 특수한 경우: 뉴스 사이트별 패턴 매칭
+    const sitePatterns = {
+      'daum.net': /v\/\d+/, // 다음 뉴스 패턴
+      'naver.com': /news\/\d+/, // 네이버 뉴스 패턴
+      'mk.co.kr': /news\/\w+\/\d+/, // 매일경제 패턴
+      'hankyung.com': /article\/\d+/, // 한국경제 패턴
+      'fnnews.com': /news\/\w+\/\d+/, // 파이낸셜뉴스 패턴
+      'land.naver.com': /news\/article\/\d+/, // 네이버 부동산 패턴
+    }
+    
+    const domain = new URL(url).hostname
+    const hasValidPattern = Object.entries(sitePatterns).some(([site, pattern]) => 
+      domain.includes(site) && pattern.test(urlPath)
+    )
+    
+    console.log(`제목-URL 매칭: "${cleanTitle}" -> ${url} (키워드매칭: ${keywordMatch}, 패턴매칭: ${hasValidPattern})`)
+    
+    return keywordMatch || hasValidPattern
+    
+  } catch (error) {
+    console.log(`제목-URL 매칭 검증 오류: ${error}`)
+    return false // 오류 시 안전하게 false 반환
+  }
 }
 
 // 현재 연도 가져오기
@@ -92,7 +152,7 @@ async function fetchNaverNewsFallback(category: string): Promise<NewsItem[]> {
 
 // 날짜 필터링 함수 (오늘 날짜 우선, 부족하면 어제 날짜로 채우기)
 function filterNewsByDate(newsItems: NewsItem[], targetCount: number = 10): NewsItem[] {
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }) // YYYY-MM-DD
+  const today = getTodayDate()
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
   
   console.log(`날짜 필터링: 오늘(${today}), 어제(${yesterday})`)
@@ -124,7 +184,49 @@ function filterNewsByDate(newsItems: NewsItem[], targetCount: number = 10): News
   return combinedNews.slice(0, targetCount)
 }
 
-// 뉴스 링크 유효성 검증 함수
+// 종합 뉴스 필터링 함수 (날짜 + URL 유효성 + 제목-URL 매칭)
+async function filterValidNews(newsItems: NewsItem[]): Promise<NewsItem[]> {
+  console.log(`종합 필터링 시작: ${newsItems.length}개 뉴스`)
+  
+  const today = getTodayDate()
+  const validNews: NewsItem[] = []
+  
+  for (const news of newsItems) {
+    try {
+      // 1. 오늘 날짜 필터
+      if (news.publishedAt !== today) {
+        console.log(`날짜 불일치 제외: ${news.title} (${news.publishedAt} != ${today})`)
+        continue
+      }
+      
+      // 2. URL 유효성 검사
+      const urlValid = await isValidUrl(news.url || '')
+      if (!urlValid) {
+        console.log(`URL 유효하지 않음 제외: ${news.title} -> ${news.url}`)
+        continue
+      }
+      
+      // 3. 제목-URL 매칭 검증
+      const titleUrlMatch = isTitleUrlMatch(news.title, news.url || '')
+      if (!titleUrlMatch) {
+        console.log(`제목-URL 불일치 제외: ${news.title} -> ${news.url}`)
+        continue
+      }
+      
+      // 모든 조건 통과
+      validNews.push(news)
+      console.log(`✅ 유효한 뉴스 추가: ${news.title} -> ${news.url}`)
+      
+    } catch (error) {
+      console.log(`뉴스 필터링 오류: ${news.title} -> ${error}`)
+    }
+  }
+  
+  console.log(`종합 필터링 완료: ${validNews.length}/${newsItems.length}개 유효`)
+  return validNews
+}
+
+// 뉴스 링크 유효성 검증 함수 (기존 함수는 유지하되 새로운 필터링과 함께 사용)
 async function validateNewsLinks(newsItems: NewsItem[]): Promise<NewsItem[]> {
   console.log(`링크 유효성 검증 시작: ${newsItems.length}개 뉴스`)
   
@@ -204,7 +306,7 @@ async function fetchGoogleNews(category: string): Promise<NewsItem[]> {
             usedUrls.add(cleanUrl)
             
             // 구글 검색 결과에서 날짜 추출 (pagemap에서)
-            let publishedDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+            let publishedDate = getTodayDate()
             if (item.pagemap?.metatags?.[0]?.['article:published_time']) {
               const dateStr = item.pagemap.metatags[0]['article:published_time']
               publishedDate = new Date(dateStr).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
@@ -224,9 +326,8 @@ async function fetchGoogleNews(category: string): Promise<NewsItem[]> {
           }
         }
         
-        // 날짜 필터링 후 링크 유효성 검증
-        const dateFilteredNews = filterNewsByDate(uniqueNews, 10)
-        return await validateNewsLinks(dateFilteredNews)
+        // 종합 필터링 적용
+        return await filterValidNews(uniqueNews)
       }
     } else {
       console.log('구글 검색 API 오류:', response.status)
@@ -264,21 +365,18 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
     
     console.log(`${category}에서 수집된 총 뉴스:`, allNews.length)
     
-    // 날짜 필터링 (오늘 우선, 부족하면 어제로 채우기)
-    const dateFilteredNews = filterNewsByDate(allNews, 10)
-    
-    // 최종 링크 유효성 검증
-    const validatedNews = await validateNewsLinks(dateFilteredNews)
+    // 최종 종합 필터링
+    const finalValidNews = await filterValidNews(allNews)
     
     // 유효한 뉴스가 부족하면 fallback 데이터로 채우기
-    if (validatedNews.length < 4) {
-      console.log(`유효한 뉴스가 부족합니다 (${validatedNews.length}개). fallback 데이터로 채웁니다.`)
+    if (finalValidNews.length < 4) {
+      console.log(`유효한 뉴스가 부족합니다 (${finalValidNews.length}개). fallback 데이터로 채웁니다.`)
       const fallbackNews = getFallbackNews(category)
-      const additionalNews = fallbackNews.slice(0, 4 - validatedNews.length)
-      validatedNews.push(...additionalNews)
+      const additionalNews = fallbackNews.slice(0, 4 - finalValidNews.length)
+      finalValidNews.push(...additionalNews)
     }
     
-    return validatedNews.slice(0, 10) // 최대 10개 반환
+    return finalValidNews.slice(0, 10) // 최대 10개 반환
     
   } catch (error) {
     console.error('실제 뉴스 수집 오류:', error)
@@ -343,7 +441,7 @@ async function fetchNaverNewsAPI(category: string): Promise<NewsItem[]> {
             usedUrls.add(cleanUrl)
             
             // 네이버 API에서 pubDate 추출
-            let publishedDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+            let publishedDate = getTodayDate()
             if (item.pubDate) {
               try {
                 publishedDate = new Date(item.pubDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
@@ -368,9 +466,8 @@ async function fetchNaverNewsAPI(category: string): Promise<NewsItem[]> {
         
         console.log(`${category}에서 가져온 고유한 기사 링크:`, uniqueNews.map(item => item.url))
         
-        // 날짜 필터링 후 링크 유효성 검증
-        const dateFilteredNews = filterNewsByDate(uniqueNews, 10)
-        return await validateNewsLinks(dateFilteredNews)
+        // 종합 필터링 적용
+        return await filterValidNews(uniqueNews)
       } else {
         console.log('네이버 뉴스 API에서 뉴스 아이템이 없습니다.')
       }

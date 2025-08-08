@@ -1,20 +1,16 @@
-// 웹 푸시 알림 기능 (무료)
-// Service Worker를 사용한 브라우저 기반 푸시 알림
+import webpush from 'web-push'
+
+// VAPID 키 설정
+webpush.setVapidDetails(
+  'mailto:your-email@example.com',
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
+  process.env.VAPID_PRIVATE_KEY || ''
+)
 
 // 푸시 알림 권한 요청
 export const requestNotificationPermission = async (): Promise<boolean> => {
   try {
     if (!('Notification' in window)) {
-      console.log('이 브라우저는 푸시 알림을 지원하지 않습니다.')
-      return false
-    }
-
-    if (Notification.permission === 'granted') {
-      return true
-    }
-
-    if (Notification.permission === 'denied') {
-      console.log('푸시 알림 권한이 거부되었습니다.')
       return false
     }
 
@@ -32,7 +28,7 @@ export const sendPushNotification = (
   options: NotificationOptions = {}
 ) => {
   try {
-    if (Notification.permission === 'granted') {
+    if (typeof window !== 'undefined' && Notification.permission === 'granted') {
       const notification = new Notification(title, {
         icon: '/favicon.ico',
         badge: '/favicon.ico',
@@ -76,7 +72,7 @@ export const sendNewsletterPushNotification = (newsItems: any[]) => {
 // Service Worker 등록 (브라우저에서만 실행)
 export const registerServiceWorker = async () => {
   try {
-    if ('serviceWorker' in navigator) {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.register('/sw.js')
       console.log('Service Worker 등록 성공:', registration)
       return registration
@@ -88,31 +84,22 @@ export const registerServiceWorker = async () => {
 
 // 푸시 알림 설정 상태 확인
 export const getNotificationStatus = () => {
-  if (!('Notification' in window)) {
+  if (typeof window === 'undefined' || !('Notification' in window)) {
     return 'not-supported'
   }
   return Notification.permission
 }
 
-// 푸시 알림 설정 UI 컴포넌트용 훅
-export const useNotificationPermission = () => {
-  const [permission, setPermission] = useState<NotificationPermission>('default')
-  const [isSupported, setIsSupported] = useState(false)
-
-  useEffect(() => {
-    setIsSupported('Notification' in window)
-    setPermission(Notification.permission)
-  }, [])
-
-  const requestPermission = async () => {
-    const granted = await requestNotificationPermission()
-    setPermission(Notification.permission)
-    return granted
-  }
-
-  return {
-    permission,
-    isSupported,
-    requestPermission
+// 서버 사이드 푸시 알림 발송
+export const sendServerPushNotification = async (
+  subscription: any,
+  payload: any
+) => {
+  try {
+    await webpush.sendNotification(subscription, JSON.stringify(payload))
+    return true
+  } catch (error) {
+    console.error('서버 푸시 알림 발송 실패:', error)
+    return false
   }
 }

@@ -124,7 +124,7 @@ export default function Dashboard() {
     setNewsLoading(true)
     try {
       // 탭에 따른 맞춤형 뉴스 가져오기
-      const sampleNews = getNewsForTab(tab)
+      const sampleNews = await getNewsForTab(tab)
       
       // AI 요약 생성
       const newsWithSummaries = await Promise.all(
@@ -440,73 +440,21 @@ export default function Dashboard() {
                       <div className="news-date">
                         {new Date(item.publishedAt).toLocaleDateString('ko-KR')}
                       </div>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        {typeof item.url === 'object' ? (
-                          <>
-                            <a 
-                              href={item.url.naver} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="button"
-                              style={{ 
-                                fontSize: '11px', 
-                                padding: '4px 8px',
-                                background: '#03c75a',
-                                textDecoration: 'none',
-                                display: 'inline-block'
-                              }}
-                            >
-                              네이버
-                            </a>
-                            <a 
-                              href={item.url.google} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="button"
-                              style={{ 
-                                fontSize: '11px', 
-                                padding: '4px 8px',
-                                background: '#4285f4',
-                                textDecoration: 'none',
-                                display: 'inline-block'
-                              }}
-                            >
-                              구글
-                            </a>
-                            <a 
-                              href={item.url.youtube} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="button"
-                              style={{ 
-                                fontSize: '11px', 
-                                padding: '4px 8px',
-                                background: '#ff0000',
-                                textDecoration: 'none',
-                                display: 'inline-block'
-                              }}
-                            >
-                              유튜브
-                            </a>
-                          </>
-                        ) : (
-                          <a 
-                            href={item.url || '#'} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="button"
-                            style={{ 
-                              fontSize: '12px', 
-                              padding: '6px 12px',
-                              background: '#6b7280',
-                              textDecoration: 'none',
-                              display: 'inline-block'
-                            }}
-                          >
-                            원문 보기
-                          </a>
-                        )}
-                      </div>
+                      <a 
+                        href={item.url || '#'} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="button"
+                        style={{ 
+                          fontSize: '12px', 
+                          padding: '6px 12px',
+                          background: '#6b7280',
+                          textDecoration: 'none',
+                          display: 'inline-block'
+                        }}
+                      >
+                        원문 보기
+                      </a>
                     </div>
                   </div>
                 ))}

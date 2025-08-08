@@ -125,8 +125,10 @@ export default function Dashboard() {
     try {
       console.log('뉴스 로딩 시작:', tab)
       
-      // 내부 API를 통해 뉴스 가져오기
-      const response = await fetch(`/api/news?tab=${encodeURIComponent(tab)}`)
+      // 내부 API를 통해 뉴스 가져오기 (캐시 끄기)
+      const response = await fetch(`/api/news?tab=${encodeURIComponent(tab)}`, { 
+        cache: 'no-store' 
+      })
       const data = await response.json()
       
       if (!data.success) {

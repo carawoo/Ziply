@@ -1,64 +1,35 @@
 import { NextResponse } from 'next/server'
-import { fetchMultiSourceNews } from '@/lib/ai'
+import { getNewsForTab } from '@/lib/ai'
 
 export async function GET() {
   try {
-    console.log('뉴스 수집 테스트 API 호출')
+    console.log('getNewsForTab 테스트 API 호출')
     
-    // 부동산 정책 뉴스 수집 테스트
-    const policyNews = await fetchMultiSourceNews('부동산 정책')
+    // 각 탭별로 getNewsForTab 함수 테스트
+    const tabs = ['초보자용', '신혼부부용', '투자자용', '정책뉴스', '시장분석', '지원혜택']
+    const results: Record<string, any> = {}
     
-    // 부동산 시장 뉴스 수집 테스트
-    const marketNews = await fetchMultiSourceNews('부동산 시장')
-    
-    // 뉴스 링크 유효성 분석
-    const policyLinks = policyNews.map((news: any) => ({
-      title: news.title,
-      url: news.url,
-      domain: news.url ? new URL(news.url).hostname : 'N/A'
-    }))
-    
-    const marketLinks = marketNews.map((news: any) => ({
-      title: news.title,
-      url: news.url,
-      domain: news.url ? new URL(news.url).hostname : 'N/A'
-    }))
-    
-    // 도메인별 분포 분석
-    const policyDomains = new Map<string, number>()
-    const marketDomains = new Map<string, number>()
-    
-    policyLinks.forEach((link: any) => {
-      policyDomains.set(link.domain, (policyDomains.get(link.domain) || 0) + 1)
-    })
-    
-    marketLinks.forEach((link: any) => {
-      marketDomains.set(link.domain, (marketDomains.get(link.domain) || 0) + 1)
-    })
+    for (const tab of tabs) {
+      console.log(`=== ${tab} 탭 테스트 시작 ===`)
+      const news = await getNewsForTab(tab)
+      results[tab] = {
+        count: news.length,
+        categories: news.map(n => n.category),
+        titles: news.map(n => n.title)
+      }
+      console.log(`=== ${tab} 탭 테스트 완료: ${news.length}개 ===`)
+    }
     
     return NextResponse.json({
       success: true,
-      policy: {
-        count: policyNews.length,
-        links: policyLinks,
-        domainDistribution: Object.fromEntries(policyDomains)
-      },
-      market: {
-        count: marketNews.length,
-        links: marketLinks,
-        domainDistribution: Object.fromEntries(marketDomains)
-      },
+      results,
       summary: {
-        totalPolicy: policyNews.length,
-        totalMarket: marketNews.length,
-        totalUniqueDomains: new Set([
-          ...Array.from(policyDomains.keys()),
-          ...Array.from(marketDomains.keys())
-        ]).size
+        totalTabs: tabs.length,
+        totalNews: Object.values(results).reduce((sum: any, tab: any) => sum + tab.count, 0)
       }
     })
   } catch (error) {
-    console.error('뉴스 수집 테스트 오류:', error)
+    console.error('getNewsForTab 테스트 오류:', error)
     return NextResponse.json({
       success: false,
       error: String(error)

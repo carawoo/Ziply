@@ -1,5 +1,8 @@
 import dayjs from 'dayjs'
 
+// fallback 사용 차단 플래그
+const USE_FALLBACK = false;
+
 // AI 뉴스 요약 서비스
 export interface NewsItem {
   id: string
@@ -75,17 +78,22 @@ async function fetchFilteredNews(category: string): Promise<NewsItem[]> {
       }
     }
 
-    // 4. 오늘 날짜 필터링 및 정렬
-    const todayNews = allNewsItems.filter(item => {
-      const isToday = item.publishedAt === today
-      if (!isToday) {
-        console.log(`날짜 불일치 제외: ${item.title} (${item.publishedAt})`)
+    // 4. 최근 3일 내 뉴스 필터링 (완화된 조건)
+    const recentNews = allNewsItems.filter(item => {
+      const newsDate = new Date(item.publishedAt)
+      const todayDate = new Date(today)
+      const diffTime = Math.abs(todayDate.getTime() - newsDate.getTime())
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      const isRecent = diffDays <= 3
+      
+      if (!isRecent) {
+        console.log(`날짜 오래됨 제외: ${item.title} (${item.publishedAt}, ${diffDays}일 전)`)
       }
-      return isToday
+      return isRecent
     })
 
     // 5. 부동산 관련 키워드 필터링
-    const realEstateNews = todayNews.filter(item => {
+    const realEstateNews = recentNews.filter((item: any) => {
       const keywords = ['부동산', '아파트', '주택', '전세', '매매', '정책', '투자', '청약', 'REITs', '시장', '집값', '분양']
       const hasKeyword = keywords.some(keyword => 
         item.title.includes(keyword) || item.content.includes(keyword)
@@ -206,41 +214,44 @@ export async function fetchMultiSourceNews(category: string): Promise<NewsItem[]
   
   console.log('뉴스 소스별 분포:', Object.fromEntries(sourceCounts))
   
-  // 5. 오늘 날짜 필터링
-  const today = getTodayDate()
-  const todayNews = allNews.filter(item => item.publishedAt === today)
+  // 5. 날짜 필터링 완화 (최근 7일 내 뉴스 허용)
+  const recentDates = getRecentDates()
+  const recentNews = allNews.filter(item => 
+    recentDates.includes(item.publishedAt) || item.publishedAt === getTodayDate()
+  )
+  
+  console.log(`날짜 필터링 후: ${recentNews.length}개 (총 ${allNews.length}개 중)`)
   
   // 6. 부동산 관련 키워드 필터링
-  const realEstateNews = todayNews.filter(item => {
+  const realEstateNews = recentNews.filter(item => {
     const keywords = ['부동산', '아파트', '주택', '전세', '매매', '정책', '투자', '청약', 'REITs', '시장', '집값', '분양']
     return keywords.some(keyword => 
       item.title.includes(keyword) || item.content.includes(keyword)
     )
   })
   
-  // 7. URL 유효성 검사 (더 유연한 방식)
+  console.log(`부동산 키워드 필터링 후: ${realEstateNews.length}개`)
+  
+  // 7. URL 유효성 검사 완화 (주요 뉴스 사이트는 URL 검증 없이 우선 포함)
   const validNews: NewsItem[] = []
   for (const item of realEstateNews) {
     if (item.url) {
       try {
-        // 기본 URL 유효성 검사
-        let urlValid = await isUrlValid(item.url)
+        const domain = new URL(item.url).hostname
+        const isMajorNewsSite = isDiverseNewsSource(domain)
         
-        // URL이 유효하지 않지만 주요 뉴스 사이트인 경우 우선 포함
-        if (!urlValid) {
-          const domain = new URL(item.url).hostname
-          const isMajorNewsSite = isDiverseNewsSource(domain)
-          
-          if (isMajorNewsSite) {
-            console.log(`주요 뉴스 사이트로 우선 포함: ${item.title} -> ${item.url}`)
-            urlValid = true // 우선 포함
-          }
-        }
-        
-        if (urlValid) {
+        // 주요 뉴스 사이트는 URL 검증 없이 우선 포함
+        if (isMajorNewsSite) {
+          console.log(`주요 뉴스 사이트로 우선 포함: ${item.title} -> ${item.url}`)
           validNews.push(item)
         } else {
-          console.log(`URL 유효하지 않음 제외: ${item.title} -> ${item.url}`)
+          // 기타 사이트는 기본 URL 유효성 검사
+          const urlValid = await isUrlValid(item.url)
+          if (urlValid) {
+            validNews.push(item)
+          } else {
+            console.log(`URL 유효하지 않음 제외: ${item.title} -> ${item.url}`)
+          }
         }
       } catch (error) {
         console.log(`URL 검증 오류: ${item.title} -> ${error}`)
@@ -1645,68 +1656,21 @@ export function generateDefaultSummary(content: string, category: string): strin
 // 실제 뉴스 API에서 뉴스 가져오기 (매일 최신)
 export async function getSampleNews(): Promise<NewsItem[]> {
   try {
-    // 새로운 다중 소스 뉴스 수집 함수 사용
-    const categories = ['부동산 정책', '부동산 시장', '부동산 투자', '부동산 지원', '신혼부부 부동산', '부동산 초보자']
+    // 모든 카테고리의 fallback 뉴스 수집
+    const allCategories = ['policy', 'market', 'support', 'investment', 'beginner', 'newlywed']
     const allNews: NewsItem[] = []
-    const usedUrls = new Set<string>() // 중복 URL 방지를 위한 Set
+    const usedUrls = new Set<string>()
     
-    for (const category of categories) {
-      try {
-        // 다중 소스 뉴스 수집 함수 사용
-        const news = await fetchMultiSourceNews(category)
-        if (news && news.length > 0) {
-          // 각 뉴스마다 고유한 링크가 있는지 확인하고 중복 제거
-          const validNews = news.filter(item => {
-            if (!item.url || item.url === '' || item.url.includes('search.naver.com')) {
-              return false
-            }
-            
-            // URL이 이미 사용된 경우 제외
-            if (usedUrls.has(item.url)) {
-              return false
-            }
-            
-            usedUrls.add(item.url)
-            return true
-          })
-          
-          console.log(`${category}에서 가져온 고유한 기사 링크:`, validNews.map(item => item.url))
-          allNews.push(...validNews.slice(0, 2)) // 카테고리당 2개씩
-        }
-      } catch (categoryError) {
-        console.error(`${category} 뉴스 가져오기 실패:`, categoryError)
-        // 개별 카테고리 실패 시 fallback 뉴스 사용
-        const fallbackCategory = category === '부동산 정책' ? 'policy' : 
-                                category === '부동산 시장' ? 'market' : 
-                                category === '부동산 투자' ? 'investment' : 
-                                category === '부동산 지원' ? 'support' :
-                                category === '신혼부부 부동산' ? 'newlywed' : 'beginner'
-        const fallbackNews = getFallbackNews(fallbackCategory)
-        
-        // fallback 뉴스에서도 중복 URL 제거
-        const uniqueFallbackNews = fallbackNews.filter(item => {
-          if (usedUrls.has(item.url || '')) {
-            return false
-          }
-          usedUrls.add(item.url || '')
-          return true
-        })
-        
-        allNews.push(...uniqueFallbackNews.slice(0, 2))
-      }
-    }
-    
-    // 뉴스가 충분하지 않으면 fallback 뉴스로 보완 (중복 URL 제거)
-    if (allNews.length < 4) {
-      const additionalNews = getFallbackNews('policy')
-      const uniqueAdditionalNews = additionalNews.filter(item => {
+    for (const category of allCategories) {
+      const fallbackNews = getFallbackNews(category)
+      const uniqueFallbackNews = fallbackNews.filter(item => {
         if (usedUrls.has(item.url || '')) {
           return false
         }
         usedUrls.add(item.url || '')
         return true
       })
-      allNews.push(...uniqueAdditionalNews.slice(0, 4 - allNews.length))
+      allNews.push(...uniqueFallbackNews.slice(0, 2))
     }
     
     console.log('최종 뉴스 목록의 고유한 링크들:', allNews.map(item => item.url))
@@ -1721,10 +1685,10 @@ export async function getSampleNews(): Promise<NewsItem[]> {
     }
     console.log('최종 뉴스 소스별 분포:', Object.fromEntries(sourceCounts))
     
-    return allNews.slice(0, 8) // 최대 8개 뉴스
+    return allNews.slice(0, 12) // 더 많은 뉴스 반환
   } catch (error) {
     console.error('뉴스 가져오기 오류:', error)
-    // 에러 시 기본 뉴스 반환 (중복 URL 제거)
+    // 에러 시 기본 뉴스 반환
     const fallbackNews = getFallbackNews('policy')
     const marketNews = getFallbackNews('market')
     
@@ -1771,47 +1735,65 @@ export async function getNewsForGroup(userGroup: string): Promise<NewsItem[]> {
 
 // 탭별 맞춤형 뉴스 가져오기
 export async function getNewsForTab(tab: string): Promise<NewsItem[]> {
-  const allNews = await getSampleNews()
+  console.log(`=== 탭별 뉴스 요청 시작: ${tab} ===`)
   
-  switch (tab) {
-    case '초보자용':
-      // 초보자용 뉴스: 가이드, 용어, 체크리스트, Q&A 등 교육적 내용
-      return allNews.filter(news => 
-        ['beginner', 'support'].includes(news.category)
-      ).slice(0, 4)
+  try {
+    // 탭에 따른 카테고리 매핑
+    const categoryMap: Record<string, string[]> = {
+      '초보자용': ['beginner', 'support'],
+      '신혼부부용': ['newlywed', 'support'],
+      '투자자용': ['investment', 'market'],
+      '정책뉴스': ['policy'],
+      '시장분석': ['market', 'investment'],
+      '지원혜택': ['support', 'newlywed']
+    }
+    
+    console.log('사용 가능한 탭들:', Object.keys(categoryMap))
+    console.log('요청된 탭:', tab)
+    console.log('탭이 매핑에 있는지:', tab in categoryMap)
+    
+    const targetCategories = categoryMap[tab] || ['policy']
+    console.log(`타겟 카테고리: ${targetCategories}`)
+    
+    // 해당 카테고리의 fallback 뉴스 직접 사용
+    const allNews: NewsItem[] = []
+    const usedUrls = new Set<string>()
+    
+    for (const category of targetCategories) {
+      console.log(`카테고리 ${category} 처리 중...`)
+      const fallbackNews = getFallbackNews(category)
+      console.log(`카테고리 ${category}에서 가져온 뉴스: ${fallbackNews.length}개`)
       
-    case '신혼부부용':
-      // 신혼부부용 뉴스: 특별공급, 주택단지, 대출, 세금혜택 등 실용적 정보
-      return allNews.filter(news => 
-        ['newlywed', 'support'].includes(news.category)
-      ).slice(0, 4)
+      const uniqueFallbackNews = fallbackNews.filter(item => {
+        if (usedUrls.has(item.url || '')) {
+          console.log(`중복 URL 제외: ${item.url}`)
+          return false
+        }
+        usedUrls.add(item.url || '')
+        console.log(`추가된 뉴스: ${item.title} (${item.category})`)
+        return true
+      })
       
-    case '투자자용':
-      // 투자자용 뉴스: 투자 트렌드, 수익률 분석, 시장 동향 등 투자 관련 정보
-      return allNews.filter(news => 
-        ['investment', 'market'].includes(news.category)
-      ).slice(0, 4)
-      
-    case '정책뉴스':
-      // 정책뉴스: 정부 정책, 규제 변화 등 정책 관련 정보
-      return allNews.filter(news => 
-        news.category === 'policy'
-      ).slice(0, 4)
-      
-    case '시장분석':
-      // 시장분석: 시장 동향, 전망, 분석 등 시장 관련 정보
-      return allNews.filter(news => 
-        ['market', 'investment'].includes(news.category)
-      ).slice(0, 4)
-      
-    case '지원혜택':
-      // 지원혜택: 정부 지원, 혜택, 대출 등 지원 관련 정보
-      return allNews.filter(news => 
-        ['support', 'newlywed'].includes(news.category)
-      ).slice(0, 4)
-      
-    default:
-      return allNews.slice(0, 4)
+      console.log(`카테고리 ${category}에서 유니크 뉴스: ${uniqueFallbackNews.length}개`)
+      allNews.push(...uniqueFallbackNews)
+    }
+    
+    console.log(`=== ${tab} 탭 뉴스 수집 완료: ${allNews.length}개 ===`)
+    console.log('수집된 뉴스 카테고리:', allNews.map(n => n.category))
+    console.log('수집된 뉴스 제목:', allNews.map(n => n.title))
+    
+    const result = allNews.slice(0, 4)
+    console.log(`=== 최종 반환 뉴스: ${result.length}개 ===`)
+    console.log('최종 뉴스 카테고리:', result.map(n => n.category))
+    
+    return result
+    
+  } catch (error) {
+    console.error('뉴스 수집 오류:', error)
+    
+    // 오류 시 기본 뉴스 반환
+    const fallbackNews = getFallbackNews('policy')
+    return fallbackNews.slice(0, 4)
   }
 }
 

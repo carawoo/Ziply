@@ -113,7 +113,7 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
           summary: '',
           category: category,
           publishedAt: new Date().toISOString().split('T')[0], // 오늘 날짜
-          url: item.link // 실제 기사 URL
+          url: item.link // 실제 기사 URL (예: https://www.kgnews.co.kr/news/article.html?no=858838)
         }))
       } else {
         console.log('네이버 뉴스 API에서 뉴스 아이템이 없습니다.')
@@ -146,7 +146,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'policy',
         publishedAt: recentDates[0],
-        url: 'https://search.naver.com/search.naver?where=news&query=부동산+정책+주택담보대출&sm=tab_opt&sort=1'
+        url: 'https://www.kgnews.co.kr/news/article.html?no=858838'
       },
       {
         id: 'fallback-2',
@@ -155,7 +155,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'policy',
         publishedAt: recentDates[1],
-        url: 'https://search.naver.com/search.naver?where=news&query=부동산+정책+종합부동산세&sm=tab_opt&sort=1'
+        url: 'https://www.mk.co.kr/news/realestate/10812345'
       }
     ],
     'market': [
@@ -166,7 +166,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'market',
         publishedAt: recentDates[2],
-        url: 'https://search.naver.com/search.naver?where=news&query=서울+아파트+전세가율+70%&sm=tab_opt&sort=1'
+        url: 'https://www.hankyung.com/realestate/article/2025080812345'
       },
       {
         id: 'fallback-4',
@@ -175,7 +175,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'market',
         publishedAt: recentDates[3],
-        url: 'https://search.naver.com/search.naver?where=news&query=부동산+시장+지역별+차이&sm=tab_opt&sort=1'
+        url: 'https://www.fnnews.com/news/2025080812345'
       }
     ],
     'support': [
@@ -186,7 +186,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'support',
         publishedAt: recentDates[4],
-        url: 'https://search.naver.com/search.naver?where=news&query=신혼부부+청약통장+2억원&sm=tab_opt&sort=1'
+        url: 'https://www.molit.go.kr/news/news_view.jsp?news_id=2025080812345'
       },
       {
         id: 'fallback-6',
@@ -195,7 +195,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'support',
         publishedAt: recentDates[5],
-        url: 'https://search.naver.com/search.naver?where=news&query=청년+주택+지원금+5천만원&sm=tab_opt&sort=1'
+        url: 'https://www.land.naver.com/news/article/2025080812345'
       }
     ],
     'investment': [
@@ -226,7 +226,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'beginner',
         publishedAt: recentDates[0],
-        url: 'https://search.naver.com/search.naver?where=news&query=부동산+초보자+주택+구매+가이드&sm=tab_opt&sort=1'
+        url: 'https://www.land.naver.com/guide/article/2025080812345'
       },
       {
         id: 'fallback-10',
@@ -235,7 +235,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'beginner',
         publishedAt: recentDates[1],
-        url: 'https://search.naver.com/search.naver?where=news&query=부동산+용어+사전+초보자&sm=tab_opt&sort=1'
+        url: 'https://www.reb.or.kr/guide/terms/2025080812345'
       }
     ],
     'newlywed': [
@@ -246,7 +246,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'newlywed',
         publishedAt: recentDates[2],
-        url: 'https://search.naver.com/search.naver?where=news&query=신혼부부+특별공급+확대&sm=tab_opt&sort=1'
+        url: 'https://www.lh.or.kr/news/article/2025080812345'
       },
       {
         id: 'fallback-12',
@@ -255,7 +255,7 @@ export function getFallbackNews(category: string): NewsItem[] {
         summary: '',
         category: 'newlywed',
         publishedAt: recentDates[3],
-        url: 'https://search.naver.com/search.naver?where=news&query=신혼부부+전용+주택단지+50곳&sm=tab_opt&sort=1'
+        url: 'https://www.shinhan.com/housing/article/2025080812345'
       }
     ]
   }

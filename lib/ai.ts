@@ -37,15 +37,15 @@ function buildNewsSearchUrl(title: string): string {
 
 // 실제 기사 URL들 (최신 기사 기준)
 const REAL_NEWS_URLS = {
-  '2024년 부동산 정책 변화, 주택담보대출 규제 완화': 'https://www.yna.co.kr/view/AKR20240115051500002',
-  '서울 아파트 전세가율 70% 돌파, 매매 시장 영향은?': 'https://www.land.naver.com/news/newsView.naver?newsId=20240114000002',
-  '신혼부부 전용 청약통장 출시, 최대 2억원 지원': 'https://www.molit.go.kr/news/news_view.jsp?news_id=20240113000003',
-  '부동산 투자 트렌드 변화, REITs 관심 급증': 'https://www.fnnews.com/news/20240112000004',
-  '처음 집 사는 사람을 위한 부동산 기초 가이드': 'https://www.land.naver.com/guide/',
-  '신혼부부 특별공급, 2024년 새로운 신청 조건 공개': 'https://www.sh.co.kr/news/20240111000006',
-  '2024년 부동산 투자 전략, 지역별 수익률 분석': 'https://www.reb.or.kr/news/20240110000007',
-  '토지거래허가제 일부 해제, 투자 시장에 미치는 영향': 'https://www.land.naver.com/news/newsView.naver?newsId=20240109000008',
-  '2024년 1분기 부동산 시장 전망, 금리 인하 기대감': 'https://www.yna.co.kr/view/AKR20240108051500009'
+  '2024년 부동산 정책 변화, 주택담보대출 규제 완화': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=2024년+부동산+정책+변화+주택담보대출+규제+완화',
+  '서울 아파트 전세가율 70% 돌파, 매매 시장 영향은?': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=서울+아파트+전세가율+70%+돌파+매매+시장+영향',
+  '신혼부부 전용 청약통장 출시, 최대 2억원 지원': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=신혼부부+전용+청약통장+출시+최대+2억원+지원',
+  '부동산 투자 트렌드 변화, REITs 관심 급증': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=부동산+투자+트렌드+REITs+관심+급증',
+  '처음 집 사는 사람을 위한 부동산 기초 가이드': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=처음+집+사는+사람+부동산+기초+가이드',
+  '신혼부부 특별공급, 2024년 새로운 신청 조건 공개': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=신혼부부+특별공급+2024년+신청+조건',
+  '2024년 부동산 투자 전략, 지역별 수익률 분석': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=2024년+부동산+투자+전략+지역별+수익률',
+  '토지거래허가제 일부 해제, 투자 시장에 미치는 영향': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=토지거래허가제+일부+해제+투자+시장+영향',
+  '2024년 1분기 부동산 시장 전망, 금리 인하 기대감': 'https://search.naver.com/search.naver?where=news&sm=tab_jum&query=2024년+1분기+부동산+시장+전망+금리+인하'
 }
 
 export async function summarizeNews(content: string, category: string): Promise<string> {

@@ -59,7 +59,7 @@ export const sendKakaoNewsletter = async (
 ) => {
   const newsSummary = newsItems
     .slice(0, 3) // 최대 3개 뉴스만
-    .map(item => `• ${item.title}`)
+    .map(item => `${item.title}`)
     .join('\n')
 
   const variables = {

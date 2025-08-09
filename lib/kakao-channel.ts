@@ -48,7 +48,7 @@ export const createKakaoChannelNewsletter = (
 ): KakaoChannelMessage => {
   const newsSummary = newsItems
     .slice(0, 3) // 최대 3개 뉴스만
-    .map(item => `• ${item.title}`)
+    .map(item => `${item.title}`)
     .join('\n')
 
   const text = `📈 ${date} 오늘의 부동산 뉴스

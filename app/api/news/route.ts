@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fetchNewsByTab, summarizeNews, generateDefaultSummary } from '@/lib/ai'
+import he from 'he'
 
 // 캐시 끄기
 export const dynamic = 'force-dynamic';
@@ -38,17 +39,22 @@ export async function GET(request: NextRequest) {
     const SUMMARY_TIMEOUT_MS = 2500
     const newsWithSummaries = await Promise.all(
       news.map(async (item: any) => {
+        // HTML 엔티티 디코딩 및 태그 제거
+        const decodedTitle = he.decode((item.title || '').toString())
+        const decodedContent = he.decode((item.content || '').toString())
+        const cleanTitle = decodedTitle.replace(/<[^>]*>/g, '').trim()
+        const cleanContent = decodedContent.replace(/<[^>]*>/g, '').trim()
         try {
           const summary = await Promise.race([
-            summarizeNews(item.content, tab),
+            summarizeNews(cleanContent, tab),
             new Promise((_, reject) => setTimeout(() => reject(new Error('summary-timeout')), SUMMARY_TIMEOUT_MS))
           ]) as string
-          return { ...item, summary }
+          return { ...item, title: cleanTitle, content: cleanContent, summary }
         } catch (summaryError) {
           console.error('요약 생성 실패:', summaryError)
           // 요약 실패 시 기본 요약 사용 (내용이 없으면 제목 기반 생성)
-          const defaultSummary = generateDefaultSummary(item.content || item.title || '', tab)
-          return { ...item, summary: defaultSummary }
+          const defaultSummary = generateDefaultSummary(cleanContent || cleanTitle || '', tab)
+          return { ...item, title: cleanTitle, content: cleanContent, summary: defaultSummary }
         }
       })
     )

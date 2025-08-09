@@ -538,7 +538,7 @@ async function fetchNaverNewsFallback(category: string): Promise<NewsItem[]> {
     return fallbackNews
   } catch (error) {
     console.error('네이버 뉴스 fallback 오류:', error)
-    return getFallbackNews(category)
+    return []
   }
 }
 
@@ -1177,12 +1177,9 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
       }
     }
     
-    // 4. 최종적으로 부족하면 fallback 데이터로 채우기
+    // 4. 최종적으로 부족해도 폴백 사용 금지: 그대로 반환
     if (allNews.length < 4) {
-      console.log(`최종 결과 부족 (${allNews.length}개). fallback 데이터로 채웁니다.`)
-      const fallbackNews = getFallbackNews(category)
-      const additionalNews = fallbackNews.slice(0, 4 - allNews.length)
-      allNews.push(...additionalNews)
+      console.log(`최종 결과 부족 (${allNews.length}개). 폴백 미사용, 수집한 만큼만 반환합니다.`)
     }
     
     return allNews.slice(0, 10)
@@ -1191,9 +1188,9 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
     console.error('실제 뉴스 수집 오류:', error)
   }
   
-  // 모든 API 실패 시 fallback 사용
-  console.log('모든 API 실패. fallback 데이터 사용.')
-  return getFallbackNews(category).slice(0, 10)
+  // 모든 API 실패 시 폴백 미사용
+  console.log('모든 API 실패. 빈 결과 반환.')
+  return []
 }
 
 // 탭 이름을 받아 실제 뉴스 수집 파이프라인을 실행하는 공개 함수

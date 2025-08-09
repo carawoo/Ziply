@@ -6,14 +6,26 @@ const createTransporter = async () => {
   const protocol = String(process.env.EMAIL_PROTOCOL || '').toLowerCase() // 'ssl' | 'tls' | ''(auto)
   const port = parseInt(process.env.EMAIL_PORT || (protocol === 'ssl' ? '465' : '587'))
   const secure = protocol === 'ssl' || (String(process.env.EMAIL_SECURE || '').toLowerCase() === 'true') || port === 465
+  
+  // 환경변수 정리 및 검증
+  const emailUser = String(process.env.EMAIL_USER || '').trim()
+  const emailPass = String(process.env.EMAIL_PASS || '').replace(/\s+/g, '')
+  
+  console.log('📧 이메일 설정 확인:')
+  console.log(`- Host: ${process.env.EMAIL_HOST}`)
+  console.log(`- Port: ${port}`)
+  console.log(`- Secure: ${secure}`)
+  console.log(`- User: ${emailUser}`)
+  console.log(`- Pass length: ${emailPass.length}자`)
+  
   return nodemailer.default.createTransport({
     host: process.env.EMAIL_HOST,
     port,
     secure, // 465이면 자동 true
     requireTLS: protocol === 'tls',
     auth: {
-      user: (process.env.EMAIL_USER || '').trim(),
-      pass: (process.env.EMAIL_PASS || '').replace(/\s+/g, ''),
+      user: emailUser,
+      pass: emailPass,
     },
   })
 }

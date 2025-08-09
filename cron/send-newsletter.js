@@ -34,8 +34,8 @@ const createTransporter = () => {
     secure,
     requireTLS: protocol === 'tls',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user: String(process.env.EMAIL_USER || '').trim(),
+      pass: String(process.env.EMAIL_PASS || '').replace(/\s+/g, ''),
     },
   })
 }

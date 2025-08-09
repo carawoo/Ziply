@@ -12,8 +12,8 @@ const createTransporter = async () => {
     secure, // 465이면 자동 true
     requireTLS: protocol === 'tls',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user: (process.env.EMAIL_USER || '').trim(),
+      pass: (process.env.EMAIL_PASS || '').replace(/\s+/g, ''),
     },
   })
 }

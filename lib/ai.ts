@@ -1,7 +1,6 @@
 import dayjs from 'dayjs'
 
-// fallback 사용 차단 플래그
-const USE_FALLBACK = false;
+// 폴백 완전 제거 - 실제 API 데이터만 사용
 
 // AI 뉴스 요약 서비스
 export interface NewsItem {
@@ -297,15 +296,15 @@ export async function getNewsByCategory() {
 
 // 타겟별 키워드 설정
 const TARGET_KEYWORDS: Record<string, string[]> = {
-  '초보자': ['부동산 기초', '내집마련', '주택 매매', '부동산 용어', '부동산 가이드', '주택 구매'],
-  '신혼부부': ['청약', '신혼부부 특별공급', '전세', '신축 아파트', '신혼부부', '특별공급'],
-  '투자자': ['수익률', '투자', 'REITs', '상업용 부동산', '부동산 시장 분석', '부동산 투자'],
-  'policy': ['정책', '부동산 정책', '규제', '법안', '정부 발표'],
-  'market': ['시장', '부동산 시장', '가격', '동향', '분석'],
-  'support': ['지원', '혜택', '대출', '보조금', '정부 지원'],
-  'investment': ['투자', '수익률', 'REITs', '상업용', '투자 전략'],
-  'beginner': ['기초', '가이드', '용어', '체크리스트', '초보자'],
-  'newlywed': ['신혼부부', '특별공급', '청약', '신축', '혜택']
+  '초보자': ['내집마련', '부동산 기초', '주택 구매'],
+  '신혼부부': ['신혼부부 청약', '특별공급', '전세 지원'],
+  '투자자': ['부동산 투자', '수익률', 'REITs'],
+  'policy': ['부동산 정책', '정부 대책', '대출 규제'],
+  'market': ['집값 동향', '부동산 시장', '매매가'],
+  'support': ['주택 지원', '대출 지원', '보조금'],
+  'investment': ['부동산 투자', '수익률', 'REITs'],
+  'beginner': ['내집마련', '부동산 기초', '주택 구매'],
+  'newlywed': ['신혼부부 청약', '특별공급', '전세 지원']
 }
 
 // 오늘 날짜를 YYYY-MM-DD로 반환
@@ -486,61 +485,7 @@ function getRecentDates(): string[] {
   return dates
 }
 
-// 네이버 뉴스 API 실패 시 대안으로 실제 네이버 뉴스 검색 결과 사용
-async function fetchNaverNewsFallback(category: string): Promise<NewsItem[]> {
-  try {
-    // 실제 네이버 뉴스 검색 API 호출 (무료)
-    const searchQuery = encodeURIComponent(category)
-    const searchUrl = `https://search.naver.com/search.naver?where=news&query=${searchQuery}&sm=tab_opt&sort=1`
-    
-    console.log('네이버 뉴스 검색 URL:', searchUrl)
-    
-    // 실제 검색 결과를 기반으로 한 뉴스 생성 (각각 다른 URL 사용)
-    const fallbackNews = [
-      {
-        id: 'naver-1',
-        title: `${category} 관련 최신 뉴스 - 시장 동향 분석`,
-        content: `${category} 분야의 최신 동향과 시장 변화에 대한 분석이 나왔습니다. 전문가들은 지속적인 모니터링이 필요하다고 조언합니다.`,
-        summary: '',
-        category: category,
-        publishedAt: new Date().toISOString().split('T')[0],
-        url: `https://search.naver.com/search.naver?where=news&query=${searchQuery}&sm=tab_opt&sort=1&start=1`
-      },
-      {
-        id: 'naver-2',
-        title: `${category} 정책 변화, 시장에 미치는 영향`,
-        content: `최근 ${category} 관련 정책 변화가 시장에 미치는 영향에 대한 전문가 분석이 나왔습니다.`,
-        summary: '',
-        category: category,
-        publishedAt: new Date().toISOString().split('T')[0],
-        url: `https://search.naver.com/search.naver?where=news&query=${searchQuery}&sm=tab_opt&sort=1&start=11`
-      },
-      {
-        id: 'naver-3',
-        title: `${category} 투자 전략, 전문가 조언`,
-        content: `${category} 분야에서 투자 전략에 대한 전문가 조언이 나왔습니다. 시장 상황을 고려한 신중한 접근이 필요하다고 강조합니다.`,
-        summary: '',
-        category: category,
-        publishedAt: new Date().toISOString().split('T')[0],
-        url: `https://search.naver.com/search.naver?where=news&query=${searchQuery}&sm=tab_opt&sort=1&start=21`
-      },
-      {
-        id: 'naver-4',
-        title: `${category} 시장 전망, 올해 예상 동향`,
-        content: `${category} 시장의 올해 전망과 예상 동향에 대한 분석이 나왔습니다. 다양한 요인을 종합적으로 고려한 전망입니다.`,
-        summary: '',
-        category: category,
-        publishedAt: new Date().toISOString().split('T')[0],
-        url: `https://search.naver.com/search.naver?where=news&query=${searchQuery}&sm=tab_opt&sort=1&start=31`
-      }
-    ]
-    
-    return fallbackNews
-  } catch (error) {
-    console.error('네이버 뉴스 fallback 오류:', error)
-    return []
-  }
-}
+// 폴백 함수 제거됨 - 실제 API만 사용
 
 // 날짜 필터링 함수 (오늘 날짜 우선, 부족하면 어제 날짜로 채우기)
 function filterNewsByDate(newsItems: NewsItem[], targetCount: number = 10): NewsItem[] {
@@ -747,9 +692,9 @@ async function fetchNaverNewsStrict(category: string): Promise<NewsItem[]> {
     
     console.log(`네이버 뉴스 엄격 필터링 시작: ${category} (오늘: ${today})`)
     
-    // 네이버 뉴스 API 호출
+    // 네이버 뉴스 API 호출 (그룹 키워드 OR 쿼리 적용)
     const url = new URL('https://openapi.naver.com/v1/search/news.json')
-    url.searchParams.set('query', category)
+    url.searchParams.set('query', decodeURIComponent(query))
     url.searchParams.set('display', '50') // 더 많은 결과 가져오기
     url.searchParams.set('start', '1')
     url.searchParams.set('sort', 'date')
@@ -790,7 +735,7 @@ async function fetchNaverNewsStrict(category: string): Promise<NewsItem[]> {
           continue
         }
 
-        // 1. 오늘 날짜 필터
+        // 1. 최신성 필터 (최근 3일)
         let publishedDate = getTodayDate()
         if (item.pubDate) {
           try {
@@ -799,18 +744,16 @@ async function fetchNaverNewsStrict(category: string): Promise<NewsItem[]> {
             console.log('날짜 파싱 오류:', error)
           }
         }
-
-        if (publishedDate !== today) {
-          console.log(`날짜 불일치 제외: ${cleanTitle} (${publishedDate} != ${today})`)
+        if (!isWithinDaysKST(item.pubDate || publishedDate, 3)) {
+          console.log(`최근 3일 범위 외 제외: ${cleanTitle} (${item.pubDate || publishedDate})`)
           continue
         }
 
-        // 2. 주요 뉴스 도메인 우선 허용 (헤비 검증 제거)
+        // 2. 주요 뉴스 도메인 우대 (비주요도 허용)
         const domain = new URL(cleanUrl).hostname
         const isMajor = isDiverseNewsSource(domain)
-        if (!isMajor) {
-          // 비주요 도메인은 간단히 제외
-          console.log(`비주요 도메인 제외: ${cleanTitle} -> ${cleanUrl} (${domain})`)
+        if (!isMajor && domain.endsWith('.blog')) {
+          console.log(`블로그 도메인 제외: ${cleanTitle} -> ${cleanUrl} (${domain})`)
           continue
         }
 
@@ -894,22 +837,21 @@ async function fetchGoogleNewsStrict(category: string): Promise<NewsItem[]> {
           continue
         }
         
-        // 1. 오늘 날짜 필터
+        // 1. 최신성 필터 (최근 3일)
         let publishedDate = getTodayDate()
         if (item.pagemap?.metatags?.[0]?.['article:published_time']) {
           const dateStr = item.pagemap.metatags[0]['article:published_time']
           publishedDate = new Date(dateStr).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
         }
-        
-        if (publishedDate !== today) {
-          console.log(`날짜 불일치 제외: ${cleanTitle} (${publishedDate} != ${today})`)
+        if (!isWithinDaysKST(publishedDate, 3)) {
+          console.log(`최근 3일 범위 외 제외: ${cleanTitle} (${publishedDate})`)
           continue
         }
         
-        // 2. 뉴스 소스 다양성 확인 (주요 도메인만 허용)
+        // 2. 뉴스 소스 다양성 확인 (주요 도메인 우대, 비주요도 허용)
         const domain = new URL(cleanUrl).hostname
         const isDiverseSource = isDiverseNewsSource(domain)
-        if (isDiverseSource) {
+        if (isDiverseSource || !domain.endsWith('.blog')) {
           // 모든 조건 통과
           usedUrls.add(cleanUrl)
           validNews.push({
@@ -954,6 +896,19 @@ function isToday(dateString: string): boolean {
     return date === today
   } catch (error) {
     console.log('날짜 파싱 오류:', error)
+    return false
+  }
+}
+
+// KST 기준 최근 N일 이내인지 체크
+function isWithinDaysKST(dateString: string, days: number): boolean {
+  try {
+    const target = new Date(new Date(dateString).getTime() + 9 * 3600 * 1000)
+    const now = new Date(new Date().getTime() + 9 * 3600 * 1000)
+    const diffMs = now.getTime() - target.getTime()
+    const diffDays = diffMs / (1000 * 60 * 60 * 24)
+    return diffDays <= days && diffDays >= 0
+  } catch {
     return false
   }
 }
@@ -1426,171 +1381,7 @@ async function validateWithCustomHeaders(url: string, customHeaders: Record<stri
   }
 }
 
-// API 실패 시 사용할 기본 뉴스 (실제 기사 URL 포함)
-export function getFallbackNews(category: string): NewsItem[] {
-  const currentDate = new Date().toISOString().split('T')[0] // 항상 최신 날짜 사용
-  
-  const fallbackNews = {
-    'policy': [
-      {
-        id: 'policy-1',
-        title: '[단독] 신생아 특례 대환대출, 연소득 8천만 원 이상 고소득자 비중 절반으로',
-        content: '이번 보도에 따르면 정책대출인 신생아 특례 대환대출 신청자 중 연소득 8천만 원 이상 비중이 절반을 넘는다는 국회 예산정책처 평가 결과가 전해졌습니다. 실질적으로 저소득층이 아닌 고소득자가 주요 수혜층이 된다는 비판 제기.',
-        summary: '',
-        category: 'policy',
-        publishedAt: currentDate,
-        url: 'https://v.daum.net/v/20250803180612879'
-      },
-      {
-        id: 'policy-2',
-        title: '[속보] 정부, 부동산 투기억제를 위한 종합부동산세 개편안 발표',
-        content: '정부가 부동산 투기억제를 위해 종합부동산세 개편안을 발표했습니다. 다주택자에 대한 세금 부담을 강화하고, 실수요자 보호를 위한 정책을 추진한다고 밝혔습니다. 이번 조치로 다주택자들의 투기 수요가 억제될 것으로 예상됩니다.',
-        summary: '',
-        category: 'policy',
-        publishedAt: currentDate,
-        url: 'https://www.mk.co.kr/news/realestate/10812345'
-      }
-    ],
-    'market': [
-      {
-        id: 'market-1',
-        title: '서울 아파트 전세가율 70% 돌파, 매매 시장 영향은?',
-        content: '서울 주요 지역의 아파트 전세가율이 70%를 돌파하면서 전세 시장의 변화가 감지되고 있습니다. 전문가들은 전세 시장의 불안정성이 매매 시장에도 영향을 미칠 수 있다고 분석합니다. 전세가 상승으로 인한 월세 전환 수요 증가도 예상됩니다.',
-        summary: '',
-        category: 'market',
-        publishedAt: currentDate,
-        url: 'https://www.hankyung.com/realestate/article/2025080812345'
-      },
-      {
-        id: 'market-2',
-        title: '[분석] 부동산 시장 동향, 지역별 차이 심화',
-        content: '최근 부동산 시장에서 지역별 차이가 심화되고 있습니다. 수도권과 지방, 그리고 수도권 내에서도 지역별로 상반된 움직임을 보이고 있어 투자 시 신중한 접근이 필요합니다. 전문가들은 지역별 맞춤형 투자 전략이 중요하다고 조언합니다.',
-        summary: '',
-        category: 'market',
-        publishedAt: currentDate,
-        url: 'https://www.fnnews.com/news/2025080812345'
-      }
-    ],
-    'support': [
-      {
-        id: 'support-1',
-        title: '[정책] 신혼부부 전용 청약통장 출시, 최대 2억원 지원',
-        content: '정부가 신혼부부의 내 집 마련을 지원하기 위해 전용 청약통장을 출시합니다. 연소득 기준을 완화하고 지원 한도를 최대 2억원까지 확대하여 신혼부부들의 주택 구입을 적극 지원한다고 밝혔습니다. 이번 정책으로 신혼부부들의 주거 안정이 크게 개선될 것으로 기대됩니다.',
-        summary: '',
-        category: 'support',
-        publishedAt: currentDate,
-        url: 'https://www.land.naver.com/news/article/2025080812345'
-      },
-      {
-        id: 'support-2',
-        title: '[지원] 청년 주택 구입 지원금 확대, 1인당 최대 5천만원',
-        content: '정부가 청년들의 내 집 마련을 위해 주택 구입 지원금을 확대합니다. 1인당 최대 5천만원까지 지원하며, 소득 기준도 완화하여 더 많은 청년들이 혜택을 받을 수 있도록 했습니다. 청년들의 주거 부담 해소를 위한 적극적인 정책 지원이 이어지고 있습니다.',
-        summary: '',
-        category: 'support',
-        publishedAt: currentDate,
-        url: 'https://www.land.naver.com/news/article/2025080812346'
-      }
-    ],
-    'investment': [
-      {
-        id: 'investment-1',
-        title: '[투자] 부동산 투자 트렌드 변화, REITs 관심 급증',
-        content: '최근 부동산 투자 트렌드가 직접 투자에서 REITs(부동산투자신탁)로 이동하고 있습니다. 소액 투자자들도 부동산 시장에 참여할 수 있고, 유동성이 높다는 장점으로 인기가 높아지고 있습니다. 전문가들은 REITs 투자가 부동산 시장의 새로운 대안이 될 것으로 전망합니다.',
-        summary: '',
-        category: 'investment',
-        publishedAt: currentDate,
-        url: 'https://www.fnnews.com/news/realestate/2025080812345'
-      },
-      {
-        id: 'investment-2',
-        title: '[분석] 부동산 투자 수익률 분석, 지역별 차이 심화',
-        content: '부동산 투자 수익률에서 지역별 차이가 심화되고 있습니다. 수도권 일부 지역은 높은 수익률을 보이고 있지만, 지방 지역은 상대적으로 낮은 수익률을 기록하고 있어 투자 전략 수립이 중요합니다. 지역별 수익률 분석을 통한 체계적인 투자가 필요하다는 지적입니다.',
-        summary: '',
-        category: 'investment',
-        publishedAt: currentDate,
-        url: 'https://www.fnnews.com/news/realestate/2025080812346'
-      }
-    ],
-    'beginner': [
-      {
-        id: 'beginner-1',
-        title: '[가이드] 부동산 초보자를 위한 주택 구매 가이드',
-        content: '부동산 투자가 처음인 분들을 위한 주택 구매 가이드가 나왔습니다. 주택 구매 프로세스부터 필요한 서류, 주의사항까지 단계별로 설명하여 초보자들도 쉽게 따라할 수 있도록 구성했습니다. 전문가들이 추천하는 체크리스트도 함께 제공됩니다.',
-        summary: '',
-        category: 'beginner',
-        publishedAt: currentDate,
-        url: 'https://www.land.naver.com/guide/article/2025080812345'
-      },
-      {
-        id: 'beginner-2',
-        title: '[용어] 부동산 용어 사전, 초보자도 쉽게 이해하는 용어 정리',
-        content: '부동산 시장에서 자주 사용되는 용어들을 초보자도 쉽게 이해할 수 있도록 정리한 용어 사전이 출간되었습니다. 복잡한 부동산 용어들을 일상적인 언어로 설명하여 부동산 시장에 대한 이해를 돕습니다. 실무에서 자주 사용되는 용어들도 포함되어 있습니다.',
-        summary: '',
-        category: 'beginner',
-        publishedAt: currentDate,
-        url: 'https://www.reb.or.kr/guide/terms/2025080812345'
-      },
-      {
-        id: 'beginner-3',
-        title: '[체크리스트] 부동산 구매 전 꼭 확인해야 할 사항들',
-        content: '부동산 구매를 준비하는 분들을 위한 체크리스트가 공개되었습니다. 위치, 교통, 편의시설, 미래 개발 계획 등 구매 전 꼭 확인해야 할 사항들을 체계적으로 정리했습니다. 초보자도 놓치지 않고 확인할 수 있도록 단계별로 구성되어 있습니다.',
-        summary: '',
-        category: 'beginner',
-        publishedAt: currentDate,
-        url: 'https://www.land.naver.com/guide/checklist/2025080812346'
-      },
-      {
-        id: 'beginner-4',
-        title: '[Q&A] 부동산 초보자가 궁금해하는 질문 TOP 10',
-        content: '부동산 시장에 처음 발을 들이는 분들이 가장 궁금해하는 질문들을 모아서 전문가가 답변한 Q&A가 나왔습니다. 주택 구매부터 투자까지 실무에서 자주 묻는 질문들을 다루어 초보자들의 궁금증을 해소해줍니다.',
-        summary: '',
-        category: 'beginner',
-        publishedAt: currentDate,
-        url: 'https://www.reb.or.kr/guide/qa/2025080812347'
-      }
-    ],
-    'newlywed': [
-      {
-        id: 'newlywed-1',
-        title: '[특별공급] 신혼부부 특별공급 정보, 올해 확대 실시',
-        content: '정부가 신혼부부를 위한 특별공급을 올해 확대 실시한다고 발표했습니다. 신혼부부 특별공급 비율을 높이고, 선정 기준도 완화하여 더 많은 신혼부부들이 혜택을 받을 수 있도록 했습니다. 이번 확대로 신혼부부들의 주택 구입 기회가 크게 늘어날 것으로 예상됩니다.',
-        summary: '',
-        category: 'newlywed',
-        publishedAt: currentDate,
-        url: 'https://www.land.naver.com/news/article/2025080812347'
-      },
-      {
-        id: 'newlywed-2',
-        title: '[주택단지] 신혼부부 전용 주택단지, 전국 50곳 추가 건설',
-        content: '정부가 신혼부부를 위한 전용 주택단지를 전국 50곳 추가로 건설한다고 발표했습니다. 신혼부부들의 주거 안정을 위해 전용 주택단지를 확대하고, 다양한 주택 유형을 제공할 예정입니다. 신혼부부들의 주거 환경 개선을 위한 적극적인 정책이 추진되고 있습니다.',
-        summary: '',
-        category: 'newlywed',
-        publishedAt: currentDate,
-        url: 'https://www.land.naver.com/news/article/2025080812348'
-      },
-      {
-        id: 'newlywed-3',
-        title: '[대출] 신혼부부 전용 주택담보대출, 금리 우대 혜택 확대',
-        content: '은행들이 신혼부부를 위한 전용 주택담보대출 상품을 확대하고 있습니다. 기존 대비 0.3%p 낮은 금리 우대 혜택을 제공하며, 신혼부부들의 내 집 마련 부담을 줄여주고 있습니다. 다양한 은행에서 경쟁적으로 혜택을 확대하고 있어 비교 후 선택하는 것이 좋습니다.',
-        summary: '',
-        category: 'newlywed',
-        publishedAt: currentDate,
-        url: 'https://www.mk.co.kr/news/realestate/10812346'
-      },
-      {
-        id: 'newlywed-4',
-        title: '[세금혜택] 신혼부부 주택 구입 시 세금 감면 혜택 안내',
-        content: '신혼부부가 주택을 구입할 때 받을 수 있는 세금 감면 혜택에 대한 안내가 나왔습니다. 취득세, 등록세 등 다양한 세금에서 감면 혜택을 받을 수 있으며, 신혼부부임을 증명하는 서류만 제출하면 됩니다. 전문가들은 세금 혜택을 놓치지 않도록 미리 확인하라고 조언합니다.',
-        summary: '',
-        category: 'newlywed',
-        publishedAt: currentDate,
-        url: 'https://www.hankyung.com/realestate/article/2025080812346'
-      }
-    ]
-  }
-
-  return fallbackNews[category as keyof typeof fallbackNews] || fallbackNews['policy']
-}
+// 폴백 뉴스 함수 완전 제거 - 실제 API 데이터만 사용
 
 export async function summarizeNews(content: string, category: string): Promise<string> {
   try {
@@ -1669,9 +1460,9 @@ export function generateDefaultSummary(content: string, category: string): strin
   return `${firstTwo} ${categoryMessages[category as keyof typeof categoryMessages] || '부동산 시장의 중요한 변화입니다.'}`
 }
 
-// 실제 뉴스 API에서 뉴스 가져오기 (폴백 제거)
+// 실제 뉴스 API에서 뉴스 가져오기 (폴백 완전 제거)
 export async function getSampleNews(): Promise<NewsItem[]> {
-  console.log('getSampleNews 호출: 폴백 제거됨 → 빈 배열 반환')
+  console.log('getSampleNews 호출: 폴백 완전 제거됨 → 빈 배열 반환')
   return []
 }
 

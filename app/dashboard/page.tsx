@@ -170,7 +170,7 @@ export default function Dashboard() {
       <header className="header">
         <div className="container">
           <nav className="nav">
-            <div className="logo">부동산 뉴스 큐레이터</div>
+            <div className="logo">Ziply</div>
             <div>
               <button 
                 onClick={handleLogout}
@@ -223,10 +223,10 @@ export default function Dashboard() {
                 부동산 투자나 구매가 처음이신 분들을 위한<br />
                 기초적이고 이해하기 쉬운 정보를 제공합니다
               </p>
-              <ul style={{ textAlign: 'left', marginTop: '16px', color: '#6b7280' }}>
-                <li>• 부동산 기초 용어 설명</li>
-                <li>• 주택 구매 프로세스 가이드</li>
-                <li>• 기본적인 시장 동향 해석</li>
+              <ul style={{ textAlign: 'left', marginTop: '16px', color: '#6b7280', listStyleType: 'none', paddingLeft: 0, margin: 0 }}>
+                <li>부동산 기초 용어 설명</li>
+                <li>주택 구매 프로세스 가이드</li>
+                <li>기본적인 시장 동향 해석</li>
               </ul>
             </div>
 
@@ -257,10 +257,10 @@ export default function Dashboard() {
                 내 집 마련을 준비하는 신혼부부와 사회초년생을 위한<br />
                 실용적인 주거 관련 정보를 제공합니다
               </p>
-              <ul style={{ textAlign: 'left', marginTop: '16px', color: '#6b7280' }}>
-                <li>• 신혼부부 특별공급 정보</li>
-                <li>• 생애 첫 주택 구입 혜택</li>
-                <li>• 전세/월세 관련 팁</li>
+              <ul style={{ textAlign: 'left', marginTop: '16px', color: '#6b7280', listStyleType: 'none', paddingLeft: 0, margin: 0 }}>
+                <li>신혼부부 특별공급 정보</li>
+                <li>생애 첫 주택 구입 혜택</li>
+                <li>전세/월세 관련 팁</li>
               </ul>
             </div>
 
@@ -291,10 +291,10 @@ export default function Dashboard() {
                 부동산 투자 경험이 있거나 관심이 많은 분들을 위한<br />
                 심층적인 시장 분석과 투자 인사이트를 제공합니다
               </p>
-              <ul style={{ textAlign: 'left', marginTop: '16px', color: '#6b7280' }}>
-                <li>• 시장 동향 심층 분석</li>
-                <li>• 투자 수익률 및 전략</li>
-                <li>• 정책 변화의 투자 영향</li>
+              <ul style={{ textAlign: 'left', marginTop: '16px', color: '#6b7280', listStyleType: 'none', paddingLeft: 0, margin: 0 }}>
+                <li>시장 동향 심층 분석</li>
+                <li>투자 수익률 및 전략</li>
+                <li>정책 변화의 투자 영향</li>
               </ul>
             </div>
           </div>
@@ -332,7 +332,7 @@ export default function Dashboard() {
       <header className="header">
         <div className="container">
           <nav className="nav">
-            <div className="logo">부동산 뉴스 큐레이터</div>
+            <div className="logo">Ziply</div>
             <div>
               <a href="/" style={{ marginRight: '16px', color: 'white' }}>
                 홈

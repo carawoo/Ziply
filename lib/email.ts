@@ -3,10 +3,12 @@ const createTransporter = async () => {
   // 서버 사이드에서만 nodemailer import
   const nodemailer = await import('nodemailer')
   
+  const port = parseInt(process.env.EMAIL_PORT || '587')
+  const secure = (String(process.env.EMAIL_SECURE || '').toLowerCase() === 'true') || port === 465
   return nodemailer.default.createTransport({
     host: process.env.EMAIL_HOST,
-    port: parseInt(process.env.EMAIL_PORT || '587'),
-    secure: false, // true for 465, false for other ports
+    port,
+    secure, // 465이면 자동 true
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,

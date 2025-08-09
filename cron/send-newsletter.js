@@ -25,10 +25,12 @@ const supabase = createClient(
 
 // 이메일 전송기 설정
 const createTransporter = () => {
+  const port = parseInt(process.env.EMAIL_PORT || '587')
+  const secure = (String(process.env.EMAIL_SECURE || '').toLowerCase() === 'true') || port === 465
   return nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
-    port: parseInt(process.env.EMAIL_PORT || '587'),
-    secure: false,
+    port,
+    secure,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,

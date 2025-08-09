@@ -188,7 +188,7 @@ const createNewsletterHTML = (newsItems: any[], date: string) => {
               이 뉴스레터는 매일 아침 7시에 발송됩니다.
             </p>
             <div style="margin-bottom: 16px;">
-              <a href="https://ziply-nine.vercel.app" style="color: #4f46e5; text-decoration: none; font-weight: 600;">
+              <a href="https://ziply-nine.vercel.app/dashboard" style="color: #4f46e5; text-decoration: none; font-weight: 600;">
                 웹사이트 방문하기
               </a>
             </div>

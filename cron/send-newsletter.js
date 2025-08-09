@@ -87,7 +87,7 @@ const buildNewsletterHtml = (byTab) => {
           ${sectionHtml}
           <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;">
             <p style="color:#9ca3af;font-size:12px;margin:0 0 12px 0;">이 뉴스레터는 매일 아침 7시에 발송됩니다.</p>
-            <a href="${BASE_URL}" style="color:#4f46e5;text-decoration:none;font-weight:600;">웹사이트 방문하기</a>
+            <a href="${BASE_URL.replace(/\/$/, '')}/dashboard" style="color:#4f46e5;text-decoration:none;font-weight:600;">웹사이트 방문하기</a>
           </div>
         </div>
       </div>

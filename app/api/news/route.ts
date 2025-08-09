@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getNewsForTab, summarizeNews, generateDefaultSummary } from '@/lib/ai'
+import { fetchNewsByTab, summarizeNews, generateDefaultSummary, getFallbackNews } from '@/lib/ai'
 
 // 캐시 끄기
 export const dynamic = 'force-dynamic';
@@ -20,29 +20,23 @@ export async function GET(request: NextRequest) {
     console.log('=== 뉴스 API 호출 시작 ===')
     console.log('요청된 탭:', tab)
     
-    // 탭 → 쿼리 매핑 확정
-    const tabToQuery: Record<string, string> = {
-      '정책뉴스': '(부동산 정책) OR (정부 부동산) OR (종부세) OR (대출 규제) OR (부동산 규제)',
-      '시장분석': '(부동산 시장 분석) OR (거래량) OR (전세가) OR (매매가) OR (부동산 시장)',
-      '투자자용': '(부동산 투자) OR (REITs) OR (수익률) OR (투자 전략) OR (부동산 투자 분석)',
-      '초보자용': '(부동산 기초) OR (내집마련) OR (주택 매매) OR (부동산 용어) OR (부동산 가이드)',
-      '신혼부부용': '(청약) OR (신혼부부 특별공급) OR (전세) OR (신축 아파트) OR (신혼부부 주택)',
-      '지원혜택': '(부동산 지원) OR (혜택) OR (대출) OR (보조금) OR (정부 지원)'
-    }
-    
-    const query = tabToQuery[tab] || '(부동산)'
-    console.log('매핑된 쿼리:', query)
-    
-    // 실제 뉴스 검색 수행 (fallback 차단)
-    console.log('실제 뉴스 검색 시작...')
-    const news = await fetchRealNews(query)
-    console.log('실제 뉴스 검색 완료:', news.length, '개')
+    // 탭 기반 실제 뉴스 수집 파이프라인 사용
+    console.log('탭 기반 실제 뉴스 수집 시작...')
+    const news = await fetchNewsByTab(tab)
+    console.log('탭 기반 실제 뉴스 수집 완료:', news.length, '개')
     
     if (news.length === 0) {
-      console.log('실제 뉴스가 없습니다.')
+      console.log('실제 뉴스가 없습니다. fallback으로 대체합니다.')
+      const fallbackCategory =
+        tab === '초보자용' ? 'beginner' :
+        tab === '신혼부부용' ? 'newlywed' :
+        tab === '투자자용' ? 'investment' :
+        tab === '정책뉴스' ? 'policy' :
+        tab === '시장분석' ? 'market' : 'support'
+      const fallbackNews = getFallbackNews(fallbackCategory)
       return NextResponse.json({
         success: true,
-        news: []
+        news: fallbackNews.slice(0, 4)
       })
     }
     
@@ -54,8 +48,8 @@ export async function GET(request: NextRequest) {
           return { ...item, summary }
         } catch (summaryError) {
           console.error('요약 생성 실패:', summaryError)
-          // 요약 실패 시 기본 요약 사용
-          const defaultSummary = generateDefaultSummary(item.content, tab)
+          // 요약 실패 시 기본 요약 사용 (내용이 없으면 제목 기반 생성)
+          const defaultSummary = generateDefaultSummary(item.content || item.title || '', tab)
           return { ...item, summary: defaultSummary }
         }
       })

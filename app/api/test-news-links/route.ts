@@ -1,4 +1,9 @@
 import { NextResponse } from 'next/server'
+
+// dev 테스트용: 빌드 시 정적 생성 방지
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const runtime = 'nodejs'
 import { testNewsLinks } from '@/lib/ai'
 
 export async function GET() {

@@ -1,23 +1,46 @@
 import { NextResponse } from 'next/server'
-import { getNewsForTab } from '@/lib/ai'
+
+// dev 테스트용: 빌드 시 정적 생성 방지
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const runtime = 'nodejs'
+import { getNewsForTab, fetchNewsByTab, fetchNaverNewsAPI } from '@/lib/ai'
 
 export async function GET() {
   try {
     console.log('getNewsForTab 테스트 API 호출')
     
-    // 각 탭별로 getNewsForTab 함수 테스트
+    // 각 탭별로 getNewsForTab / fetchNewsByTab / fetchNaverNewsAPI 교차 테스트
     const tabs = ['초보자용', '신혼부부용', '투자자용', '정책뉴스', '시장분석', '지원혜택']
     const results: Record<string, any> = {}
     
     for (const tab of tabs) {
       console.log(`=== ${tab} 탭 테스트 시작 ===`)
-      const news = await getNewsForTab(tab)
+      const fallbackNews = await getNewsForTab(tab)
+      const realNews = await fetchNewsByTab(tab)
+      // 네이버 API는 카테고리 키워드로 테스트 (대략적인 매핑)
+      const naverCategory = tab === '초보자용' ? 'beginner' :
+                            tab === '신혼부부용' ? 'newlywed' :
+                            tab === '투자자용' ? 'investment' :
+                            tab === '정책뉴스' ? 'policy' :
+                            tab === '시장분석' ? 'market' : 'support'
+      const naverNews = await fetchNaverNewsAPI(naverCategory)
+
       results[tab] = {
-        count: news.length,
-        categories: news.map(n => n.category),
-        titles: news.map(n => n.title)
+        fallback: {
+          count: fallbackNews.length,
+          titles: fallbackNews.map(n => n.title)
+        },
+        realPipeline: {
+          count: realNews.length,
+          titles: realNews.map(n => n.title)
+        },
+        naverApi: {
+          count: naverNews.length,
+          sample: naverNews.slice(0, 5).map(n => ({ title: n.title, url: n.url }))
+        }
       }
-      console.log(`=== ${tab} 탭 테스트 완료: ${news.length}개 ===`)
+      console.log(`=== ${tab} 탭 테스트 완료: fallback ${fallbackNews.length} / real ${realNews.length} / naver ${naverNews.length} ===`)
     }
     
     return NextResponse.json({

@@ -1218,8 +1218,49 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
   return getFallbackNews(category).slice(0, 10)
 }
 
+// 탭 이름을 받아 실제 뉴스 수집 파이프라인을 실행하는 공개 함수
+// - 내부의 fetchRealNews(네이버 타겟별/엄격 + 구글 보완)를 활용
+// - 여러 카테고리를 매핑하여 수집하고 URL 기준으로 중복 제거
+// - 상위 10개까지만 반환 (호출부에서 4개로 슬라이스 가능)
+export async function fetchNewsByTab(tab: string): Promise<NewsItem[]> {
+  console.log(`=== fetchNewsByTab 시작: ${tab} ===`)
+
+  // 탭 → 내부 카테고리 매핑 (대시보드/라우트와 동일 의미)
+  const categoryMap: Record<string, string[]> = {
+    '초보자용': ['beginner', 'support'],
+    '신혼부부용': ['newlywed', 'support'],
+    '투자자용': ['investment', 'market'],
+    '정책뉴스': ['policy'],
+    '시장분석': ['market', 'investment'],
+    '지원혜택': ['support', 'newlywed']
+  }
+
+  const targetCategories = categoryMap[tab] || ['policy']
+  const usedUrls = new Set<string>()
+  const collected: NewsItem[] = []
+
+  for (const category of targetCategories) {
+    try {
+      console.log(`[fetchNewsByTab] 카테고리 수집 시작: ${category}`)
+      const news = await fetchRealNews(category)
+      for (const item of news) {
+        const key = item.url || ''
+        if (!key || usedUrls.has(key)) continue
+        usedUrls.add(key)
+        collected.push(item)
+      }
+      console.log(`[fetchNewsByTab] ${category} 수집: 누적 ${collected.length}건`)
+    } catch (error) {
+      console.error(`[fetchNewsByTab] ${category} 수집 오류:`, error)
+    }
+  }
+
+  console.log(`=== fetchNewsByTab 완료: ${collected.length}건 ===`)
+  return collected.slice(0, 10)
+}
+
 // 네이버 뉴스 API 호출 함수 (기존 fetchRealNews에서 분리)
-async function fetchNaverNewsAPI(category: string): Promise<NewsItem[]> {
+export async function fetchNaverNewsAPI(category: string): Promise<NewsItem[]> {
   try {
     // 환경 변수에서 API 키 확인
     const clientId = process.env.NAVER_CLIENT_ID || 'ceVPKnFABx59Lo4SzbmY'

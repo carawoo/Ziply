@@ -194,7 +194,7 @@ const createNewsletterHTML = (newsItems: any[], date: string) => {
             </div>
             <!-- 매우 눈에 띄지 않는 구독 해지 링크 -->
             <div style="margin-top: 8px;">
-              <a href="${(process.env.APP_BASE_URL || 'https://ziply-nine.vercel.app').replace(/\\\/$/, '')}/api/newsletter/unsubscribe?email={{EMAIL}}&redirect=1"
+              <a href="${('https://ziply-nine.vercel.app').replace(/\\\/$/, '')}/api/newsletter/unsubscribe?email={{EMAIL}}&redirect=1"
                  style="color:#cbd5e1;font-size:11px;text-decoration:underline;opacity:0.6;">
                 구독 취소
               </a>

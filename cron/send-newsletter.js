@@ -37,7 +37,7 @@ const createTransporter = () => {
 }
 
 // 기본 사이트 URL (API 호출용)
-const BASE_URL = process.env.APP_BASE_URL || 'http://localhost:3000'
+const BASE_URL = process.env.APP_BASE_URL || 'https://ziply-nine.vercel.app'
 
 // 탭별 뉴스 수집 (Next API 사용)
 const fetchNewsByTab = async (tab) => {
@@ -88,6 +88,9 @@ const buildNewsletterHtml = (byTab) => {
           <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;">
             <p style="color:#9ca3af;font-size:12px;margin:0 0 12px 0;">이 뉴스레터는 매일 아침 7시에 발송됩니다.</p>
             <a href="${BASE_URL.replace(/\/$/, '')}/dashboard" style="color:#4f46e5;text-decoration:none;font-weight:600;">웹사이트 방문하기</a>
+            <div style="margin-top:8px;">
+              <a href="${BASE_URL.replace(/\/$/, '')}/api/newsletter/unsubscribe?email={{EMAIL}}&redirect=1" style="color:#cbd5e1;font-size:11px;text-decoration:underline;opacity:.6;">구독 취소</a>
+            </div>
           </div>
         </div>
       </div>
@@ -149,12 +152,16 @@ const sendNewsletterToAllSubscribers = async () => {
         byTab[tab] = []
       }
     }
-    const html = buildNewsletterHtml(byTab)
+    // 수신자별로 구독취소 링크에 이메일을 삽입
+    const baseHtml = buildNewsletterHtml(byTab)
 
     // 각 구독자에게 발송
     // 실제 메일 발송 수행 (is_active=true 대상자만)
     const results = await Promise.allSettled(
-      emailSubscribers.map(subscriber => sendRealNewsletter(subscriber.email, html))
+      emailSubscribers.map(subscriber => {
+        const htmlForUser = baseHtml.replace(/\{\{EMAIL\}\}/g, subscriber.email)
+        return sendRealNewsletter(subscriber.email, htmlForUser)
+      })
     )
 
     // 결과 분석

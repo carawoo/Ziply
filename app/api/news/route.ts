@@ -20,9 +20,13 @@ export async function GET(request: NextRequest) {
     console.log('=== 뉴스 API 호출 시작 ===')
     console.log('요청된 탭:', tab)
     
-    // 탭 기반 실제 뉴스 수집 파이프라인 사용
+    // 탭 기반 실제 뉴스 수집 파이프라인 사용 (타임아웃 가드)
     console.log('탭 기반 실제 뉴스 수집 시작...')
-    const news = await fetchNewsByTab(tab)
+    const NEWS_TIMEOUT_MS = 7000
+    const news: any[] = await Promise.race([
+      fetchNewsByTab(tab),
+      new Promise((resolve) => setTimeout(() => resolve([]), NEWS_TIMEOUT_MS))
+    ]) as any[]
     console.log('탭 기반 실제 뉴스 수집 완료:', news.length, '개')
     
     if (news.length === 0) {
@@ -40,11 +44,15 @@ export async function GET(request: NextRequest) {
       })
     }
     
-    // AI 요약 생성 (에러 처리 포함)
+    // AI 요약 생성 (에러/타임아웃 처리 포함)
+    const SUMMARY_TIMEOUT_MS = 2500
     const newsWithSummaries = await Promise.all(
       news.map(async (item: any) => {
         try {
-          const summary = await summarizeNews(item.content, tab)
+          const summary = await Promise.race([
+            summarizeNews(item.content, tab),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('summary-timeout')), SUMMARY_TIMEOUT_MS))
+          ]) as string
           return { ...item, summary }
         } catch (summaryError) {
           console.error('요약 생성 실패:', summaryError)

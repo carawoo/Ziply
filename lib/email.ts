@@ -152,13 +152,15 @@ const createNewsletterHTML = (newsItems: any[], date: string) => {
                   <p style="margin:0 0 16px 0;color:#6b7280;line-height:1.7;">매일 아침 7시, 맞춤형 부동산 뉴스 요약을 받아보세요.</p>
                   ${newsHTML}
 
-                  <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;">
+                    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;">
                     <div style="color:#9ca3af;font-size:12px;margin:0 0 12px 0;">이 뉴스레터는 매일 아침 7시에 발송됩니다.</div>
                     <div style="margin-bottom:8px;">
                       <a href="https://ziply-nine.vercel.app/dashboard" style="color:#2563eb;text-decoration:none;font-weight:700;">웹사이트 방문하기</a>
                     </div>
-                    <div style="margin-top:4px;">
-                      <a href="${('https://ziply-nine.vercel.app').replace(/\\\/$/, '')}/api/newsletter/unsubscribe?email={{EMAIL}}&redirect=1" style="color:#cbd5e1;font-size:11px;text-decoration:underline;opacity:0.6;">구독 취소</a>
+                      <div style="margin-top:4px;color:#94a3b8;font-size:11px;">
+                        <a href="${('https://ziply-nine.vercel.app').replace(/\\\/$/, '')}/api/newsletter/unsubscribe?email={{EMAIL}}&redirect=1" style="color:#94a3b8;text-decoration:underline;">구독 취소</a>
+                        <span style="margin:0 6px;opacity:.6;">·</span>
+                        <span style="opacity:.7;">취소 후 상단에 완료 안내가 표시됩니다</span>
                     </div>
                   </div>
                 </td>

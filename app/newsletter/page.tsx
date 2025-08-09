@@ -1,8 +1,10 @@
+
 'use client'
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import PushNotification from '@/components/PushNotification'
+import { useSearchParams } from 'next/navigation'
 
 export default function Newsletter() {
   const [email, setEmail] = useState('')
@@ -10,6 +12,8 @@ export default function Newsletter() {
   const [message, setMessage] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
+  const searchParams = useSearchParams()
+  const unsubscribed = searchParams?.get('unsubscribed') === '1'
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -104,6 +108,22 @@ export default function Newsletter() {
 
       <div className="container" style={{ paddingTop: '60px', paddingBottom: '80px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* 구독 취소 완료 배너 */}
+          {unsubscribed && (
+            <div style={{
+              background: '#f1f5f9',
+              border: '1px solid #e2e8f0',
+              color: '#0f172a',
+              padding: '14px 16px',
+              borderRadius: 12,
+              marginBottom: 16,
+              textAlign: 'center',
+              fontSize: 14,
+              fontWeight: 600
+            }}>
+              구독 취소가 완료되었습니다. 언제든지 다시 구독하실 수 있어요.
+            </div>
+          )}
           {/* 메인 카드 */}
           <div style={{
             background: 'white',

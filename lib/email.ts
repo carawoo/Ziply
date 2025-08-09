@@ -213,20 +213,38 @@ export const sendNewsletter = async (email: string) => {
 
   try {
     // 동적 import로 서버 사이드에서만 실행
-    const { getSampleNews, summarizeNews } = await import('./ai')
-    
-    // 오늘의 뉴스 가져오기
-    const todayNews: any[] = [] // 폴백 제거: 샘플 뉴스 사용 중단
+    const { fetchNewsByTab, summarizeNews } = await import('./ai')
+
+    // 오늘 날짜 문자열 생성
     const today = new Date().toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     })
 
-    // 뉴스 요약 생성
+    // 그룹/탭별 맞춤 뉴스 수집 (현 개발 파이프라인 유지)
+    const tabs = ['정책뉴스', '시장분석', '지원혜택', '초보자용', '신혼부부용', '투자자용']
+    const collected: any[] = []
+
+    for (const tab of tabs) {
+      try {
+        const items = await fetchNewsByTab(tab)
+        // 섹션당 최대 4개, 섹션 정보가 드러나도록 제목에 탭 라벨 프리픽스
+        const topItems = items.slice(0, 4).map((n) => ({
+          ...n,
+          title: `${tab} | ${n.title}`
+        }))
+        collected.push(...topItems)
+      } catch (e) {
+        console.error(`[sendNewsletter] ${tab} 수집 실패:`, e)
+      }
+    }
+
+    // 요약 본문 준비 (요약 키가 없으면 생성)
     const newsWithSummaries = await Promise.all(
-      todayNews.map(async (news) => {
-        const summary = await summarizeNews(news.content, news.category)
+      collected.map(async (news) => {
+        if (news.summary && news.summary.trim().length > 0) return news
+        const summary = await summarizeNews(news.content || '', news.category || '정책뉴스')
         return { ...news, summary }
       })
     )

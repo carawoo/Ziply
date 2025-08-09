@@ -81,54 +81,210 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="container">
-        <div className="hero">
-          <h1>Ziply와 함께<br />부동산 뉴스를 더 쉽게 📈</h1>
+      <div className="hero">
+        <div className="container">
+          <h1>부동산이 어려우신가요?<br />Ziply와 함께 <span style={{ color: 'var(--primary-600)' }}>쉽게</span> 시작하세요</h1>
           <p>
-            초보자도 쉽게 이해할 수 있는 맞춤형 부동산 뉴스 요약 서비스
+            복잡한 부동산 시장, 이제 걱정하지 마세요.<br />
+            AI가 매일 선별한 맞춤형 뉴스로 똑똑하게 투자하세요.
           </p>
           
-          <div style={{ marginTop: '40px' }}>
+          <div style={{ marginTop: '48px' }}>
             <button 
               onClick={handleKakaoLogin}
               className="button button-kakao"
               style={{ 
-                fontSize: '18px', 
-                padding: '16px 32px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px'
+                fontSize: '20px', 
+                padding: '20px 40px',
+                fontWeight: '700',
+                borderRadius: '16px',
+                minHeight: '64px'
               }}
             >
-              <span>💬</span>
+              <span style={{ fontSize: '24px' }}>💬</span>
               카카오로 3초 만에 시작하기
             </button>
           </div>
 
-          <div style={{ marginTop: '60px', textAlign: 'left', maxWidth: '800px', margin: '60px auto 0' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
-              <div className="card">
-                <div style={{ fontSize: '32px', marginBottom: '12px' }}>🔰</div>
-                <h3 style={{ marginBottom: '8px', color: '#1f2937' }}>초보자 친화적</h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.6' }}>
-                  복잡한 부동산 용어도 쉽게 설명해드려요
+          <div className="feature-grid">
+            <div className="feature-card">
+              <span className="feature-icon">🎯</span>
+              <h3 className="feature-title">맞춤형 뉴스</h3>
+              <p className="feature-description">
+                초보자, 신혼부부, 투자자별로<br />
+                딱 맞는 정보만 골라서 제공
+              </p>
+            </div>
+            
+            <div className="feature-card">
+              <span className="feature-icon">🤖</span>
+              <h3 className="feature-title">AI 똑똑한 요약</h3>
+              <p className="feature-description">
+                복잡한 경제 용어는 쉽게,<br />
+                핵심 포인트는 명확하게 정리
+              </p>
+            </div>
+            
+            <div className="feature-card">
+              <span className="feature-icon">📧</span>
+              <h3 className="feature-title">매일 아침 7시 배송</h3>
+              <p className="feature-description">
+                출근길에 읽기 좋은<br />
+                3분 분량의 뉴스레터
+              </p>
+            </div>
+          </div>
+
+          <div style={{ 
+            marginTop: '80px', 
+            padding: '40px', 
+            background: 'white', 
+            borderRadius: 'var(--radius-2xl)',
+            boxShadow: 'var(--shadow-lg)',
+            border: '1px solid var(--gray-200)'
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <h2 style={{ 
+                fontSize: '32px', 
+                fontWeight: '800', 
+                marginBottom: '16px',
+                color: 'var(--gray-900)'
+              }}>
+                이런 분들께 추천해요
+              </h2>
+              <p style={{ 
+                fontSize: '18px', 
+                color: 'var(--gray-600)',
+                lineHeight: '1.6'
+              }}>
+                Ziply는 부동산이 처음인 모든 분들을 위해 만들어졌어요
+              </p>
+            </div>
+
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+              gap: '24px' 
+            }}>
+              <div style={{ textAlign: 'center', padding: '24px' }}>
+                <div style={{ 
+                  fontSize: '48px', 
+                  marginBottom: '16px',
+                  background: 'var(--primary-50)',
+                  borderRadius: '50%',
+                  width: '80px',
+                  height: '80px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px'
+                }}>🏠</div>
+                <h3 style={{ 
+                  fontWeight: '700', 
+                  marginBottom: '8px', 
+                  color: 'var(--gray-900)',
+                  fontSize: '18px'
+                }}>
+                  생애 첫 집 준비
+                </h3>
+                <p style={{ 
+                  color: 'var(--gray-600)', 
+                  lineHeight: '1.6',
+                  fontSize: '15px'
+                }}>
+                  내 집 마련이 막막한<br />20-30대를 위한 가이드
                 </p>
               </div>
-              
-              <div className="card">
-                <div style={{ fontSize: '32px', marginBottom: '12px' }}>🤖</div>
-                <h3 style={{ marginBottom: '8px', color: '#1f2937' }}>AI 맞춤 요약</h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.6' }}>
-                  당신의 상황에 맞는 핵심 정보만 골라서
+
+              <div style={{ textAlign: 'center', padding: '24px' }}>
+                <div style={{ 
+                  fontSize: '48px', 
+                  marginBottom: '16px',
+                  background: 'var(--primary-50)',
+                  borderRadius: '50%',
+                  width: '80px',
+                  height: '80px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px'
+                }}>💑</div>
+                <h3 style={{ 
+                  fontWeight: '700', 
+                  marginBottom: '8px', 
+                  color: 'var(--gray-900)',
+                  fontSize: '18px'
+                }}>
+                  신혼부부 특별공급
+                </h3>
+                <p style={{ 
+                  color: 'var(--gray-600)', 
+                  lineHeight: '1.6',
+                  fontSize: '15px'
+                }}>
+                  각종 혜택과 지원 정책을<br />놓치지 않게 알려드려요
                 </p>
               </div>
-              
-              <div className="card">
-                <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚡</div>
-                <h3 style={{ marginBottom: '8px', color: '#1f2937' }}>실시간 업데이트</h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.6' }}>
-                  중요한 부동산 뉴스를 놓치지 마세요
+
+              <div style={{ textAlign: 'center', padding: '24px' }}>
+                <div style={{ 
+                  fontSize: '48px', 
+                  marginBottom: '16px',
+                  background: 'var(--primary-50)',
+                  borderRadius: '50%',
+                  width: '80px',
+                  height: '80px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px'
+                }}>📈</div>
+                <h3 style={{ 
+                  fontWeight: '700', 
+                  marginBottom: '8px', 
+                  color: 'var(--gray-900)',
+                  fontSize: '18px'
+                }}>
+                  스마트한 투자
+                </h3>
+                <p style={{ 
+                  color: 'var(--gray-600)', 
+                  lineHeight: '1.6',
+                  fontSize: '15px'
+                }}>
+                  시장 동향을 파악하고<br />기회를 놓치지 마세요
                 </p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ 
+            marginTop: '60px',
+            textAlign: 'center'
+          }}>
+            <p style={{ 
+              fontSize: '16px', 
+              color: 'var(--gray-500)',
+              marginBottom: '24px'
+            }}>
+              이미 <strong style={{ color: 'var(--primary-600)' }}>1,000+</strong>명이 Ziply와 함께 성공적인 부동산 여정을 시작했어요
+            </p>
+            
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: '32px',
+              alignItems: 'center',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ color: 'var(--gray-400)', fontSize: '14px' }}>
+                ✓ 무료 서비스
+              </div>
+              <div style={{ color: 'var(--gray-400)', fontSize: '14px' }}>
+                ✓ 언제든 구독 해지
+              </div>
+              <div style={{ color: 'var(--gray-400)', fontSize: '14px' }}>
+                ✓ 개인정보 보호
               </div>
             </div>
           </div>

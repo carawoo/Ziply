@@ -80,7 +80,7 @@ const buildNewsletterHtml = (byTab) => {
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;padding:0;background:#f3f4f6;">
       <div style="max-width:640px;margin:0 auto;background:#ffffff;">
         <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:28px;text-align:center;">
-          <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">📈 부동산 뉴스 큐레이터</h1>
+          <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">📈 Ziply</h1>
           <p style="color:rgba(255,255,255,0.9);margin:8px 0 0 0;font-size:14px;">${today} 오늘의 주요 부동산 뉴스</p>
         </div>
         <div style="padding:24px;">
@@ -103,7 +103,7 @@ const sendRealNewsletter = async (email, html) => {
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
-      subject: `[부동산 뉴스 큐레이터] ${today} 오늘의 부동산 뉴스`,
+      subject: `[Ziply] ${today} 오늘의 부동산 뉴스`,
       html,
     }
     const result = await (await transporter).sendMail(mailOptions)

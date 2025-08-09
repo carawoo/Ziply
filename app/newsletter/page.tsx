@@ -70,16 +70,16 @@ export default function Newsletter() {
   }
 
   return (
-    <div>
+    <div style={{ background: 'var(--gray-50)', minHeight: '100vh' }}>
       <header className="header">
         <div className="container">
           <nav className="nav">
             <div className="logo">Ziply</div>
-            <div>
-              <a href="/" style={{ marginRight: '16px', color: 'white' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <a href="/" style={{ color: 'white', textDecoration: 'none', fontWeight: '500' }}>
                 홈
               </a>
-              <a href="/dashboard" style={{ marginRight: '16px', color: 'white' }}>
+              <a href="/dashboard" style={{ color: 'white', textDecoration: 'none', fontWeight: '500' }}>
                 대시보드
               </a>
             </div>
@@ -87,30 +87,70 @@ export default function Newsletter() {
         </div>
       </header>
 
-      <div className="container" style={{ paddingTop: '40px', paddingBottom: '40px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <div className="card">
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <div style={{ fontSize: '64px', marginBottom: '16px' }}>📧</div>
-              <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '12px', color: '#1f2937' }}>
-                뉴스레터 구독
+      <div className="container" style={{ paddingTop: '60px', paddingBottom: '80px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* 메인 카드 */}
+          <div style={{
+            background: 'white',
+            borderRadius: 'var(--radius-2xl)',
+            padding: '48px',
+            boxShadow: 'var(--shadow-lg)',
+            border: '1px solid var(--gray-200)',
+            marginBottom: '40px'
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+              <div style={{ 
+                fontSize: '80px', 
+                marginBottom: '24px',
+                background: 'linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%)',
+                borderRadius: '50%',
+                width: '120px',
+                height: '120px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 24px',
+                border: '3px solid var(--primary-200)'
+              }}>📧</div>
+              <h1 style={{ 
+                fontSize: 'clamp(32px, 5vw, 48px)', 
+                fontWeight: '800', 
+                marginBottom: '16px', 
+                color: 'var(--gray-900)',
+                lineHeight: '1.2'
+              }}>
+                매일 아침 7시,<br />
+                <span style={{ color: 'var(--primary-600)' }}>똑똑한</span> 부동산 뉴스
               </h1>
-              <p style={{ color: '#6b7280', fontSize: '18px', lineHeight: '1.6' }}>
-                매일 아침 7시, 맞춤형 부동산 뉴스 요약을<br />
-                이메일로 받아보세요
+              <p style={{ 
+                color: 'var(--gray-600)', 
+                fontSize: '20px', 
+                lineHeight: '1.6',
+                maxWidth: '500px',
+                margin: '0 auto'
+              }}>
+                출근길 3분이면 충분한 맞춤형 부동산 뉴스 요약을<br />
+                매일 아침 이메일로 받아보세요
               </p>
             </div>
 
             <form onSubmit={handleSubscribe} style={{ marginBottom: '32px' }}>
-              <div style={{ marginBottom: '16px' }}>
+              <div style={{ marginBottom: '20px' }}>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="이메일 주소를 입력하세요"
+                  placeholder="이메일 주소를 입력하세요 (예: hello@ziply.kr)"
                   className="input"
                   required
                   disabled={loading}
+                  style={{
+                    fontSize: '18px',
+                    padding: '20px 24px',
+                    borderRadius: 'var(--radius-xl)',
+                    border: '2px solid var(--gray-200)',
+                    transition: 'all var(--transition-base)'
+                  }}
                 />
               </div>
               <button
@@ -118,106 +158,253 @@ export default function Newsletter() {
                 className="button"
                 style={{ 
                   width: '100%', 
-                  fontSize: '18px',
-                  background: loading ? '#9ca3af' : '#4f46e5'
+                  fontSize: '20px',
+                  padding: '20px 32px',
+                  background: loading ? 'var(--gray-400)' : 'var(--primary-600)',
+                  fontWeight: '700',
+                  borderRadius: 'var(--radius-xl)',
+                  minHeight: '64px'
                 }}
                 disabled={loading}
               >
-                {loading ? '구독 중...' : '무료로 구독하기'}
+                {loading ? '구독 처리 중...' : '🚀 무료로 시작하기'}
               </button>
             </form>
 
             {message && (
               <div style={{
-                padding: '16px',
-                borderRadius: '8px',
-                marginBottom: '24px',
-                background: isSuccess ? '#d1fae5' : '#fef2f2',
-                border: `1px solid ${isSuccess ? '#10b981' : '#ef4444'}`,
-                color: isSuccess ? '#065f46' : '#dc2626'
+                padding: '20px 24px',
+                borderRadius: 'var(--radius-xl)',
+                marginBottom: '32px',
+                background: isSuccess ? '#dcfce7' : '#fef2f2',
+                border: `2px solid ${isSuccess ? '#10b981' : '#ef4444'}`,
+                color: isSuccess ? '#065f46' : '#dc2626',
+                fontSize: '16px',
+                fontWeight: '500',
+                lineHeight: '1.6'
               }}>
                 {message}
               </div>
             )}
 
-            {/* 웹 푸시 알림 설정 */}
-            <PushNotification />
+            {/* 알림 섹션 */}
+            <div style={{
+              background: 'linear-gradient(135deg, var(--primary-50) 0%, white 100%)',
+              padding: '24px',
+              borderRadius: 'var(--radius-xl)',
+              border: '1px solid var(--primary-200)',
+              marginBottom: '32px'
+            }}>
+              <h3 style={{ 
+                fontSize: '18px',
+                fontWeight: '700',
+                color: 'var(--primary-700)',
+                marginBottom: '16px',
+                textAlign: 'center'
+              }}>
+                🔔 웹 푸시 알림도 함께 받아보세요!
+              </h3>
+              <PushNotification />
+            </div>
 
-            <div style={{ marginTop: '32px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#1f2937' }}>
-                뉴스레터에서 받을 수 있는 내용
-              </h2>
-              
-              <div style={{ display: 'grid', gap: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                  <span style={{ fontSize: '20px' }}>📈</span>
-                  <div>
-                    <h3 style={{ fontWeight: '600', marginBottom: '4px', color: '#374151' }}>
-                      일일 시장 동향
-                    </h3>
-                    <p style={{ color: '#6b7280', fontSize: '14px' }}>
-                      전날 부동산 시장의 주요 변화와 트렌드 분석
-                    </p>
-                  </div>
+            {/* 신뢰도 지표 */}
+            <div style={{ 
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+              gap: '24px',
+              marginBottom: '40px',
+              textAlign: 'center'
+            }}>
+              <div>
+                <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--primary-600)', marginBottom: '4px' }}>
+                  1,000+
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                  <span style={{ fontSize: '20px' }}>🏛️</span>
-                  <div>
-                    <h3 style={{ fontWeight: '600', marginBottom: '4px', color: '#374151' }}>
-                      정책 변화 알림
-                    </h3>
-                    <p style={{ color: '#6b7280', fontSize: '14px' }}>
-                      부동산 관련 정책 변경사항과 그 영향 분석
-                    </p>
-                  </div>
+                <div style={{ fontSize: '14px', color: 'var(--gray-600)', fontWeight: '500' }}>
+                  구독자
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                  <span style={{ fontSize: '20px' }}>💡</span>
-                  <div>
-                    <h3 style={{ fontWeight: '600', marginBottom: '4px', color: '#374151' }}>
-                      투자 인사이트
-                    </h3>
-                    <p style={{ color: '#6b7280', fontSize: '14px' }}>
-                      전문가 관점에서 본 투자 기회와 주의사항
-                    </p>
-                  </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--success)', marginBottom: '4px' }}>
+                  97%
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                  <span style={{ fontSize: '20px' }}>🔔</span>
-                  <div>
-                    <h3 style={{ fontWeight: '600', marginBottom: '4px', color: '#374151' }}>
-                      즉시 구독 확인
-                    </h3>
-                    <p style={{ color: '#6b7280', fontSize: '14px' }}>
-                      구독 완료 시 즉시 확인 이메일 발송
-                    </p>
-                  </div>
+                <div style={{ fontSize: '14px', color: 'var(--gray-600)', fontWeight: '500' }}>
+                  만족도
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                  <span style={{ fontSize: '20px' }}>📱</span>
-                  <div>
-                    <h3 style={{ fontWeight: '600', marginBottom: '4px', color: '#374151' }}>
-                      웹 푸시 알림
-                    </h3>
-                    <p style={{ color: '#6b7280', fontSize: '14px' }}>
-                      브라우저를 닫아도 데스크톱에 알림 표시
-                    </p>
-                  </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--warning)', marginBottom: '4px' }}>
+                  3분
+                </div>
+                <div style={{ fontSize: '14px', color: 'var(--gray-600)', fontWeight: '500' }}>
+                  읽기 시간
                 </div>
               </div>
             </div>
 
             <div style={{ 
-              marginTop: '20px', 
               textAlign: 'center',
-              fontSize: '12px',
-              color: '#9ca3af'
+              fontSize: '14px',
+              color: 'var(--gray-500)',
+              fontWeight: '500'
             }}>
-              언제든지 구독을 취소할 수 있으며, 개인정보는 안전하게 보호됩니다.
+              ✓ 언제든 구독 취소 가능 &nbsp;&nbsp; ✓ 개인정보 안전 보호 &nbsp;&nbsp; ✓ 스팸 없음
+            </div>
+          </div>
+
+          {/* 뉴스레터 콘텐츠 미리보기 */}
+          <div style={{
+            background: 'white',
+            borderRadius: 'var(--radius-2xl)',
+            padding: '40px',
+            boxShadow: 'var(--shadow-sm)',
+            border: '1px solid var(--gray-200)'
+          }}>
+            <h2 style={{ 
+              fontSize: '28px', 
+              fontWeight: '700', 
+              marginBottom: '24px', 
+              color: 'var(--gray-900)',
+              textAlign: 'center'
+            }}>
+              뉴스레터에는 이런 내용이 담겨요
+            </h2>
+            
+            <div style={{ display: 'grid', gap: '24px' }}>
+              <div style={{ 
+                background: 'var(--gray-50)',
+                borderRadius: 'var(--radius-xl)',
+                padding: '24px',
+                border: '1px solid var(--gray-200)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                  <div style={{
+                    background: '#fee2e2',
+                    borderRadius: '50%',
+                    width: '48px',
+                    height: '48px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '20px',
+                    flexShrink: 0
+                  }}>📈</div>
+                  <div>
+                    <h3 style={{ 
+                      fontWeight: '700', 
+                      marginBottom: '8px', 
+                      color: 'var(--gray-900)',
+                      fontSize: '18px'
+                    }}>
+                      오늘의 부동산 시장 동향
+                    </h3>
+                    <p style={{ color: 'var(--gray-600)', fontSize: '15px', lineHeight: '1.6' }}>
+                      전날 부동산 시장의 주요 변화와 트렌드를 한 눈에 파악할 수 있도록 정리해드려요
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ 
+                background: 'var(--gray-50)',
+                borderRadius: 'var(--radius-xl)',
+                padding: '24px',
+                border: '1px solid var(--gray-200)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                  <div style={{
+                    background: '#fef3c7',
+                    borderRadius: '50%',
+                    width: '48px',
+                    height: '48px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '20px',
+                    flexShrink: 0
+                  }}>🏛️</div>
+                  <div>
+                    <h3 style={{ 
+                      fontWeight: '700', 
+                      marginBottom: '8px', 
+                      color: 'var(--gray-900)',
+                      fontSize: '18px'
+                    }}>
+                      정책 변화 & 지원 혜택 알림
+                    </h3>
+                    <p style={{ color: 'var(--gray-600)', fontSize: '15px', lineHeight: '1.6' }}>
+                      부동산 관련 정책 변경사항과 놓치기 쉬운 각종 지원 혜택을 빠르게 알려드려요
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ 
+                background: 'var(--gray-50)',
+                borderRadius: 'var(--radius-xl)',
+                padding: '24px',
+                border: '1px solid var(--gray-200)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                  <div style={{
+                    background: 'var(--primary-50)',
+                    borderRadius: '50%',
+                    width: '48px',
+                    height: '48px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '20px',
+                    flexShrink: 0
+                  }}>💡</div>
+                  <div>
+                    <h3 style={{ 
+                      fontWeight: '700', 
+                      marginBottom: '8px', 
+                      color: 'var(--gray-900)',
+                      fontSize: '18px'
+                    }}>
+                      AI 맞춤 투자 인사이트
+                    </h3>
+                    <p style={{ color: 'var(--gray-600)', fontSize: '15px', lineHeight: '1.6' }}>
+                      복잡한 부동산 시장 데이터를 AI가 분석해서 당신의 상황에 맞는 조언을 제공해요
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ 
+                background: 'var(--gray-50)',
+                borderRadius: 'var(--radius-xl)',
+                padding: '24px',
+                border: '1px solid var(--gray-200)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                  <div style={{
+                    background: '#dcfce7',
+                    borderRadius: '50%',
+                    width: '48px',
+                    height: '48px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '20px',
+                    flexShrink: 0
+                  }}>🔔</div>
+                  <div>
+                    <h3 style={{ 
+                      fontWeight: '700', 
+                      marginBottom: '8px', 
+                      color: 'var(--gray-900)',
+                      fontSize: '18px'
+                    }}>
+                      즉시 구독 확인 & 웹 푸시 알림
+                    </h3>
+                    <p style={{ color: 'var(--gray-600)', fontSize: '15px', lineHeight: '1.6' }}>
+                      구독 완료 즉시 확인 이메일을 보내드리고, 중요한 뉴스는 웹 푸시로도 알려드려요
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

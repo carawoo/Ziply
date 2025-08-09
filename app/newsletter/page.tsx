@@ -101,6 +101,9 @@ export default function Newsletter() {
               <a href="/dashboard" style={{ color: 'white', textDecoration: 'none', fontWeight: '500' }}>
                 대시보드
               </a>
+              <a href="http://pf.kakao.com/_nCHNn" target="_blank" rel="noreferrer" style={{ color: 'white', textDecoration: 'none', fontWeight: '500' }}>
+                카카오채널
+              </a>
             </div>
           </nav>
         </div>
@@ -224,13 +227,27 @@ export default function Newsletter() {
 
             {/* 구독자에게만 구독취소 버튼 노출 */}
             {isSubscribed && (
-              <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                <a
-                  href={`/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}&redirect=1`}
-                  style={{ color: '#9ca3af', fontSize: 12, textDecoration: 'underline' }}
-                >
-                  구독 취소
-                </a>
+            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                <button
+                  type="button"
+                  style={{ background:'transparent',border:'none',color:'#9ca3af',fontSize:12,textDecoration:'underline',cursor:'pointer' }}
+                  onClick={async()=>{
+                    try{
+                      const resp=await fetch(`/api/newsletter/unsubscribe`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})})
+                      const j=await resp.json()
+                      if(j.success){
+                        setMessage('구독 취소가 완료되었습니다.')
+                        setIsSuccess(true)
+                      }else{
+                        setMessage('구독 취소에 실패했습니다.')
+                        setIsSuccess(false)
+                      }
+                    }catch(e){
+                      setMessage('구독 취소 중 오류가 발생했습니다.')
+                      setIsSuccess(false)
+                    }
+                  }}
+                >구독 취소</button>
               </div>
             )}
 
@@ -251,6 +268,11 @@ export default function Newsletter() {
               }}>
                 🔔 웹 푸시 알림도 함께 받아보세요!
               </h3>
+              <div style={{ textAlign:'center', marginBottom: 12 }}>
+                <a href="http://pf.kakao.com/_nCHNn" target="_blank" rel="noreferrer" style={{ color: 'var(--primary-700)', fontWeight: 600, textDecoration: 'underline', fontSize: 14 }}>
+                  카카오톡 채널 소식 받기
+                </a>
+              </div>
               <PushNotification />
             </div>
 

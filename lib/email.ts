@@ -105,6 +105,66 @@ export const sendSubscriptionConfirmation = async (email: string) => {
   }
 }
 
+// 구독 취소 알림 이메일 HTML 생성 (Toss-style)
+const createUnsubscribeConfirmationHTML = (email: string) => {
+  return `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>구독 취소 완료 - Ziply</title>
+    </head>
+    <body style="margin:0;padding:24px;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+        <tr>
+          <td align="center">
+            <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="max-width:640px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 20px rgba(0,0,0,0.06);">
+              <tr>
+                <td align="center" style="background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);padding:28px;">
+                  <div style="color:#fff;font-size:24px;font-weight:800;letter-spacing:-0.02em;">구독 취소가 완료되었습니다</div>
+                  <div style="color:rgba(255,255,255,0.9);margin-top:8px;font-size:14px;">${email}</div>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:28px;">
+                  <p style="margin:0 0 12px 0;color:#4b5563;line-height:1.7;">요청하신 뉴스레터 구독 취소가 정상 처리되었습니다.</p>
+                  <p style="margin:0 0 16px 0;color:#4b5563;line-height:1.7;">언제든지 Ziply에서 다시 구독하실 수 있어요.</p>
+                  <div style="text-align:center;margin-top:8px;">
+                    <a href="https://ziply-nine.vercel.app/newsletter" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 22px;border-radius:12px;font-weight:700;">다시 구독하기</a>
+                  </div>
+                </td>
+              </tr>
+            </table>
+            <div style="max-width:640px;margin:12px auto 0 auto;text-align:center;color:#9ca3af;font-size:12px;line-height:1.6;">© 2024 Ziply</div>
+          </td>
+        </tr>
+      </table>
+    </body>
+  </html>`
+}
+
+// 구독 취소 알림 이메일 발송
+export const sendUnsubscribeConfirmation = async (email: string) => {
+  if (typeof window !== 'undefined') return null
+  try {
+    const transporter = await createTransporter()
+    const htmlContent = createUnsubscribeConfirmationHTML(email)
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: email,
+      subject: '[Ziply] 구독 취소가 완료되었습니다',
+      html: htmlContent,
+    }
+    const result = await transporter.sendMail(mailOptions)
+    console.log(`구독 취소 이메일 발송: ${email}`)
+    return result
+  } catch (error) {
+    console.error(`구독 취소 이메일 발송 실패 (${email}):`, error)
+    return null
+  }
+}
+
 // 뉴스레터 HTML 생성
 const createNewsletterHTML = (newsItems: any[], date: string) => {
   const newsHTML = newsItems.map((news, index) => `
@@ -152,12 +212,15 @@ const createNewsletterHTML = (newsItems: any[], date: string) => {
                   <p style="margin:0 0 16px 0;color:#6b7280;line-height:1.7;">매일 아침 7시, 맞춤형 부동산 뉴스 요약을 받아보세요.</p>
                   ${newsHTML}
 
-                    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;">
+          <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;">
                     <div style="color:#9ca3af;font-size:12px;margin:0 0 12px 0;">이 뉴스레터는 매일 아침 7시에 발송됩니다.</div>
-                    <div style="margin-bottom:8px;">
+                    <div style="margin-bottom:6px;">
                       <a href="https://ziply-nine.vercel.app/dashboard" style="color:#2563eb;text-decoration:none;font-weight:700;">웹사이트 방문하기</a>
                     </div>
-                      <div style="margin-top:4px;color:#94a3b8;font-size:11px;">
+                    <div style="margin-bottom:8px;">
+                      <a href="https://pf.kakao.com/_nCHNn" style="color:#6b7280;text-decoration:none;font-size:12px;">카카오톡 채널 소식 받기</a>
+                    </div>
+                    <div style="margin-top:4px;color:#94a3b8;font-size:11px;">
                         <a href="${('https://ziply-nine.vercel.app').replace(/\\\/$/, '')}/api/newsletter/unsubscribe?email={{EMAIL}}&redirect=1" style="color:#94a3b8;text-decoration:underline;">구독 취소</a>
                         <span style="margin:0 6px;opacity:.6;">·</span>
                         <span style="opacity:.7;">취소 후 상단에 완료 안내가 표시됩니다</span>

@@ -89,6 +89,9 @@ const buildNewsletterHtml = (byTab) => {
             <p style="color:#9ca3af;font-size:12px;margin:0 0 12px 0;">이 뉴스레터는 매일 아침 7시에 발송됩니다.</p>
             <a href="${BASE_URL.replace(/\/$/, '')}/dashboard" style="color:#4f46e5;text-decoration:none;font-weight:600;">웹사이트 방문하기</a>
             <div style="margin-top:8px;">
+              <a href="http://pf.kakao.com/_nCHNn" style="color:#6b7280;font-size:12px;text-decoration:none;display:inline-block;margin-bottom:6px;">카카오톡 채널 소식 받기</a>
+            </div>
+            <div style="margin-top:4px;">
               <a href="${BASE_URL.replace(/\/$/, '')}/api/newsletter/unsubscribe?email={{EMAIL}}&redirect=1" style="color:#cbd5e1;font-size:11px;text-decoration:underline;opacity:.6;">구독 취소</a>
             </div>
           </div>

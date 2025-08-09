@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { sendUnsubscribeConfirmation } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -23,14 +24,33 @@ export async function GET(req: Request) {
     }
 
     const supabase = getSupabaseAdmin()
-    const { data, error } = await supabase
+    // 먼저 존재 여부 확인
+    const { data: existing } = await supabase
       .from('newsletter_subscribers')
-      .upsert({ email, is_active: false }, { onConflict: 'email' })
-      .select('email, is_active')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle()
+    let data
+    let error
+    if (existing) {
+      ;({ data, error } = await supabase
+        .from('newsletter_subscribers')
+        .update({ is_active: false })
+        .eq('email', email)
+        .select('email, is_active'))
+    } else {
+      ;({ data, error } = await supabase
+        .from('newsletter_subscribers')
+        .insert({ email, is_active: false })
+        .select('email, is_active'))
+    }
 
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     }
+
+    // 취소 완료 이메일 발송 (best-effort)
+    try { await sendUnsubscribeConfirmation(email) } catch {}
 
     if (redirect) {
       const baseUrl = process.env.APP_BASE_URL || 'https://ziply-nine.vercel.app'
@@ -48,6 +68,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}))
     const emailRaw = body?.email || new URL(req.url).searchParams.get('email')
+    const redirect = new URL(req.url).searchParams.get('redirect')
     const email = (emailRaw || '').trim().toLowerCase()
     if (!email) {
       return NextResponse.json({ success: false, error: 'email is required' }, { status: 400 })
@@ -61,6 +82,15 @@ export async function POST(req: Request) {
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     }
+    // 취소 완료 이메일 발송 (best-effort)
+    try { await sendUnsubscribeConfirmation(email) } catch {}
+
+    if (redirect) {
+      const baseUrl = process.env.APP_BASE_URL || 'https://ziply-nine.vercel.app'
+      const url = `${baseUrl.replace(/\/$/, '')}/newsletter?unsubscribed=1`
+      return NextResponse.redirect(url)
+    }
+
     return NextResponse.json({ success: true, data })
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e?.message || 'unknown error' }, { status: 500 })

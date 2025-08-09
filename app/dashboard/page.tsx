@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
-import { NewsItem, getFallbackNews } from '@/lib/ai'
+import { NewsItem } from '@/lib/ai'
 
 type UserGroup = '초보자' | '신혼부부·초년생' | '투자자' | null
 
@@ -138,16 +138,8 @@ export default function Dashboard() {
       console.log('가져온 뉴스 개수:', data.news.length)
       
       if (data.news.length === 0) {
-        console.log('뉴스가 없습니다. fallback 뉴스 사용')
-        // fallback 뉴스 사용
-        const fallbackCategory = tab === '초보자용' ? 'beginner' : 
-                                tab === '신혼부부용' ? 'newlywed' : 
-                                tab === '투자자용' ? 'investment' : 
-                                tab === '정책뉴스' ? 'policy' : 
-                                tab === '시장분석' ? 'market' : 'support'
-        
-        const fallbackNews = getFallbackNews(fallbackCategory)
-        setNews(fallbackNews)
+        console.log('뉴스가 없습니다. 실시간 결과가 비어 있습니다')
+        setNews([])
         setNewsLoading(false)
         return
       }
@@ -156,15 +148,7 @@ export default function Dashboard() {
       setNews(data.news)
     } catch (error) {
       console.error('뉴스 로딩 오류:', error)
-      // 에러 시 fallback 뉴스 사용
-      const fallbackCategory = tab === '초보자용' ? 'beginner' : 
-                              tab === '신혼부부용' ? 'newlywed' : 
-                              tab === '투자자용' ? 'investment' : 
-                              tab === '정책뉴스' ? 'policy' : 
-                              tab === '시장분석' ? 'market' : 'support'
-      
-      const fallbackNews = getFallbackNews(fallbackCategory)
-      setNews(fallbackNews)
+      setNews([])
     } finally {
       setNewsLoading(false)
     }

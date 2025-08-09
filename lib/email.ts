@@ -216,7 +216,7 @@ export const sendNewsletter = async (email: string) => {
     const { getSampleNews, summarizeNews } = await import('./ai')
     
     // 오늘의 뉴스 가져오기
-    const todayNews = await getSampleNews() // 모든 카테고리의 뉴스 가져오기
+    const todayNews: any[] = [] // 폴백 제거: 샘플 뉴스 사용 중단
     const today = new Date().toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: 'long',

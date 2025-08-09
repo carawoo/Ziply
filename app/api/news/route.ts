@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { fetchNewsByTab, summarizeNews, generateDefaultSummary, getFallbackNews } from '@/lib/ai'
+import { fetchNewsByTab, summarizeNews, generateDefaultSummary } from '@/lib/ai'
 
 // 캐시 끄기
 export const dynamic = 'force-dynamic';
@@ -30,18 +30,8 @@ export async function GET(request: NextRequest) {
     console.log('탭 기반 실제 뉴스 수집 완료:', news.length, '개')
     
     if (news.length === 0) {
-      console.log('실제 뉴스가 없습니다. fallback으로 대체합니다.')
-      const fallbackCategory =
-        tab === '초보자용' ? 'beginner' :
-        tab === '신혼부부용' ? 'newlywed' :
-        tab === '투자자용' ? 'investment' :
-        tab === '정책뉴스' ? 'policy' :
-        tab === '시장분석' ? 'market' : 'support'
-      const fallbackNews = getFallbackNews(fallbackCategory)
-      return NextResponse.json({
-        success: true,
-        news: fallbackNews.slice(0, 4)
-      })
+      console.log('실제 뉴스가 없습니다. 빈 결과 반환')
+      return NextResponse.json({ success: true, news: [] })
     }
     
     // AI 요약 생성 (에러/타임아웃 처리 포함)

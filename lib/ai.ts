@@ -1694,177 +1694,44 @@ export function generateDefaultSummary(content: string, category: string): strin
   return `${firstTwo} ${categoryMessages[category as keyof typeof categoryMessages] || '부동산 시장의 중요한 변화입니다.'}`
 }
 
-// 실제 뉴스 API에서 뉴스 가져오기 (매일 최신)
+// 실제 뉴스 API에서 뉴스 가져오기 (폴백 제거)
 export async function getSampleNews(): Promise<NewsItem[]> {
-  try {
-    // 모든 카테고리의 fallback 뉴스 수집
-    const allCategories = ['policy', 'market', 'support', 'investment', 'beginner', 'newlywed']
-    const allNews: NewsItem[] = []
-    const usedUrls = new Set<string>()
-    
-    for (const category of allCategories) {
-      const fallbackNews = getFallbackNews(category)
-      const uniqueFallbackNews = fallbackNews.filter(item => {
-        if (usedUrls.has(item.url || '')) {
-          return false
-        }
-        usedUrls.add(item.url || '')
-        return true
-      })
-      allNews.push(...uniqueFallbackNews.slice(0, 2))
-    }
-    
-    console.log('최종 뉴스 목록의 고유한 링크들:', allNews.map(item => item.url))
-    
-    // 뉴스 소스 다양성 분석
-    const sourceCounts = new Map<string, number>()
-    for (const news of allNews) {
-      if (news.url) {
-        const domain = new URL(news.url).hostname
-        sourceCounts.set(domain, (sourceCounts.get(domain) || 0) + 1)
-      }
-    }
-    console.log('최종 뉴스 소스별 분포:', Object.fromEntries(sourceCounts))
-    
-    return allNews.slice(0, 12) // 더 많은 뉴스 반환
-  } catch (error) {
-    console.error('뉴스 가져오기 오류:', error)
-    // 에러 시 기본 뉴스 반환
-    const fallbackNews = getFallbackNews('policy')
-    const marketNews = getFallbackNews('market')
-    
-    const usedUrls = new Set<string>()
-    const allFallbackNews = [...fallbackNews, ...marketNews].filter(item => {
-      if (usedUrls.has(item.url || '')) {
-        return false
-      }
-      usedUrls.add(item.url || '')
-      return true
-    })
-    
-    return allFallbackNews.slice(0, 8)
-  }
+  console.log('getSampleNews 호출: 폴백 제거됨 → 빈 배열 반환')
+  return []
 }
 
 // 그룹별 필터링된 뉴스 가져오기
 export async function getNewsForGroup(userGroup: string): Promise<NewsItem[]> {
-  const allNews = await getSampleNews()
-  
-  switch (userGroup) {
-    case '초보자':
-      // 초보자용 뉴스: 가이드, 용어, 체크리스트, Q&A 등 교육적 내용
-      return allNews.filter(news => 
-        ['beginner', 'support'].includes(news.category)
-      ).slice(0, 4)
-      
-    case '신혼부부·초년생':
-      // 신혼부부용 뉴스: 특별공급, 주택단지, 대출, 세금혜택 등 실용적 정보
-      return allNews.filter(news => 
-        ['newlywed', 'support', 'policy'].includes(news.category)
-      ).slice(0, 4)
-      
-    case '투자자':
-      // 투자자용 뉴스: 투자 트렌드, 수익률 분석, 시장 동향 등 투자 관련 정보
-      return allNews.filter(news => 
-        ['investment', 'market', 'policy'].includes(news.category)
-      ).slice(0, 4)
-      
-    default:
-      return allNews.slice(0, 4)
-  }
+  console.log(`getNewsForGroup(${userGroup}) → 폴백 제거, 실뉴스 파이프라인 사용`)
+  const tab = userGroup === '초보자' ? '초보자용' : userGroup === '신혼부부·초년생' ? '신혼부부용' : userGroup === '투자자' ? '투자자용' : '정책뉴스'
+  return (await fetchNewsByTab(tab)).slice(0, 4)
 }
 
 // 탭별 맞춤형 뉴스 가져오기
 export async function getNewsForTab(tab: string): Promise<NewsItem[]> {
-  console.log(`=== 탭별 뉴스 요청 시작: ${tab} ===`)
-  
+  console.log(`=== 탭별 뉴스 요청 시작(폴백 제거): ${tab} ===`)
   try {
-    // 탭에 따른 카테고리 매핑
-    const categoryMap: Record<string, string[]> = {
-      '초보자용': ['beginner', 'support'],
-      '신혼부부용': ['newlywed', 'support'],
-      '투자자용': ['investment', 'market'],
-      '정책뉴스': ['policy'],
-      '시장분석': ['market', 'investment'],
-      '지원혜택': ['support', 'newlywed']
-    }
-    
-    console.log('사용 가능한 탭들:', Object.keys(categoryMap))
-    console.log('요청된 탭:', tab)
-    console.log('탭이 매핑에 있는지:', tab in categoryMap)
-    
-    const targetCategories = categoryMap[tab] || ['policy']
-    console.log(`타겟 카테고리: ${targetCategories}`)
-    
-    // 해당 카테고리의 fallback 뉴스 직접 사용
-    const allNews: NewsItem[] = []
-    const usedUrls = new Set<string>()
-    
-    for (const category of targetCategories) {
-      console.log(`카테고리 ${category} 처리 중...`)
-      const fallbackNews = getFallbackNews(category)
-      console.log(`카테고리 ${category}에서 가져온 뉴스: ${fallbackNews.length}개`)
-      
-      const uniqueFallbackNews = fallbackNews.filter(item => {
-        if (usedUrls.has(item.url || '')) {
-          console.log(`중복 URL 제외: ${item.url}`)
-          return false
-        }
-        usedUrls.add(item.url || '')
-        console.log(`추가된 뉴스: ${item.title} (${item.category})`)
-        return true
-      })
-      
-      console.log(`카테고리 ${category}에서 유니크 뉴스: ${uniqueFallbackNews.length}개`)
-      allNews.push(...uniqueFallbackNews)
-    }
-    
-    console.log(`=== ${tab} 탭 뉴스 수집 완료: ${allNews.length}개 ===`)
-    console.log('수집된 뉴스 카테고리:', allNews.map(n => n.category))
-    console.log('수집된 뉴스 제목:', allNews.map(n => n.title))
-    
-    const result = allNews.slice(0, 4)
-    console.log(`=== 최종 반환 뉴스: ${result.length}개 ===`)
-    console.log('최종 뉴스 카테고리:', result.map(n => n.category))
-    
-    return result
-    
+    const results = await fetchNewsByTab(tab)
+    return results.slice(0, 4)
   } catch (error) {
     console.error('뉴스 수집 오류:', error)
-    
-    // 오류 시 기본 뉴스 반환
-    const fallbackNews = getFallbackNews('policy')
-    return fallbackNews.slice(0, 4)
+    return []
   }
 }
 
 // 뉴스 링크 테스트 함수 (개발용)
 export async function testNewsLinks(): Promise<{ url: string; valid: boolean; error?: string }[]> {
-  console.log('뉴스 링크 테스트 시작')
-  
-  // 현재 fallback 뉴스에 있는 실제 URL들로 테스트
-  const fallbackNews = getFallbackNews('policy')
-  const testUrls = fallbackNews
-    .filter(news => news.url)
-    .map(news => news.url!)
-    .slice(0, 5)
-  
-  console.log('테스트할 fallback 뉴스 URL들:', testUrls)
-  
-  const results = []
-  
+  console.log('뉴스 링크 테스트 시작(폴백 제거)')
+  const items = await fetchNewsByTab('정책뉴스')
+  const testUrls = items.filter(n => n.url).map(n => n.url!).slice(0, 5)
+  const results: { url: string; valid: boolean; error?: string }[] = []
   for (const url of testUrls) {
     try {
-      console.log(`테스트 중: ${url}`)
       const isValid = await isUrlValid(url)
       results.push({ url, valid: isValid })
-      console.log(`결과: ${url} -> ${isValid ? '유효' : '무효'}`)
     } catch (error) {
-      console.log(`테스트 오류: ${url} -> ${error}`)
       results.push({ url, valid: false, error: String(error) })
     }
   }
-  
-  console.log('뉴스 링크 테스트 완료:', results)
   return results
 }

@@ -74,7 +74,7 @@ export default function Newsletter() {
       <header className="header">
         <div className="container">
           <nav className="nav">
-            <div className="logo">부동산 뉴스 큐레이터</div>
+            <div className="logo">Ziply</div>
             <div>
               <a href="/" style={{ marginRight: '16px', color: 'white' }}>
                 홈
@@ -209,19 +209,6 @@ export default function Newsletter() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div style={{ 
-              marginTop: '32px', 
-              padding: '20px', 
-              background: '#f8fafc', 
-              borderRadius: '8px',
-              textAlign: 'center'
-            }}>
-              <p style={{ color: '#475569', fontSize: '14px', lineHeight: '1.6' }}>
-                💌 <strong>구독자 혜택:</strong> 뉴스레터 구독자만을 위한<br />
-                특별 부동산 세미나 및 전문가 상담 기회 제공
-              </p>
             </div>
 
             <div style={{ 

@@ -76,17 +76,16 @@ export default function Home() {
       <header className="header">
         <div className="container">
           <nav className="nav">
-            <div className="logo">부동산 뉴스 큐레이터</div>
+            <div className="logo">Ziply</div>
           </nav>
         </div>
       </header>
 
       <div className="container">
         <div className="hero">
-          <h1>부동산 뉴스를<br />더 쉽게, 더 스마트하게 📈</h1>
+          <h1>Ziply와 함께<br />부동산 뉴스를 더 쉽게 📈</h1>
           <p>
-            초보자도 쉽게 이해할 수 있는<br />
-            맞춤형 부동산 뉴스 요약 서비스
+            초보자도 쉽게 이해할 수 있는 맞춤형 부동산 뉴스 요약 서비스
           </p>
           
           <div style={{ marginTop: '40px' }}>

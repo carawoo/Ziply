@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = JSON.stringify({
-      title: title || '부동산 뉴스 큐레이터',
+      title: title || 'Ziply',
       body: body || '새로운 뉴스가 도착했습니다!',
       icon: '/favicon.ico',
       badge: '/favicon.ico',

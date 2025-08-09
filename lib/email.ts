@@ -22,7 +22,7 @@ const createSubscriptionConfirmationHTML = (email: string) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>뉴스레터 구독 완료 - 부동산 뉴스 큐레이터</title>
+      <title>뉴스레터 구독 완료 - Ziply</title>
     </head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
       <div style="max-width: 600px; margin: 0 auto; background-color: white;">
@@ -32,7 +32,7 @@ const createSubscriptionConfirmationHTML = (email: string) => {
             🎉 구독 완료!
           </h1>
           <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">
-            부동산 뉴스 큐레이터 뉴스레터 구독이 완료되었습니다
+            Ziply 뉴스레터 구독이 완료되었습니다
           </p>
         </div>
 
@@ -43,7 +43,7 @@ const createSubscriptionConfirmationHTML = (email: string) => {
               환영합니다! 👋
             </h2>
             <p style="color: #6b7280; margin: 0 0 16px 0; line-height: 1.6;">
-              <strong>${email}</strong>님, 부동산 뉴스 큐레이터 뉴스레터 구독이 성공적으로 완료되었습니다.
+              <strong>${email}</strong>님, Ziply 뉴스레터 구독이 성공적으로 완료되었습니다.
             </p>
             <p style="color: #6b7280; margin: 0; line-height: 1.6;">
               이제 매일 아침 7시에 맞춤형 부동산 뉴스 요약을 받아보실 수 있습니다.
@@ -87,7 +87,7 @@ const createSubscriptionConfirmationHTML = (email: string) => {
               구독 해지가 필요하시면 언제든지 연락주세요.
             </p>
             <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-              © 2024 부동산 뉴스 큐레이터. All rights reserved.
+              © 2024 Ziply. All rights reserved.
             </p>
           </div>
         </div>
@@ -112,7 +112,7 @@ export const sendSubscriptionConfirmation = async (email: string) => {
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
-      subject: '[부동산 뉴스 큐레이터] 뉴스레터 구독 완료',
+      subject: '[Ziply] 뉴스레터 구독 완료',
       html: htmlContent,
     }
 
@@ -154,14 +154,14 @@ const createNewsletterHTML = (newsItems: any[], date: string) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${date} 부동산 뉴스 - 부동산 뉴스 큐레이터</title>
+      <title>${date} 부동산 뉴스 - Ziply</title>
     </head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
       <div style="max-width: 600px; margin: 0 auto; background-color: white;">
         <!-- 헤더 -->
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px; text-align: center;">
           <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">
-            📈 부동산 뉴스 큐레이터
+            📈 Ziply
           </h1>
           <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">
             ${date} 오늘의 주요 부동산 뉴스
@@ -257,7 +257,7 @@ export const sendNewsletter = async (email: string) => {
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
-      subject: `[부동산 뉴스 큐레이터] ${today} 오늘의 부동산 뉴스`,
+      subject: `[Ziply] ${today} 오늘의 부동산 뉴스`,
       html: htmlContent,
     }
 
@@ -284,10 +284,10 @@ export const sendTestEmail = async (email: string) => {
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
-      subject: '[테스트] 부동산 뉴스 큐레이터 이메일 설정 확인',
+      subject: '[테스트] Ziply 이메일 설정 확인',
       html: `
         <h1>이메일 설정이 정상적으로 작동합니다! 🎉</h1>
-        <p>부동산 뉴스 큐레이터의 이메일 발송 기능이 정상적으로 설정되었습니다.</p>
+        <p>Ziply의 이메일 발송 기능이 정상적으로 설정되었습니다.</p>
         <p>매일 아침 7시에 뉴스레터를 받아보실 수 있습니다.</p>
       `
     }

@@ -40,7 +40,7 @@ self.addEventListener('push', (event) => {
   console.log('푸시 알림 수신:', event)
   
   let notificationData = {
-    title: '부동산 뉴스 큐레이터',
+    title: 'Ziply',
     body: '새로운 뉴스가 도착했습니다!',
     icon: '/favicon.ico',
     badge: '/favicon.ico',

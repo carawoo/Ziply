@@ -17,10 +17,10 @@ try {
   fetchFn = undiciFetch
 }
 
-// Supabase 클라이언트 생성
+// Supabase 클라이언트 생성 (서비스 롤 키 우선)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
 // 이메일 전송기 설정
@@ -121,10 +121,27 @@ const sendRealNewsletter = async (email, html) => {
   }
 }
 
+// 이메일 환경변수 사전 점검
+function validateEmailEnv() {
+  const required = ['EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_FROM']
+  const missing = required.filter((k) => !process.env[k] || String(process.env[k]).trim() === '')
+  if (missing.length > 0) {
+    console.error('❌ 이메일 환경변수 누락:', missing.join(', '))
+    return false
+  }
+  return true
+}
+
 // 모든 구독자에게 실제 뉴스레터 발송
 const sendNewsletterToAllSubscribers = async () => {
   try {
     console.log('📰 실제 뉴스레터 발송 시작:', new Date().toLocaleString('ko-KR'))
+    console.log('🌐 BASE_URL =', BASE_URL)
+
+    if (!validateEmailEnv()) {
+      console.error('메일 설정이 누락되어 발송을 중단합니다.')
+      return
+    }
 
     // 이메일 구독자 목록 가져오기
   const { data: emailSubscribers, error: emailError } = await supabase

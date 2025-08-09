@@ -24,26 +24,11 @@ export async function GET(req: Request) {
     }
 
     const supabase = getSupabaseAdmin()
-    // 먼저 존재 여부 확인
-    const { data: existing } = await supabase
+    // upsert로 단일 처리 (중복/존재 유무 무관)
+    const { data, error } = await supabase
       .from('newsletter_subscribers')
-      .select('email')
-      .eq('email', email)
-      .maybeSingle()
-    let data
-    let error
-    if (existing) {
-      ;({ data, error } = await supabase
-        .from('newsletter_subscribers')
-        .update({ is_active: false })
-        .eq('email', email)
-        .select('email, is_active'))
-    } else {
-      ;({ data, error } = await supabase
-        .from('newsletter_subscribers')
-        .insert({ email, is_active: false })
-        .select('email, is_active'))
-    }
+      .upsert({ email, is_active: false }, { onConflict: 'email' })
+      .select('email, is_active')
 
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 })

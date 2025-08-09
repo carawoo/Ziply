@@ -31,10 +31,10 @@ export default function Newsletter() {
       // 1차: 클라이언트 anon으로 시도 (RLS 허용 시)
       let { data, error } = await supabase
         .from('newsletter_subscribers')
-        .insert([{ email }])
+        .insert([{ email, is_active: true }])
         .select()
 
-      // RLS 등으로 실패 시 서버 API로 서비스 롤 처리
+      // 실패 시 서버 API로 서비스 롤 처리 (중복 포함 모든 오류를 서버에서 흡수)
       if (error) {
         const resp = await fetch('/api/newsletter/subscribe', {
           method: 'POST',
@@ -45,11 +45,14 @@ export default function Newsletter() {
           const j = await resp.json().catch(() => ({}))
           throw new Error(j?.error || '구독 저장 실패')
         }
-        data = await resp.json()
+        // 서버가 upsert 처리했으므로 에러 무시하고 성공 흐름으로 전환
+        await resp.json().catch(() => ({}))
+        error = null as any
       }
 
       if (error) {
-        if (error.code === '23505') { // unique constraint violation
+        if ((error as any).code === '23505') {
+          // 서버 upsert가 도달하지 못한 케이스만 여기로 옴
           setMessage('이미 구독하신 이메일 주소입니다.')
           setIsSuccess(false)
         } else {

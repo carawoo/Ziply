@@ -15,11 +15,9 @@ export interface NewsItem {
 }
 
 // 기사 유사도 측정 함수 (간단한 버전)
-function calculateSimilarity(text1: string, text2: string): number {
-  const words1 = text1.split(/\s+/)
-  const words2 = text2.split(/\s+/)
-  const commonWords = words1.filter(word => words2.includes(word))
-  return (commonWords.length * 2) / (words1.length + words2.length)
+function calculateSimilarity(_text1: string, _text2: string): number {
+  // 유사도 검사는 비활성화 (0 고정)
+  return 0
 }
 
 // 최신 기사만 가져오기 + 제목/본문 유사도 검사
@@ -138,14 +136,18 @@ async function fetchFilteredNews(category: string): Promise<NewsItem[]> {
 // 카테고리별 추가 키워드 생성
 function getAdditionalKeywords(category: string): string[] {
   const keywordMap: Record<string, string[]> = {
-    '부동산 정책': ['부동산 규제', '주택 정책', '부동산 세금', '정부 발표', '부동산 법안'],
-    '부동산 시장 분석': ['부동산 시장', '집값 동향', '부동산 투자', '아파트 시장', '부동산 전망'],
-    'policy': ['부동산 정책', '주택 정책', '부동산 규제', '정부 발표', '부동산 법안'],
-    'market': ['부동산 시장', '집값 동향', '부동산 투자', '아파트 시장', '부동산 전망'],
-    'support': ['부동산 지원', '주택 지원', '청약 혜택', '정부 지원', '부동산 대출'],
-    'investment': ['부동산 투자', 'REITs', '상업용 부동산', '투자 수익률', '부동산 투자 전략'],
-    'beginner': ['부동산 기초', '내집마련', '부동산 용어', '주택 구매 가이드', '부동산 초보'],
-    'newlywed': ['신혼부부', '청약', '특별공급', '신혼부부 혜택', '신축 아파트']
+    // 정책뉴스: 정책/규제/세금/대출/공급 등
+    'policy': ['부동산 정책', '정부 대책', '대출 규제', '세금 개편', '공급 정책', '종부세', '청약 제도'],
+    // 시장분석: 가격/거래량/전세/매매/지표 등
+    'market': ['집값 동향', '거래량', '전세가', '매매가', '시장 분석', '분양시장', '수요 공급'],
+    // 지원혜택: 대출/보조금/청년/신혼/특공 등
+    'support': ['주택 지원', '대출 지원', '보조금', '청년 주거', '신혼부부 혜택', '특별공급'],
+    // 투자자용: 투자/수익률/임대/상업용/리츠 등
+    'investment': ['부동산 투자', '수익률', '임대수익', '상업용 부동산', 'REITs', '투자 전략'],
+    // 초보자용: 기초/가이드/용어/절차 등
+    'beginner': ['부동산 기초', '내집마련 가이드', '부동산 용어', '주택 구매 절차', '등기/대출 기초'],
+    // 신혼부부용: 청약/특공/전월세/주거비 등
+    'newlywed': ['신혼부부 청약', '특별공급', '전세 지원', '월세 지원', '주거비 경감']
   }
   
   return keywordMap[category] || []
@@ -735,7 +737,12 @@ async function fetchNaverNewsStrict(category: string): Promise<NewsItem[]> {
     const clientId = process.env.NAVER_CLIENT_ID || 'ceVPKnFABx59Lo4SzbmY'
     const clientSecret = process.env.NAVER_CLIENT_SECRET || 'FUfJ_TnwL6'
     
-    const query = encodeURIComponent(category)
+    const keywordsForCat = getAdditionalKeywords(category)
+    const query = encodeURIComponent(
+      (keywordsForCat && keywordsForCat.length > 0)
+        ? keywordsForCat.join(' OR ')
+        : category
+    )
     const today = getTodayDate()
     
     console.log(`네이버 뉴스 엄격 필터링 시작: ${category} (오늘: ${today})`)
@@ -798,17 +805,12 @@ async function fetchNaverNewsStrict(category: string): Promise<NewsItem[]> {
           continue
         }
 
-        // 2. URL 유효성 검사 (HEAD 요청)
-        const urlValid = await isValidUrl(cleanUrl)
-        if (!urlValid) {
-          console.log(`URL 유효하지 않음 제외: ${cleanTitle} -> ${cleanUrl}`)
-          continue
-        }
-
-        // 3. 페이지 제목과 기사 제목 비교 검증
-        const titleMatch = await validatePageTitle(cleanTitle, cleanUrl)
-        if (!titleMatch) {
-          console.log(`제목 불일치 제외: ${cleanTitle} -> ${cleanUrl}`)
+        // 2. 주요 뉴스 도메인 우선 허용 (헤비 검증 제거)
+        const domain = new URL(cleanUrl).hostname
+        const isMajor = isDiverseNewsSource(domain)
+        if (!isMajor) {
+          // 비주요 도메인은 간단히 제외
+          console.log(`비주요 도메인 제외: ${cleanTitle} -> ${cleanUrl} (${domain})`)
           continue
         }
 
@@ -904,24 +906,9 @@ async function fetchGoogleNewsStrict(category: string): Promise<NewsItem[]> {
           continue
         }
         
-        // 2. URL 유효성 검사
-        const urlValid = await isValidUrl(cleanUrl)
-        if (!urlValid) {
-          console.log(`URL 유효하지 않음 제외: ${cleanTitle} -> ${cleanUrl}`)
-          continue
-        }
-        
-        // 3. 페이지 제목과 기사 제목 비교 검증
-        const titleMatch = await validatePageTitle(cleanTitle, cleanUrl)
-        if (!titleMatch) {
-          console.log(`제목 불일치 제외: ${cleanTitle} -> ${cleanUrl}`)
-          continue
-        }
-        
-        // 4. 뉴스 소스 다양성 확인
+        // 2. 뉴스 소스 다양성 확인 (주요 도메인만 허용)
         const domain = new URL(cleanUrl).hostname
         const isDiverseSource = isDiverseNewsSource(domain)
-        
         if (isDiverseSource) {
           // 모든 조건 통과
           usedUrls.add(cleanUrl)
@@ -1041,6 +1028,7 @@ function hasTargetKeywords(title: string, description: string, target: string): 
 // 네이버 뉴스에서 타겟별 + 최신 + 내용일치 기사만 가져오기
 async function fetchNaverNewsByTarget(target: string): Promise<NewsItem[]> {
   const keywords = TARGET_KEYWORDS[target] || ['부동산']
+  // 최신 기사 위주가 나오도록 OR 조합 + 최신 정렬
   const query = encodeURIComponent(keywords.join(' OR '))
   
   console.log(`네이버 뉴스 타겟별 검색: ${target} (${query})`)
@@ -1089,24 +1077,14 @@ async function fetchNaverNewsByTarget(target: string): Promise<NewsItem[]> {
           continue
         }
 
-        // 2. URL 유효성 체크
-        if (!(await isUrlValid(cleanUrl))) {
-          console.log(`URL 유효하지 않음 제외: ${cleanTitle} -> ${cleanUrl}`)
+        // 2. 도메인만 체크하여 과도한 네트워크 검증 제거
+        const domain = new URL(cleanUrl).hostname
+        if (!isDiverseNewsSource(domain)) {
+          console.log(`도메인 제외: ${cleanTitle} -> ${cleanUrl} (${domain})`)
           continue
         }
 
-        // 3. 제목과 실제 페이지 title 비교 (70% 이상 유사)
-        const pageTitle = await fetchPageTitle(cleanUrl)
-        if (pageTitle) {
-          const sim = similarity(cleanTitle, pageTitle)
-          if (sim < 70) {
-            console.log(`제목 유사도 부족 제외: ${cleanTitle} vs ${pageTitle} (${sim.toFixed(1)}%)`)
-            continue
-          }
-          console.log(`제목 유사도 통과: ${cleanTitle} vs ${pageTitle} (${sim.toFixed(1)}%)`)
-        }
-
-        // 4. 부동산 서비스 타겟 키워드 포함 여부
+        // 3. 부동산 서비스 타겟 키워드 포함 여부
         if (!hasTargetKeywords(cleanTitle, cleanDesc, target)) {
           console.log(`키워드 불일치 제외: ${cleanTitle}`)
           continue

@@ -2,6 +2,20 @@ require('dotenv').config({ path: '.env' })
 const cron = require('node-cron')
 const { createClient } = require('@supabase/supabase-js')
 const nodemailer = require('nodemailer')
+// Node.js 환경에서 fetch 사용 (undici)
+let fetchFn
+try {
+  // Node 18+ 에서는 글로벌 fetch 가 있을 수 있음
+  if (typeof fetch !== 'undefined') {
+    fetchFn = fetch
+  } else {
+    const { fetch: undiciFetch } = require('undici')
+    fetchFn = undiciFetch
+  }
+} catch {
+  const { fetch: undiciFetch } = require('undici')
+  fetchFn = undiciFetch
+}
 
 // Supabase 클라이언트 생성
 const supabase = createClient(
@@ -22,15 +36,79 @@ const createTransporter = () => {
   })
 }
 
+// 기본 사이트 URL (API 호출용)
+const BASE_URL = process.env.APP_BASE_URL || 'http://localhost:3000'
+
+// 탭별 뉴스 수집 (Next API 사용)
+const fetchNewsByTab = async (tab) => {
+  const url = `${BASE_URL}/api/news?tab=${encodeURIComponent(tab)}`
+  const res = await fetchFn(url, { method: 'GET' })
+  if (!res.ok) {
+    console.error(`[fetchNewsByTab] 실패: ${tab} -> ${res.status}`)
+    return []
+  }
+  const data = await res.json()
+  return Array.isArray(data.news) ? data.news : []
+}
+
+// 뉴스레터 HTML 생성 (간단 템플릿)
+const buildNewsletterHtml = (byTab) => {
+  const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+  const sectionHtml = Object.entries(byTab).map(([tab, items]) => {
+    const list = items.slice(0, 4).map((n, idx) => `
+      <div style="margin-bottom:16px;padding:16px;background:#f9fafb;border-radius:8px;border-left:4px solid #4f46e5;">
+        <h3 style="margin:0 0 8px 0;color:#111827;font-size:16px;">${idx === 0 ? '🔥' : idx === 1 ? '📈' : idx === 2 ? '💡' : '🎯'} ${n.title}</h3>
+        <p style="margin:0 0 10px 0;color:#4b5563;line-height:1.6;font-size:14px;">${(n.summary || n.content || '').toString().slice(0, 300)}</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:#9ca3af;font-size:12px;">${new Date(n.publishedAt || Date.now()).toLocaleDateString('ko-KR')}</span>
+          <a href="${n.url || '#'}" style="color:#4f46e5;text-decoration:none;font-size:12px;font-weight:600;">원문 보기 →</a>
+        </div>
+      </div>
+    `).join('')
+    return `
+      <div style="margin-bottom:24px;">
+        <h2 style="margin:0 0 12px 0;color:#111827;font-size:18px;">${tab}</h2>
+        ${list || '<p style="color:#6b7280;font-size:14px;">수집된 뉴스가 없습니다.</p>'}
+      </div>
+    `
+  }).join('')
+
+  return `
+    <!DOCTYPE html>
+    <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>${today} 부동산 뉴스</title></head>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;padding:0;background:#f3f4f6;">
+      <div style="max-width:640px;margin:0 auto;background:#ffffff;">
+        <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:28px;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">📈 부동산 뉴스 큐레이터</h1>
+          <p style="color:rgba(255,255,255,0.9);margin:8px 0 0 0;font-size:14px;">${today} 오늘의 주요 부동산 뉴스</p>
+        </div>
+        <div style="padding:24px;">
+          ${sectionHtml}
+          <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;">
+            <p style="color:#9ca3af;font-size:12px;margin:0 0 12px 0;">이 뉴스레터는 매일 아침 7시에 발송됩니다.</p>
+            <a href="${BASE_URL}" style="color:#4f46e5;text-decoration:none;font-weight:600;">웹사이트 방문하기</a>
+          </div>
+        </div>
+      </div>
+    </body></html>
+  `
+}
+
 // 실제 뉴스레터 발송 (그룹별 맞춤 뉴스 사용)
-const sendRealNewsletter = async (email) => {
+const sendRealNewsletter = async (email, html) => {
   try {
-    // 서버 코드 경로에서 모듈 불러오기
-    const { sendNewsletter } = await import('../lib/email.js')
-    const result = await sendNewsletter(email)
+    const transporter = createTransporter()
+    const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: email,
+      subject: `[부동산 뉴스 큐레이터] ${today} 오늘의 부동산 뉴스`,
+      html,
+    }
+    const result = await (await transporter).sendMail(mailOptions)
     console.log('✅ 뉴스레터 발송 완료:', email)
     return result
-
   } catch (error) {
     console.error('❌ 뉴스레터 발송 실패:', error)
     throw error
@@ -60,9 +138,22 @@ const sendNewsletterToAllSubscribers = async () => {
 
     console.log(`📧 총 ${emailSubscribers.length}명의 구독자에게 뉴스레터 발송 중...`)
 
-    // 각 구독자에게 테스트 이메일 발송
+    // 탭별 뉴스 수집 (한 번만 수집 후 동일 콘텐츠 발송)
+    const tabs = ['정책뉴스', '시장분석', '지원혜택', '초보자용', '신혼부부용', '투자자용']
+    const byTab = {}
+    for (const tab of tabs) {
+      try {
+        byTab[tab] = await fetchNewsByTab(tab)
+      } catch (e) {
+        console.error(`[뉴스 수집 실패] ${tab}:`, e)
+        byTab[tab] = []
+      }
+    }
+    const html = buildNewsletterHtml(byTab)
+
+    // 각 구독자에게 발송
     const results = await Promise.allSettled(
-      emailSubscribers.map(subscriber => sendRealNewsletter(subscriber.email))
+      emailSubscribers.map(subscriber => sendRealNewsletter(subscriber.email, html))
     )
 
     // 결과 분석
@@ -90,7 +181,7 @@ const sendNewsletterToAllSubscribers = async () => {
 
 // 테스트용: 명령행 인수로 'test'가 전달되면 즉시 발송
 if (process.argv.includes('test')) {
-  sendTestNewsletterToAllSubscribers()
+  sendNewsletterToAllSubscribers()
 } else {
   // 매일 아침 7시에 뉴스레터 발송 (한국 시간 기준)
   const schedule = '0 22 * * *' // UTC 22:00 = 한국 시간 07:00

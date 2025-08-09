@@ -846,7 +846,7 @@ export default function Dashboard() {
                   <div style={{
                     background: 'white',
                     borderRadius: 'var(--radius-2xl)',
-                    padding: '40px',
+                    padding: '20px',
                     boxShadow: 'var(--shadow-sm)',
                     border: '1px solid var(--gray-200)',
                     marginBottom: '32px'

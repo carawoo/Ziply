@@ -149,12 +149,12 @@ async function fetchRealNews(query: string) {
       }
     }
     
-    console.warn('[NEWS] FALLBACK_USED')
+    console.warn('[NEWS] API 실패 - 빈 배열 반환')
     return []
     
   } catch (error) {
     console.error('[NEWS] 뉴스 검색 오류:', error)
-    console.warn('[NEWS] FALLBACK_USED')
+    console.warn('[NEWS] API 실패 - 빈 배열 반환')
     return []
   }
 }

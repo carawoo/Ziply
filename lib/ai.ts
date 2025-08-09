@@ -521,45 +521,51 @@ function filterNewsByDate(newsItems: NewsItem[], targetCount: number = 10): News
   return combinedNews.slice(0, targetCount)
 }
 
-// 종합 뉴스 필터링 함수 (날짜 + URL 유효성 + 제목-URL 매칭)
+// 완화된 뉴스 필터링 함수 (너무 엄격한 필터링 제거)
 async function filterValidNews(newsItems: NewsItem[]): Promise<NewsItem[]> {
-  console.log(`종합 필터링 시작: ${newsItems.length}개 뉴스`)
+  console.log(`완화된 필터링 시작: ${newsItems.length}개 뉴스`)
   
   const today = getTodayDate()
   const validNews: NewsItem[] = []
   
   for (const news of newsItems) {
     try {
-      // 1. 오늘 날짜 필터
-      if (news.publishedAt !== today) {
-        console.log(`날짜 불일치 제외: ${news.title} (${news.publishedAt} != ${today})`)
+      // 1. 날짜 필터 완화 (최근 7일 이내)
+      const newsDate = new Date(news.publishedAt)
+      const todayDate = new Date(today)
+      const diffTime = Math.abs(todayDate.getTime() - newsDate.getTime())
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (diffDays > 7) {
+        console.log(`7일 이상 오래된 뉴스 제외: ${news.title} (${diffDays}일 전)`)
         continue
       }
       
-      // 2. URL 유효성 검사
-      const urlValid = await isValidUrl(news.url || '')
-      if (!urlValid) {
-        console.log(`URL 유효하지 않음 제외: ${news.title} -> ${news.url}`)
+      // 2. URL 기본 검증만 (도메인 확인 정도)
+      if (!news.url || news.url.trim().length === 0) {
+        console.log(`URL 없음 제외: ${news.title}`)
         continue
       }
       
-      // 3. 제목-URL 매칭 검증
-      const titleUrlMatch = isTitleUrlMatch(news.title, news.url || '')
-      if (!titleUrlMatch) {
-        console.log(`제목-URL 불일치 제외: ${news.title} -> ${news.url}`)
+      try {
+        new URL(news.url) // URL 형식 검증만
+      } catch {
+        console.log(`잘못된 URL 형식 제외: ${news.title} -> ${news.url}`)
         continue
       }
+      
+      // 3. 제목-URL 매칭 검증 제거 (너무 엄격함)
       
       // 모든 조건 통과
       validNews.push(news)
-      console.log(`✅ 유효한 뉴스 추가: ${news.title} -> ${news.url}`)
+      console.log(`✅ 완화된 필터 통과: ${news.title} -> ${news.url}`)
       
     } catch (error) {
       console.log(`뉴스 필터링 오류: ${news.title} -> ${error}`)
     }
   }
   
-  console.log(`종합 필터링 완료: ${validNews.length}/${newsItems.length}개 유효`)
+  console.log(`완화된 필터링 완료: ${validNews.length}/${newsItems.length}개 유효`)
   return validNews
 }
 
@@ -1148,40 +1154,53 @@ async function fetchRealNews(category: string): Promise<NewsItem[]> {
   return []
 }
 
-// 탭 이름을 받아 실제 뉴스 수집 파이프라인을 실행하는 공개 함수
-// - 내부의 fetchRealNews(네이버 타겟별/엄격 + 구글 보완)를 활용
-// - 여러 카테고리를 매핑하여 수집하고 URL 기준으로 중복 제거
-// - 상위 10개까지만 반환 (호출부에서 4개로 슬라이스 가능)
+// 탭 이름을 받아 실제 뉴스 수집 - 간소화된 버전
 export async function fetchNewsByTab(tab: string): Promise<NewsItem[]> {
   console.log(`=== fetchNewsByTab 시작: ${tab} ===`)
 
-  // 탭 → 내부 카테고리 매핑 (대시보드/라우트와 동일 의미)
-  const categoryMap: Record<string, string[]> = {
-    '초보자용': ['beginner', 'support'],
-    '신혼부부용': ['newlywed', 'support'],
-    '투자자용': ['investment', 'market'],
-    '정책뉴스': ['policy'],
-    '시장분석': ['market', 'investment'],
-    '지원혜택': ['support', 'newlywed']
+  // 탭 → 검색 키워드 매핑
+  const keywordMap: Record<string, string[]> = {
+    '초보자용': ['부동산 기초', '주택 구매 가이드', '부동산 초보자'],
+    '신혼부부용': ['신혼부부 특별공급', '신혼부부 청약', '신혼부부 혜택'],
+    '투자자용': ['부동산 투자', 'REITs', '부동산 수익률'],
+    '정책뉴스': ['부동산 정책', '부동산 규제', '주택 정책'],
+    '시장분석': ['부동산 시장', '집값 동향', '부동산 분석'],
+    '지원혜택': ['주택 지원', '부동산 혜택', '청년 주택']
   }
 
-  const targetCategories = categoryMap[tab] || ['policy']
+  const keywords = keywordMap[tab] || ['부동산 정책']
   const usedUrls = new Set<string>()
   const collected: NewsItem[] = []
 
-  for (const category of targetCategories) {
+  for (const keyword of keywords) {
     try {
-      console.log(`[fetchNewsByTab] 카테고리 수집 시작: ${category}`)
-      const news = await fetchRealNews(category)
-      for (const item of news) {
+      console.log(`[fetchNewsByTab] 키워드 검색: ${keyword}`)
+      const news = await fetchNaverNewsAPI(keyword)
+      
+      // 간단한 부동산 관련 필터링만 적용
+      const filtered = news.filter(item => {
+        const realEstateKeywords = ['부동산', '아파트', '주택', '전세', '매매', '정책', '투자', '청약', '시장', '집값']
+        const hasKeyword = realEstateKeywords.some(kw => 
+          item.title.includes(kw) || item.content.includes(kw)
+        )
+        
+        if (!hasKeyword) {
+          console.log(`부동산 키워드 없음 제외: ${item.title}`)
+          return false
+        }
+        
+        return true
+      })
+      
+      for (const item of filtered) {
         const key = item.url || ''
         if (!key || usedUrls.has(key)) continue
         usedUrls.add(key)
         collected.push(item)
       }
-      console.log(`[fetchNewsByTab] ${category} 수집: 누적 ${collected.length}건`)
+      console.log(`[fetchNewsByTab] ${keyword} 수집: 누적 ${collected.length}건`)
     } catch (error) {
-      console.error(`[fetchNewsByTab] ${category} 수집 오류:`, error)
+      console.error(`[fetchNewsByTab] ${keyword} 수집 오류:`, error)
     }
   }
 
@@ -1232,12 +1251,11 @@ export async function fetchNaverNewsAPI(category: string): Promise<NewsItem[]> {
           const cleanTitle = item.title?.replace(/<[^>]*>/g, '').trim()
           const cleanContent = item.description?.replace(/<[^>]*>/g, '').trim()
           
-          // URL이 유효하고 중복되지 않은 경우만 추가
+          // URL이 유효하고 중복되지 않은 경우만 추가 (네이버 뉴스 URL도 허용)
           if (cleanUrl && 
               cleanUrl.length > 0 && 
               !usedUrls.has(cleanUrl) && 
-              !cleanUrl.includes('search.naver.com') &&
-              !cleanUrl.includes('news.naver.com') && // 네이버 뉴스 리다이렉트 URL 제외
+              !cleanUrl.includes('search.naver.com') && // 검색 결과 페이지만 제외
               cleanTitle && cleanTitle.length > 0 &&
               cleanContent && cleanContent.length > 0) {
             
@@ -1298,11 +1316,19 @@ export async function fetchNaverNewsAPI(category: string): Promise<NewsItem[]> {
 function isDiverseNewsSource(domain: string): boolean {
   // 주요 뉴스 사이트 목록 (다양성 확보를 위한 우선순위)
   const diverseSources = [
+    // 기존 주요 뉴스 사이트
     'mk.co.kr', 'hankyung.com', 'fnnews.com', 'land.naver.com', 'reb.or.kr',
     'chosun.com', 'joongang.co.kr', 'donga.com', 'seoul.co.kr', 'khan.co.kr',
     'hani.co.kr', 'ohmynews.com', 'pressian.com', 'mediatoday.co.kr',
     'yonhapnews.co.kr', 'newsis.com', 'news1.kr', 'edaily.co.kr',
-    'etnews.com', 'zdnet.co.kr', 'it.chosun.com', 'zdnet.com'
+    'etnews.com', 'zdnet.co.kr', 'it.chosun.com', 'zdnet.com',
+    // 네이버 뉴스 도메인들 추가
+    'n.news.naver.com', 'm.entertain.naver.com', 'news.naver.com',
+    // 네이버 API에서 자주 나오는 도메인들 추가
+    'wikitree.co.kr', 'topstarnews.net', 'segye.com', 'newsen.com',
+    'xportsnews.com', 'osen.co.kr', 'mydaily.co.kr', 'spotvnews.co.kr',
+    // 부동산 관련 주요 사이트들 추가
+    'biz.chosun.com', 'economychosun.com', 'realty.chosun.com'
   ]
   
   // 부동산 전문 사이트들
@@ -1315,6 +1341,7 @@ function isDiverseNewsSource(domain: string): boolean {
   const isDiverse = diverseSources.some(source => domain.includes(source)) ||
                    realEstateSources.some(source => domain.includes(source))
   
+  console.log(`도메인 다양성 검사: ${domain} -> ${isDiverse ? '통과' : '차단'}`)
   return isDiverse
 }
 

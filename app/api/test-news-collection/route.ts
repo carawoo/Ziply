@@ -16,7 +16,7 @@ export async function GET() {
     
     for (const tab of tabs) {
       console.log(`=== ${tab} 탭 테스트 시작 ===`)
-      const fallbackNews = await getNewsForTab(tab)
+      const apiNews = await getNewsForTab(tab)
       const realNews = await fetchNewsByTab(tab)
       // 네이버 API는 카테고리 키워드로 테스트 (대략적인 매핑)
       const naverCategory = tab === '초보자용' ? 'beginner' :
@@ -27,9 +27,9 @@ export async function GET() {
       const naverNews = await fetchNaverNewsAPI(naverCategory)
 
       results[tab] = {
-        fallback: {
-          count: fallbackNews.length,
-          titles: fallbackNews.map(n => n.title)
+        apiPipeline: {
+          count: apiNews.length,
+          titles: apiNews.map(n => n.title)
         },
         realPipeline: {
           count: realNews.length,
@@ -40,7 +40,7 @@ export async function GET() {
           sample: naverNews.slice(0, 5).map(n => ({ title: n.title, url: n.url }))
         }
       }
-      console.log(`=== ${tab} 탭 테스트 완료: fallback ${fallbackNews.length} / real ${realNews.length} / naver ${naverNews.length} ===`)
+      console.log(`=== ${tab} 탭 테스트 완료: api ${apiNews.length} / real ${realNews.length} / naver ${naverNews.length} ===`)
     }
     
     return NextResponse.json({

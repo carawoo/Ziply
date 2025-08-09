@@ -103,7 +103,31 @@
 5. 카카오에서 복사한 REST API 키를 "Kakao Client ID"에 입력
 6. "Save" 클릭
 
-## 🤖 4단계: AI API 설정 (선택사항)
+## 📰 4단계: 네이버 뉴스 API 설정
+
+실제 뉴스 데이터를 가져오기 위해 네이버 뉴스 API를 사용합니다. 이미 설정된 API 키를 사용하거나, 직접 등록할 수 있습니다.
+
+### 기본 설정 (권장)
+
+프로젝트에 이미 설정된 네이버 API 키를 사용할 수 있습니다:
+- Client ID: `ceVPKnFABx59Lo4SzbmY`
+- Client Secret: `FUfJ_TnwL6`
+
+이 설정은 `env.example` 파일에 이미 포함되어 있어 별도 설정이 필요하지 않습니다.
+
+### 직접 네이버 API 등록 (선택사항)
+
+본인만의 네이버 API 키를 사용하려면:
+
+1. [네이버 개발자 센터](https://developers.naver.com) 접속
+2. "Application" → "애플리케이션 등록" 클릭
+3. 애플리케이션 정보 입력:
+   - 애플리케이션 이름: `부동산뉴스앱`
+   - 사용 API: "검색" 선택
+4. 등록 완료 후 "Client ID"와 "Client Secret" 복사
+5. `.env.local` 파일에서 해당 값들을 교체
+
+## 🤖 5단계: AI API 설정 (선택사항)
 
 실제 AI 요약 기능을 사용하려면 AI API 키가 필요합니다. 둘 중 하나를 선택하세요:
 
@@ -125,7 +149,7 @@
 4. "Create API key in new project" 선택
 5. 생성된 키 복사해서 메모장에 저장
 
-## 🔧 5단계: 프로젝트 설정
+## 🔧 6단계: 프로젝트 설정
 
 ### 환경변수 파일 생성
 
@@ -138,13 +162,17 @@
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 
-# 4단계에서 복사한 AI API 키 (둘 중 하나만)
+# 5단계에서 복사한 AI API 키 (둘 중 하나만)
 OPENAI_API_KEY=your_openai_api_key_here
 # 또는
 GEMINI_API_KEY=your_gemini_api_key_here
 
 # 3단계에서 복사한 카카오 REST API 키
 NEXT_PUBLIC_KAKAO_CLIENT_ID=your_kakao_client_id_here
+
+# 4단계 네이버 뉴스 API (이미 설정됨)
+NAVER_CLIENT_ID=ceVPKnFABx59Lo4SzbmY
+NAVER_CLIENT_SECRET=FUfJ_TnwL6
 ```
 
 4. 파일 저장
@@ -167,7 +195,7 @@ npm run dev
 5. 브라우저에서 `http://localhost:3000` 접속
 6. 사이트가 정상적으로 로드되는지 확인
 
-## 🌐 6단계: Vercel 배포
+## 🌐 7단계: Vercel 배포
 
 ### Vercel 계정 생성
 

@@ -40,8 +40,8 @@ GEMINI_API_KEY=your_gemini_api_key
 
 #### 네이버 뉴스 API (선택사항)
 ```
-NAVER_CLIENT_ID=your_naver_client_id
-NAVER_CLIENT_SECRET=your_naver_client_secret
+NAVER_CLIENT_ID=ceVPKnFABx59Lo4SzbmY
+NAVER_CLIENT_SECRET=FUfJ_TnwL6
 ```
 
 #### 이메일 설정 (뉴스레터용)

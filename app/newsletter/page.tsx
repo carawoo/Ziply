@@ -24,11 +24,25 @@ export default function Newsletter() {
     setMessage('')
 
     try {
-      // Supabase에 이메일 저장
-      const { data, error } = await supabase
+      // 1차: 클라이언트 anon으로 시도 (RLS 허용 시)
+      let { data, error } = await supabase
         .from('newsletter_subscribers')
-        .upsert([{ email, is_active: true }], { onConflict: 'email' })
+        .insert([{ email }])
         .select()
+
+      // RLS 등으로 실패 시 서버 API로 서비스 롤 처리
+      if (error) {
+        const resp = await fetch('/api/newsletter/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        })
+        if (!resp.ok) {
+          const j = await resp.json().catch(() => ({}))
+          throw new Error(j?.error || '구독 저장 실패')
+        }
+        data = await resp.json()
+      }
 
       if (error) {
         if (error.code === '23505') { // unique constraint violation

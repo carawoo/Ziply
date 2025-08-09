@@ -16,85 +16,64 @@ const createTransporter = async () => {
 
 // 구독 완료 알림 이메일 HTML 생성
 const createSubscriptionConfirmationHTML = (email: string) => {
+  // Toss-like Ziply email design (soft, modern, rounded, primary blue)
   return `
-    <!DOCTYPE html>
-    <html>
+  <!DOCTYPE html>
+  <html>
     <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>뉴스레터 구독 완료 - Ziply</title>
     </head>
-    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
-      <div style="max-width: 600px; margin: 0 auto; background-color: white;">
-        <!-- 헤더 -->
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">
-            🎉 구독 완료!
-          </h1>
-          <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">
-            Ziply 뉴스레터 구독이 완료되었습니다
-          </p>
-        </div>
+    <body style="margin:0;padding:24px;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+        <tr>
+          <td align="center">
+            <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="max-width:640px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 20px rgba(0,0,0,0.06);">
+              <tr>
+                <td align="center" style="background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);padding:32px;">
+                  <div style="color:#fff;font-size:28px;font-weight:800;letter-spacing:-0.02em;">🎉 구독 완료!</div>
+                  <div style="color:rgba(255,255,255,0.9);margin-top:8px;font-size:16px;">Ziply 뉴스레터 구독이 완료되었습니다</div>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:32px;">
+                  <h2 style="margin:0 0 12px 0;color:#111827;font-size:22px;">환영합니다! 👋</h2>
+                  <p style="margin:0 0 12px 0;color:#4b5563;line-height:1.7;">
+                    <strong>${email}</strong>님, Ziply 뉴스레터 구독이 성공적으로 완료되었습니다.
+                  </p>
+                  <p style="margin:0;color:#4b5563;line-height:1.7;">이제 매일 아침 7시에 맞춤형 부동산 뉴스 요약을 받아보실 수 있습니다.</p>
 
-        <!-- 메인 콘텐츠 -->
-        <div style="padding: 32px;">
-          <div style="margin-bottom: 24px;">
-            <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 22px;">
-              환영합니다! 👋
-            </h2>
-            <p style="color: #6b7280; margin: 0 0 16px 0; line-height: 1.6;">
-              <strong>${email}</strong>님, Ziply 뉴스레터 구독이 성공적으로 완료되었습니다.
-            </p>
-            <p style="color: #6b7280; margin: 0; line-height: 1.6;">
-              이제 매일 아침 7시에 맞춤형 부동산 뉴스 요약을 받아보실 수 있습니다.
-            </p>
-          </div>
+                  <div style="margin:24px 0;padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc;">
+                    <div style="color:#111827;font-weight:700;margin-bottom:8px;">📰 뉴스레터에서 받을 수 있는 내용</div>
+                    <ul style="margin:0;padding-left:18px;color:#6b7280;line-height:1.7;">
+                      <li>일일 시장 동향 및 분석</li>
+                      <li>부동산 정책 변화 알림</li>
+                      <li>투자 인사이트 및 전망</li>
+                      <li>지역별 부동산 뉴스</li>
+                    </ul>
+                  </div>
 
-          <!-- 뉴스레터 내용 안내 -->
-          <div style="background: #f3f4f6; padding: 24px; border-radius: 8px; margin-bottom: 24px;">
-            <h3 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px;">
-              📰 뉴스레터에서 받을 수 있는 내용
-            </h3>
-            <ul style="color: #6b7280; margin: 0; padding-left: 20px; line-height: 1.6;">
-              <li>일일 시장 동향 및 분석</li>
-              <li>부동산 정책 변화 알림</li>
-              <li>투자 인사이트 및 전망</li>
-              <li>지역별 부동산 뉴스</li>
-            </ul>
-          </div>
+                  <div style="margin:0 0 24px 0;padding:16px;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff;">
+                    <div style="color:#1e40af;font-weight:700;margin-bottom:6px;font-size:15px;">⏰ 발송 시간</div>
+                    <div style="color:#1e40af;font-size:14px;">매일 아침 7시 (한국 시간)에 발송됩니다.</div>
+                  </div>
 
-          <!-- 발송 시간 안내 -->
-          <div style="background: #dbeafe; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
-            <h3 style="color: #1e40af; margin: 0 0 8px 0; font-size: 16px;">
-              ⏰ 발송 시간
-            </h3>
-            <p style="color: #1e40af; margin: 0; font-size: 14px;">
-              매일 아침 7시 (한국 시간)에 발송됩니다.
-            </p>
-          </div>
+                  <div style="text-align:center;margin:0 0 8px 0;">
+                    <a href="https://ziply-nine.vercel.app/dashboard" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:14px 28px;border-radius:12px;font-weight:700;">대시보드 방문하기</a>
+                  </div>
+                </td>
+              </tr>
+            </table>
 
-          <!-- 액션 버튼 -->
-          <div style="text-align: center; margin-bottom: 24px;">
-            <a href="https://ziply-nine.vercel.app/dashboard" 
-               style="display: inline-block; background: #4f46e5; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;">
-              대시보드 방문하기
-            </a>
-          </div>
-
-          <!-- 푸터 -->
-          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb; text-align: center;">
-            <p style="color: #9ca3af; font-size: 14px; margin: 0 0 16px 0;">
-              구독 해지가 필요하시면 언제든지 연락주세요.
-            </p>
-            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+            <div style="max-width:640px;margin:12px auto 0 auto;text-align:center;color:#9ca3af;font-size:12px;line-height:1.6;">
               © 2024 Ziply. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </div>
+            </div>
+          </td>
+        </tr>
+      </table>
     </body>
-    </html>
-  `
+  </html>`
 }
 
 // 구독 완료 알림 이메일 발송 (서버 사이드 전용)
@@ -149,62 +128,47 @@ const createNewsletterHTML = (newsItems: any[], date: string) => {
   `).join('')
 
   return `
-    <!DOCTYPE html>
-    <html>
+  <!DOCTYPE html>
+  <html>
     <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>${date} 부동산 뉴스 - Ziply</title>
     </head>
-    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
-      <div style="max-width: 600px; margin: 0 auto; background-color: white;">
-        <!-- 헤더 -->
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">
-            📈 Ziply
-          </h1>
-          <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">
-            ${date} 오늘의 주요 부동산 뉴스
-          </p>
-        </div>
+    <body style="margin:0;padding:24px;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+        <tr>
+          <td align="center">
+            <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="max-width:640px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 20px rgba(0,0,0,0.06);">
+              <tr>
+                <td align="center" style="background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);padding:28px;">
+                  <div style="color:#fff;font-size:24px;font-weight:800;letter-spacing:-0.02em;">📈 Ziply</div>
+                  <div style="color:rgba(255,255,255,0.9);margin-top:8px;font-size:14px;">${date} 오늘의 주요 부동산 뉴스</div>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:28px;">
+                  <h2 style="margin:0 0 12px 0;color:#111827;font-size:20px;">오늘의 주요 부동산 뉴스</h2>
+                  <p style="margin:0 0 16px 0;color:#6b7280;line-height:1.7;">매일 아침 7시, 맞춤형 부동산 뉴스 요약을 받아보세요.</p>
+                  ${newsHTML}
 
-        <!-- 메인 콘텐츠 -->
-        <div style="padding: 32px;">
-          <div style="margin-bottom: 24px;">
-            <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 22px;">
-              오늘의 주요 부동산 뉴스
-            </h2>
-            <p style="color: #6b7280; margin: 0; line-height: 1.6;">
-              매일 아침 7시, 맞춤형 부동산 뉴스 요약을 받아보세요.
-            </p>
-          </div>
-
-          <!-- 뉴스 목록 -->
-          ${newsHTML}
-
-          <!-- 푸터 -->
-          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb; text-align: center;">
-            <p style="color: #9ca3af; font-size: 14px; margin: 0 0 16px 0;">
-              이 뉴스레터는 매일 아침 7시에 발송됩니다.
-            </p>
-            <div style="margin-bottom: 16px;">
-              <a href="https://ziply-nine.vercel.app/dashboard" style="color: #4f46e5; text-decoration: none; font-weight: 600;">
-                웹사이트 방문하기
-              </a>
-            </div>
-            <!-- 매우 눈에 띄지 않는 구독 해지 링크 -->
-            <div style="margin-top: 8px;">
-              <a href="${('https://ziply-nine.vercel.app').replace(/\\\/$/, '')}/api/newsletter/unsubscribe?email={{EMAIL}}&redirect=1"
-                 style="color:#cbd5e1;font-size:11px;text-decoration:underline;opacity:0.6;">
-                구독 취소
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+                  <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;">
+                    <div style="color:#9ca3af;font-size:12px;margin:0 0 12px 0;">이 뉴스레터는 매일 아침 7시에 발송됩니다.</div>
+                    <div style="margin-bottom:8px;">
+                      <a href="https://ziply-nine.vercel.app/dashboard" style="color:#2563eb;text-decoration:none;font-weight:700;">웹사이트 방문하기</a>
+                    </div>
+                    <div style="margin-top:4px;">
+                      <a href="${('https://ziply-nine.vercel.app').replace(/\\\/$/, '')}/api/newsletter/unsubscribe?email={{EMAIL}}&redirect=1" style="color:#cbd5e1;font-size:11px;text-decoration:underline;opacity:0.6;">구독 취소</a>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
     </body>
-    </html>
-  `
+  </html>`
 }
 
 // 뉴스레터 발송 함수 (서버 사이드 전용)

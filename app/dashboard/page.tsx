@@ -189,15 +189,7 @@ export default function Dashboard() {
         <div className="container">
           <nav className="nav">
             <div className="logo">Ziply</div>
-            <div>
-              <button 
-                onClick={handleLogout}
-                className="button"
-                style={{ background: 'rgba(255,255,255,0.2)' }}
-              >
-                로그아웃
-              </button>
-            </div>
+            <div />
           </nav>
         </div>
       </header>
@@ -568,7 +560,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="container" style={{ paddingTop: '40px', paddingBottom: '40px' }}>
+      <div className="container" style={{ paddingTop: '40px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           {/* 헤더 섹션 */}
           <div style={{ 
@@ -938,6 +930,23 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+      </div>
+      <div style={{ textAlign: 'center', padding: '8px 0 20px' }}>
+        <button
+          onClick={handleLogout}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--gray-400)',
+            textDecoration: 'underline',
+            cursor: 'pointer',
+            fontSize: '12px',
+            padding: '4px 8px'
+          }}
+          aria-label="로그아웃"
+        >
+          로그아웃
+        </button>
       </div>
     </div>
   )

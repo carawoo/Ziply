@@ -192,9 +192,13 @@ const createNewsletterHTML = (newsItems: any[], date: string) => {
                 웹사이트 방문하기
               </a>
             </div>
-            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-              구독 해지하려면 <a href="mailto:unsubscribe@your-domain.com" style="color: #4f46e5;">여기</a>를 클릭하세요.
-            </p>
+            <!-- 매우 눈에 띄지 않는 구독 해지 링크 -->
+            <div style="margin-top: 8px;">
+              <a href="${(process.env.APP_BASE_URL || 'https://ziply-nine.vercel.app').replace(/\\\/$/, '')}/api/newsletter/unsubscribe?email={{EMAIL}}&redirect=1"
+                 style="color:#cbd5e1;font-size:11px;text-decoration:underline;opacity:0.6;">
+                구독 취소
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -249,8 +253,9 @@ export const sendNewsletter = async (email: string) => {
       })
     )
 
-    // 이메일 HTML 생성
-    const htmlContent = createNewsletterHTML(newsWithSummaries, today)
+    // 이메일 HTML 생성 (구독 취소 링크에 수신자 이메일 삽입)
+    let htmlContent = createNewsletterHTML(newsWithSummaries, today)
+    htmlContent = htmlContent.replace(/\{\{EMAIL\}\}/g, email)
 
     // 이메일 전송
     const transporter = await createTransporter()

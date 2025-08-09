@@ -9,6 +9,7 @@ export default function Newsletter() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
+  const [isSubscribed, setIsSubscribed] = useState(false)
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +27,7 @@ export default function Newsletter() {
       // Supabase에 이메일 저장
       const { data, error } = await supabase
         .from('newsletter_subscribers')
-        .insert([{ email }])
+        .upsert([{ email, is_active: true }], { onConflict: 'email' })
         .select()
 
       if (error) {
@@ -58,7 +59,7 @@ export default function Newsletter() {
         }
 
         setIsSuccess(true)
-        setEmail('')
+        setIsSubscribed(true)
       }
     } catch (error) {
       console.error('구독 오류:', error)
@@ -184,6 +185,18 @@ export default function Newsletter() {
                 lineHeight: '1.6'
               }}>
                 {message}
+              </div>
+            )}
+
+            {/* 구독자에게만 구독취소 버튼 노출 */}
+            {isSubscribed && (
+              <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                <a
+                  href={`/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}&redirect=1`}
+                  style={{ color: '#9ca3af', fontSize: 12, textDecoration: 'underline' }}
+                >
+                  구독 취소
+                </a>
               </div>
             )}
 

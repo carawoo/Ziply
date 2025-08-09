@@ -121,7 +121,7 @@ const sendNewsletterToAllSubscribers = async () => {
     console.log('📰 실제 뉴스레터 발송 시작:', new Date().toLocaleString('ko-KR'))
 
     // 이메일 구독자 목록 가져오기
-    const { data: emailSubscribers, error: emailError } = await supabase
+  const { data: emailSubscribers, error: emailError } = await supabase
       .from('newsletter_subscribers')
       .select('email')
       .eq('is_active', true)
@@ -152,13 +152,14 @@ const sendNewsletterToAllSubscribers = async () => {
     const html = buildNewsletterHtml(byTab)
 
     // 각 구독자에게 발송
+    // 실제 메일 발송 수행 (is_active=true 대상자만)
     const results = await Promise.allSettled(
       emailSubscribers.map(subscriber => sendRealNewsletter(subscriber.email, html))
     )
 
     // 결과 분석
-    const successful = results.filter(result => result.status === 'fulfilled').length
-    const failed = results.filter(result => result.status === 'rejected').length
+    const successful = results.filter(r => r.status === 'fulfilled').length
+    const failed = results.filter(r => r.status === 'rejected').length
 
     console.log(`✅ 성공: ${successful}건`)
     console.log(`❌ 실패: ${failed}건`)

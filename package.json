@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "cron": "node cron/send-newsletter.js",
+    "test:unsubscribe": "node __tests__/unsubscribe.test.js",
     "generate-vapid": "npx web-push generate-vapid-keys"
   },
   "dependencies": {

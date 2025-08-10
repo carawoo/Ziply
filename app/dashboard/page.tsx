@@ -790,7 +790,7 @@ export default function Dashboard() {
                       {item.summary || item.content}
                     </p>
                     
-                    {/* 초보자 그룹에서만 용어 풀이 표시 */}
+                    {/* 초보자 그룹에서만 쉬운 설명 표시 */}
                     {userGroup === '초보자' && item.glossary && (
                       <div style={{
                         background: '#f0f9ff',
@@ -809,7 +809,7 @@ export default function Dashboard() {
                           alignItems: 'center',
                           gap: '6px'
                         }}>
-                          📖 용어 풀이
+                          📖 쉬운 설명
                         </div>
                         <div style={{
                           color: '#0369a1',
@@ -887,7 +887,7 @@ export default function Dashboard() {
                         color: 'var(--gray-900)',
                         margin: 0
                       }}>
-                        🔰 초보자 Q&A · 보금자리론·디딤돌대출
+                        🔰 초보자 Q&A · 부동산 기초 가이드
                       </h3>
                       <a
                         href="#beginner-faq"

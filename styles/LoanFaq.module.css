@@ -163,7 +163,7 @@
   font-weight: 500;
 }
 
-.loanTypeBadge {
+.categoryBadge {
   display: inline-block;
   padding: 6px 12px;
   background: var(--primary-50);
@@ -253,6 +253,77 @@
   color: var(--gray-600);
   font-size: 16px;
   font-weight: 500;
+}
+
+/* 페이지네이션 스타일 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+  padding: 24px;
+  background: white;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--gray-200);
+}
+
+.pageButton {
+  padding: 12px 20px;
+  border: 1px solid var(--gray-300);
+  background: white;
+  color: var(--gray-700);
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.pageButton:hover:not(:disabled) {
+  background: var(--gray-50);
+  border-color: var(--gray-400);
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 8px;
+}
+
+.pageNumber {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--gray-300);
+  background: white;
+  color: var(--gray-700);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pageNumber:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-400);
+}
+
+.pageNumber.active {
+  background: var(--primary-600);
+  color: white;
+  border-color: var(--primary-600);
+}
+
+.pageNumber.active:hover {
+  background: var(--primary-700);
 }
 
 /* Responsive Design */

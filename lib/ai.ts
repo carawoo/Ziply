@@ -1475,7 +1475,7 @@ export async function summarizeNews(content: string, category: string): Promise<
   }
 }
 
-// 용어 풀이가 포함된 뉴스 요약 (초보자 친화적)
+// 초등학생도 이해할 수 있는 쉬운 요약 (용어 풀이 대신)
 export async function summarizeWithGlossary(title: string, content: string, category: string): Promise<{ summary: string; glossary: string }> {
   try {
     // OpenAI API 사용
@@ -1483,8 +1483,7 @@ export async function summarizeWithGlossary(title: string, content: string, cate
       const prompt = `
 다음은 부동산 관련 기사입니다.
 1) 기사의 핵심 내용을 3~4줄로 요약하세요.
-2) 요약 중 초보자가 어려워할 만한 부동산 용어를 찾아, '용어: 쉬운 설명' 형식으로 해설하세요.
-3) 용어 설명은 '📖 용어 풀이' 섹션으로 따로 모아주세요.
+2) 초등학생도 이해할 수 있도록 아주 쉽게 설명해주세요. 전문 용어는 피하고 일상적인 말로 바꿔서 설명하세요.
 
 기사 제목: ${title}
 기사 내용: ${content}
@@ -1494,10 +1493,9 @@ export async function summarizeWithGlossary(title: string, content: string, cate
 📰 뉴스 요약
 [3-4줄 요약]
 
-📖 용어 풀이
-• 용어1: 쉬운 설명
-• 용어2: 쉬운 설명
-(용어가 없으면 "이번 뉴스에는 특별한 용어가 없습니다."라고 표시)
+📖 쉬운 설명
+[초등학생도 이해할 수 있는 아주 쉬운 설명 - 2-3줄]
+(예: "이 뉴스는 집값이 어떻게 변하는지, 우리가 알아야 할 중요한 점은 무엇인지 쉽게 설명해요.")
 `;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -1523,9 +1521,9 @@ export async function summarizeWithGlossary(title: string, content: string, cate
         const data = await response.json()
         const result = data.choices[0].message.content
         
-        // 응답을 요약과 용어 풀이로 분리
-        const summaryMatch = result.match(/📰 뉴스 요약\s*([\s\S]*?)(?=📖 용어 풀이|$)/)
-        const glossaryMatch = result.match(/📖 용어 풀이\s*([\s\S]*?)$/)
+        // 응답을 요약과 쉬운 설명으로 분리
+        const summaryMatch = result.match(/📰 뉴스 요약\s*([\s\S]*?)(?=📖 쉬운 설명|$)/)
+        const glossaryMatch = result.match(/📖 쉬운 설명\s*([\s\S]*?)$/)
         
         const summary = summaryMatch ? summaryMatch[1].trim() : result
         const glossary = glossaryMatch ? glossaryMatch[1].trim() : ''
@@ -1535,12 +1533,11 @@ export async function summarizeWithGlossary(title: string, content: string, cate
     }
 
     // Gemini API 사용 (대체)
-    if (process.env.GEMINI_API_KEY) {
-      const prompt = `
+      if (process.env.GEMINI_API_KEY) {
+        const prompt = `
 다음은 부동산 관련 기사입니다.
 1) 기사의 핵심 내용을 3~4줄로 요약하세요.
-2) 요약 중 초보자가 어려워할 만한 부동산 용어를 찾아, '용어: 쉬운 설명' 형식으로 해설하세요.
-3) 용어 설명은 '📖 용어 풀이' 섹션으로 따로 모아주세요.
+2) 초등학생도 이해할 수 있도록 아주 쉽게 설명해주세요. 전문 용어는 피하고 일상적인 말로 바꿔서 설명하세요.
 
 기사 제목: ${title}
 기사 내용: ${content}
@@ -1550,10 +1547,9 @@ export async function summarizeWithGlossary(title: string, content: string, cate
 📰 뉴스 요약
 [3-4줄 요약]
 
-📖 용어 풀이
-• 용어1: 쉬운 설명
-• 용어2: 쉬운 설명
-(용어가 없으면 "이번 뉴스에는 특별한 용어가 없습니다."라고 표시)
+📖 쉬운 설명
+[초등학생도 이해할 수 있는 아주 쉬운 설명 - 2-3줄]
+(예: "이 뉴스는 집값이 어떻게 변하는지, 우리가 알아야 할 중요한 점은 무엇인지 쉽게 설명해요.")
 `;
 
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`, {
@@ -1574,9 +1570,9 @@ export async function summarizeWithGlossary(title: string, content: string, cate
         const data = await response.json()
         const result = data.candidates[0].content.parts[0].text
         
-        // 응답을 요약과 용어 풀이로 분리
-        const summaryMatch = result.match(/📰 뉴스 요약\s*([\s\S]*?)(?=📖 용어 풀이|$)/)
-        const glossaryMatch = result.match(/📖 용어 풀이\s*([\s\S]*?)$/)
+        // 응답을 요약과 쉬운 설명으로 분리
+        const summaryMatch = result.match(/📰 뉴스 요약\s*([\s\S]*?)(?=📖 쉬운 설명|$)/)
+        const glossaryMatch = result.match(/📖 쉬운 설명\s*([\s\S]*?)$/)
         
         const summary = summaryMatch ? summaryMatch[1].trim() : result
         const glossary = glossaryMatch ? glossaryMatch[1].trim() : ''
@@ -1589,15 +1585,15 @@ export async function summarizeWithGlossary(title: string, content: string, cate
     const defaultSummary = generateDefaultSummary(content, category)
     return { 
       summary: defaultSummary, 
-      glossary: '📖 용어 풀이\n• 이번 뉴스에는 특별한 용어가 없습니다.' 
+      glossary: '📖 쉬운 설명\n• 이 뉴스는 부동산과 관련된 중요한 정보를 담고 있어요.' 
     }
     
   } catch (error) {
-    console.error('AI 용어 풀이 요약 오류:', error)
+    console.error('AI 쉬운 설명 요약 오류:', error)
     const defaultSummary = generateDefaultSummary(content, category)
     return { 
       summary: defaultSummary, 
-      glossary: '📖 용어 풀이\n• 이번 뉴스에는 특별한 용어가 없습니다.' 
+      glossary: '📖 쉬운 설명\n• 이 뉴스는 부동산과 관련된 중요한 정보를 담고 있어요.' 
     }
   }
 }

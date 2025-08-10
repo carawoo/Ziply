@@ -2,11 +2,11 @@
 import { useMemo, useState, KeyboardEvent } from 'react'
 import styles from '@/styles/LoanFaq.module.css'
 
-export type LoanTypeFilter = 'ALL' | '보금자리론' | '디딤돌대출'
+export type CategoryFilter = 'ALL' | '기초상식' | '매매' | '대출'
 
 export interface FaqItem {
   id: string
-  loanType: '보금자리론' | '디딤돌대출'
+  category: '기초상식' | '매매' | '대출'
   question: string
   answer: string
   source: string
@@ -20,8 +20,10 @@ interface Props {
 
 export default function LoanFaq({ items, embedded = false }: Props) {
   const [query, setQuery] = useState<string>('')
-  const [loanType, setLoanType] = useState<LoanTypeFilter>('ALL')
+  const [category, setCategory] = useState<CategoryFilter>('ALL')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const itemsPerPage = 5
 
   const normalizedQuery = useMemo(
     () => query.trim().toLowerCase().replace(/\s+/g, ' '),
@@ -31,12 +33,18 @@ export default function LoanFaq({ items, embedded = false }: Props) {
   const filtered = useMemo(() => {
     const list = Array.isArray(items) ? items : []
     return list.filter((it) => {
-      if (loanType !== 'ALL' && it.loanType !== loanType) return false
+      if (category !== 'ALL' && it.category !== category) return false
       if (!normalizedQuery) return true
       const hay = `${it.question} ${it.answer}`.toLowerCase().replace(/\s+/g, ' ')
       return hay.includes(normalizedQuery)
     })
-  }, [items, loanType, normalizedQuery])
+  }, [items, category, normalizedQuery])
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(filtered.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentItems = filtered.slice(startIndex, endIndex)
 
   const toggle = (id: string) => {
     setExpandedId((cur) => (cur === id ? null : id))
@@ -49,16 +57,21 @@ export default function LoanFaq({ items, embedded = false }: Props) {
     }
   }
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    setExpandedId(null) // 페이지 변경 시 모든 답변 닫기
+  }
+
   return (
     <div className={embedded ? styles.wrapper : styles.wrapperStandalone}>
       {!embedded && (
         <div className={styles.header}>
           <h1 className={styles.title}>
-            처음 주택 대출?<br />
-            <span style={{ color: 'var(--primary-600)' }}>보금자리론·디딤돌대출</span> Q&A
+            부동산 초보자를 위한<br />
+            <span style={{ color: 'var(--primary-600)' }}>Q&A 가이드</span>
           </h1>
           <p className={styles.subtitle}>
-            초보자가 가장 많이 묻는 질문을 한 페이지에서 확인하세요
+            부동산을 처음 접하는 분들이 가장 궁금해하는 질문들을 모았어요
           </p>
         </div>
       )}
@@ -73,14 +86,17 @@ export default function LoanFaq({ items, embedded = false }: Props) {
           />
         </div>
         <div className={styles.filters}>
-          {(['ALL', '보금자리론', '디딤돌대출'] as LoanTypeFilter[]).map((t) => (
+          {(['ALL', '기초상식', '매매', '대출'] as CategoryFilter[]).map((c) => (
             <button
-              key={t}
-              className={`${styles.filterItem} ${loanType === t ? styles.active : ''}`}
-              onClick={() => setLoanType(t)}
+              key={c}
+              className={`${styles.filterItem} ${category === c ? styles.active : ''}`}
+              onClick={() => {
+                setCategory(c)
+                setCurrentPage(1) // 카테고리 변경 시 첫 페이지로
+              }}
               type="button"
             >
-              {t === 'ALL' ? '🏠 전체' : t === '보금자리론' ? '🏡 보금자리론' : '🏘️ 디딤돌대출'}
+              {c === 'ALL' ? '🏠 전체' : c === '기초상식' ? '📚 기초상식' : c === '매매' ? '🏡 매매' : '💰 대출'}
             </button>
           ))}
         </div>
@@ -102,7 +118,7 @@ export default function LoanFaq({ items, embedded = false }: Props) {
         </div>
       ) : (
         <ul className={styles.list}>
-          {filtered.map((it) => {
+          {currentItems.map((it) => {
             const isOpen = expandedId === it.id
             return (
               <li key={it.id} className={styles.card}>
@@ -121,7 +137,7 @@ export default function LoanFaq({ items, embedded = false }: Props) {
                   </div>
                   <div className={styles.cardMeta}>
                     <span className={styles.updated}>기준: {it.updatedAt}</span>
-                    <span className={styles.loanTypeBadge}>{it.loanType}</span>
+                    <span className={styles.categoryBadge}>{it.category}</span>
                     <span className={`${styles.expandIcon} ${isOpen ? styles.expandIconOpen : ''}`}>
                       ↓
                     </span>
@@ -165,6 +181,42 @@ export default function LoanFaq({ items, embedded = false }: Props) {
             )
           })}
         </ul>
+
+        {/* 페이지네이션 */}
+        {totalPages > 1 && (
+          <div className={styles.pagination}>
+            <button
+              className={styles.pageButton}
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              type="button"
+            >
+              ← 이전
+            </button>
+            
+            <div className={styles.pageNumbers}>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  className={`${styles.pageNumber} ${currentPage === page ? styles.active : ''}`}
+                  onClick={() => handlePageChange(page)}
+                  type="button"
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+
+            <button
+              className={styles.pageButton}
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              type="button"
+            >
+              다음 →
+            </button>
+          </div>
+        )}
       )}
     </div>
   )

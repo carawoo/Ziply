@@ -184,10 +184,10 @@ export const sendUnsubscribeConfirmation = async (email: string) => {
 // 뉴스레터 HTML 생성 (용어 풀이 포함)
 const createNewsletterHTML = (newsItems: any[], date: string) => {
   const newsHTML = newsItems.map((news, index) => {
-    // 용어 풀이가 있는 경우에만 표시
+    // 쉬운 설명이 있는 경우에만 표시
     const glossarySection = news.glossary ? `
       <div style="margin-top: 12px; padding: 12px; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #0ea5e9;">
-        <div style="color: #0c4a6e; font-size: 13px; font-weight: 600; margin-bottom: 6px;">📖 용어 풀이</div>
+        <div style="color: #0c4a6e; font-size: 13px; font-weight: 600; margin-bottom: 6px;">📖 쉬운 설명</div>
         <div style="color: #0369a1; font-size: 12px; line-height: 1.5; white-space: pre-line;">${news.glossary}</div>
       </div>
     ` : '';

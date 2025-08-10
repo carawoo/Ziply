@@ -784,11 +784,43 @@ export default function Dashboard() {
                     <p style={{
                       color: 'var(--gray-600)',
                       lineHeight: '1.7',
-                      marginBottom: '24px',
+                      marginBottom: '16px',
                       fontSize: '16px'
                     }}>
                       {item.summary || item.content}
                     </p>
+                    
+                    {/* 초보자 그룹에서만 용어 풀이 표시 */}
+                    {userGroup === '초보자' && item.glossary && (
+                      <div style={{
+                        background: '#f0f9ff',
+                        border: '1px solid #0ea5e9',
+                        borderRadius: 'var(--radius-lg)',
+                        padding: '16px',
+                        marginBottom: '24px',
+                        borderLeft: '4px solid #0ea5e9'
+                      }}>
+                        <div style={{
+                          color: '#0c4a6e',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          marginBottom: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}>
+                          📖 용어 풀이
+                        </div>
+                        <div style={{
+                          color: '#0369a1',
+                          fontSize: '14px',
+                          lineHeight: '1.6',
+                          whiteSpace: 'pre-line'
+                        }}>
+                          {item.glossary}
+                        </div>
+                      </div>
+                    )}
                     
                     <div style={{ 
                       display: 'flex', 

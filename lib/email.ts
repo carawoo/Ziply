@@ -244,9 +244,6 @@ const createNewsletterHTML = (newsItems: any[], date: string) => {
                     <div style="margin-bottom:6px;">
                       <a href="https://ziply-nine.vercel.app/dashboard" style="color:#2563eb;text-decoration:none;font-weight:700;">웹사이트 방문하기</a>
                     </div>
-                    <div style="margin-bottom:8px;">
-                      <a href="https://pf.kakao.com/_nCHNn" style="color:#6b7280;text-decoration:none;font-size:12px;">카카오톡 채널 소식 받기</a>
-                    </div>
                     <div style="margin-top:4px;color:#94a3b8;font-size:11px;">
                         <a href="${('https://ziply-nine.vercel.app').replace(/\\\/$/, '')}/api/newsletter/unsubscribe?email={{EMAIL}}&redirect=1" style="color:#94a3b8;text-decoration:underline;">구독 취소</a>
                         <span style="margin:0 6px;opacity:.6;">·</span>

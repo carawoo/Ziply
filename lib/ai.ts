@@ -11,6 +11,7 @@ export interface NewsItem {
   category: string
   publishedAt: string
   url?: string
+  glossary?: string
 }
 
 // 기사 유사도 측정 함수 (간단한 버전)

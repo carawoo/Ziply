@@ -1853,34 +1853,170 @@ export async function summarizeWithGlossary(title: string, content: string, cate
       }
     }
 
-    // API가 없거나 실패한 경우 기본 요약
+    // API가 없거나 실패한 경우 스마트한 기본 분석 사용
+    console.log('AI API 없음 - 스마트 분석 시스템 사용')
+    const analysis = analyzeNewsContent(title, content)
     const defaultSummary = generateDefaultSummary(content, category)
+    const smartGlossary = generateSmartGlossary(title, content, analysis.detectedTerms)
+    
     return { 
       summary: defaultSummary, 
-      glossary: '📖 쉬운 설명\n• 이 뉴스는 우리가 살고 있는 집과 관련된 중요한 소식이에요.\n• 전문가들이 사용하는 어려운 말 대신 우리가 일상에서 사용하는 쉬운 말로 설명해드려요.' 
+      glossary: smartGlossary
     }
     
   } catch (error) {
     console.error('AI 쉬운 설명 요약 오류:', error)
+    console.log('오류 발생 - 스마트 분석 시스템으로 대체')
+    const analysis = analyzeNewsContent(title, content)
     const defaultSummary = generateDefaultSummary(content, category)
+    const smartGlossary = generateSmartGlossary(title, content, analysis.detectedTerms)
+    
     return { 
       summary: defaultSummary, 
-      glossary: '📖 쉬운 설명\n• 이 뉴스는 우리가 살고 있는 집과 관련된 중요한 소식이에요.\n• 전문가들이 사용하는 어려운 말 대신 우리가 일상에서 사용하는 쉬운 말로 설명해드려요.' 
+      glossary: smartGlossary
     }
   }
 }
 
+// 실제 뉴스 내용을 분석해서 의미 있는 요약과 용어 설명을 생성하는 함수
+function analyzeNewsContent(title: string, content: string): { detectedTerms: string[]; keyPoints: string[]; difficulty: 'easy' | 'medium' | 'hard' } {
+  const text = `${title} ${content}`.toLowerCase()
+  
+  // 전문 용어 탐지
+  const technicalTerms = [
+    '프로젝트파이낸싱', 'pf', '익스포저', '기초자산', '우량채권', '변동성', '시장위험',
+    'reits', 'ltv', 'dti', '종부세', '양도세', '취득세', '청약', '분양', '대출', '금리',
+    '규제', '완화', '강화', '정책', '투자', '수익률', '임대수익', '전세보증금',
+    '월세', '매매', '전세', '보증금', '계약갱신', '임대차', '상한제'
+  ]
+  
+  const detectedTerms = technicalTerms.filter(term => text.includes(term))
+  
+  // 중요한 키포인트 추출
+  const keyPoints: string[] = []
+  
+  // 가격 관련
+  if (text.includes('오른') || text.includes('상승') || text.includes('증가')) {
+    keyPoints.push('가격이 올라가고 있어요')
+  }
+  if (text.includes('떨어') || text.includes('하락') || text.includes('감소')) {
+    keyPoints.push('가격이 내려가고 있어요')
+  }
+  
+  // 정책 관련
+  if (text.includes('정책') || text.includes('규제') || text.includes('제도')) {
+    keyPoints.push('정부에서 새로운 규칙을 만들었어요')
+  }
+  
+  // 대출 관련
+  if (text.includes('대출') || text.includes('금리') || text.includes('ltv') || text.includes('dti')) {
+    keyPoints.push('돈을 빌리는 조건이 바뀔 수 있어요')
+  }
+  
+  // 청약/분양 관련
+  if (text.includes('청약') || text.includes('분양') || text.includes('특별공급')) {
+    keyPoints.push('새 집을 살 기회와 관련된 내용이에요')
+  }
+  
+  // 투자 관련
+  if (text.includes('투자') || text.includes('수익') || text.includes('reits')) {
+    keyPoints.push('집이나 땅에 돈을 투자하는 이야기예요')
+  }
+  
+  // 어려움 정도 판단
+  const difficulty = detectedTerms.length > 5 ? 'hard' : detectedTerms.length > 2 ? 'medium' : 'easy'
+  
+  return { detectedTerms, keyPoints, difficulty }
+}
+
+// 스마트한 용어 설명 생성
+function generateSmartGlossary(title: string, content: string, detectedTerms: string[]): string {
+  const explanations: string[] = []
+  
+  // 발견된 용어들에 대한 쉬운 설명
+  const termExplanations: { [key: string]: string } = {
+    '프로젝트파이낸싱': '건물을 짓기 위해 은행에서 빌린 돈을 말해요',
+    'pf': '건물을 짓기 위해 은행에서 빌린 돈을 말해요',
+    '익스포저': '빌린 돈이 얼마나 되는지를 나타내요',
+    '기초자산': '투자한 돈이 어디에 들어가는지를 말해요',
+    '우량채권': '안전하게 돈을 투자할 수 있는 방법이에요',
+    '변동성': '가격이 오르락내리락 하는 정도를 말해요',
+    '시장위험': '투자할 때 돈을 잃을 수도 있다는 뜻이에요',
+    'reits': '여러 사람이 함께 집이나 건물에 투자하는 방법이에요',
+    'ltv': '집값에 비해 얼마까지 돈을 빌릴 수 있는지의 비율이에요',
+    'dti': '수입에 비해 얼마까지 돈을 빌릴 수 있는지의 비율이에요',
+    '종부세': '비싼 집을 가진 사람이 내야 하는 세금이에요',
+    '양도세': '집을 팔 때 내야 하는 세금이에요',
+    '취득세': '집을 살 때 내야 하는 세금이에요',
+    '청약': '새로 지은 집을 살 기회를 신청하는 것이에요',
+    '분양': '새로 지은 집을 파는 것이에요',
+    '대출': '은행에서 돈을 빌리는 것이에요',
+    '금리': '돈을 빌릴 때 추가로 내야 하는 이자예요',
+    '규제': '정부가 만든 제한하는 규칙이에요',
+    '완화': '규칙을 덜 엄격하게 만드는 것이에요',
+    '강화': '규칙을 더 엄격하게 만드는 것이에요',
+    '정책': '정부가 내린 규칙이나 방향이에요',
+    '투자': '돈을 넣어서 더 많은 돈을 만들려고 하는 것이에요',
+    '수익률': '투자해서 얼마나 돈을 벌었는지의 비율이에요',
+    '임대수익': '집을 빌려주고 받는 돈이에요',
+    '전세보증금': '집을 빌릴 때 미리 맡겨두는 큰 돈이에요',
+    '월세': '매달 내는 집 임대료예요',
+    '매매': '집을 사고 파는 것이에요',
+    '전세': '큰 돈을 맡기고 집을 빌리는 방법이에요',
+    '보증금': '집을 빌릴 때 미리 맡기는 돈이에요',
+    '계약갱신': '집 임대 계약을 다시 연장하는 것이에요',
+    '임대차': '집을 빌리고 빌려주는 관계를 말해요',
+    '상한제': '최대로 올릴 수 있는 한계를 정해놓은 것이에요'
+  }
+  
+  // 발견된 용어 중 상위 3개만 설명
+  const topTerms = detectedTerms.slice(0, 3)
+  
+  for (const term of topTerms) {
+    const explanation = termExplanations[term]
+    if (explanation) {
+      explanations.push(`• ${term}: ${explanation}`)
+    }
+  }
+  
+  // 내용 기반 추가 설명
+  const text = `${title} ${content}`.toLowerCase()
+  
+  if (text.includes('집값') && text.includes('오른')) {
+    explanations.push('• 집값 상승: 집을 사려면 전보다 더 많은 돈이 필요하다는 뜻이에요')
+  }
+  
+  if (text.includes('대출') && text.includes('금리')) {
+    explanations.push('• 대출금리: 은행에서 돈을 빌릴 때 추가로 내야 하는 이자예요')
+  }
+  
+  if (text.includes('정부') && text.includes('정책')) {
+    explanations.push('• 정부 정책: 집을 사고파는 것에 대해 정부가 만든 새로운 규칙이에요')
+  }
+  
+  if (explanations.length === 0) {
+    return '📖 쉬운 설명\n• 이 뉴스는 우리가 살고 있는 집이나 집을 사는 것과 관련된 중요한 소식이에요.\n• 어려운 용어 대신 쉬운 말로 설명해드리면, 우리 일상에 영향을 주는 변화가 있다는 뜻이에요.'
+  }
+  
+  return `📖 쉬운 설명\n${explanations.join('\n')}`
+}
+
 export function generateDefaultSummary(content: string, category: string): string {
-  const sentences = content.split('.').filter(s => s.trim().length > 0)
+  // 전문 용어를 쉬운 말로 변환
+  const processedContent = removeTechnicalTerms(content)
+  
+  // 문장을 나누되, 더 스마트하게 처리
+  const sentences = processedContent.split(/[.!?]/).filter(s => s.trim().length > 10)
   const firstTwo = sentences.slice(0, 2).join('. ') + '.'
   
   const categoryMessages = {
-    '초보자용': '이 뉴스는 부동산을 처음 접하는 분들도 쉽게 이해할 수 있도록 중요한 정보를 담고 있어요.',
-    '신혼부부용': '내 집 마련을 꿈꾸는 신혼부부에게 도움이 되는 소중한 정보예요.',
-    '투자자용': '부동산에 관심 있는 분들이 알아두면 좋은 시장 변화 소식이에요.'
+    '초보자용': '이 뉴스는 집이나 땅을 처음 사려는 분들에게 도움이 되는 중요한 정보예요.',
+    '신혼부부용': '내 집 마련을 꿈꾸는 신혼부부에게 유용한 소식이에요.',
+    '투자자용': '집이나 땅에 돈을 투자하려는 분들이 알아두면 좋은 변화 소식이에요.',
+    '부동산 기초': '집이나 땅과 관련된 기본적인 내용을 다룬 소식이에요.'
   }
   
-  return `${firstTwo} ${categoryMessages[category as keyof typeof categoryMessages] || '부동산과 관련된 중요한 소식이에요.'}`
+  return `${firstTwo} ${categoryMessages[category as keyof typeof categoryMessages] || '집이나 땅과 관련된 중요한 소식이에요.'}`
 }
 
 // 실제 뉴스 API에서 뉴스 가져오기 (폴백 완전 제거)

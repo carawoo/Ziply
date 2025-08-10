@@ -1521,13 +1521,31 @@ export async function summarizeWithGlossary(title: string, content: string, cate
     // OpenAI API 사용
     if (process.env.OPENAI_API_KEY) {
       const prompt = `
-다음은 부동산 관련 기사입니다.
-1) 기사의 핵심 내용을 3~4줄로 요약하세요.
-2) 초등학생도 이해할 수 있도록 아주 쉽게 설명해주세요. 전문 용어는 피하고 일상적인 말로 바꿔서 설명하세요.
+당신은 부동산 뉴스를 어린아이도 쉽게 이해할 수 있도록 설명하는 전문가입니다.
+
+다음 기사를 분석해주세요:
 
 기사 제목: ${title}
 기사 내용: ${content}
 카테고리: ${category}
+
+다음 두 부분으로 나누어 답변해주세요:
+
+1) 📰 뉴스 요약 (3-4줄)
+- 기사의 핵심 내용을 간단명료하게 요약
+- 전문 용어는 최대한 피하고 일반인이 이해할 수 있는 표현 사용
+
+2) 📖 쉬운 설명 (2-3줄)
+- 초등학생도 이해할 수 있는 수준으로 설명
+- 복잡한 경제 용어나 부동산 전문 용어는 모두 일상적인 말로 바꿔서 설명
+- "이 뉴스가 우리 일상에 어떤 영향을 주는지", "왜 중요한지"를 중심으로 설명
+- 예시: "집값이 오른다는 것은 우리가 집을 살 때 더 많은 돈을 내야 한다는 뜻이에요. 하지만 이미 집을 가진 사람들은 집값이 올라서 좋을 수도 있어요."
+
+주의사항:
+- 절대 전문 용어나 어려운 경제 용어를 그대로 사용하지 마세요
+- "REITs", "LTV", "DTI", "종부세" 등의 전문 용어는 반드시 쉬운 말로 바꿔서 설명하세요
+- 어린아이가 이해할 수 있는 구체적인 예시를 들어주세요
+- 친근하고 따뜻한 톤으로 설명해주세요
 
 응답 형식:
 📰 뉴스 요약
@@ -1535,7 +1553,6 @@ export async function summarizeWithGlossary(title: string, content: string, cate
 
 📖 쉬운 설명
 [초등학생도 이해할 수 있는 아주 쉬운 설명 - 2-3줄]
-(예: "이 뉴스는 집값이 어떻게 변하는지, 우리가 알아야 할 중요한 점은 무엇인지 쉽게 설명해요.")
 `;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -1575,13 +1592,31 @@ export async function summarizeWithGlossary(title: string, content: string, cate
     // Gemini API 사용 (대체)
       if (process.env.GEMINI_API_KEY) {
         const prompt = `
-다음은 부동산 관련 기사입니다.
-1) 기사의 핵심 내용을 3~4줄로 요약하세요.
-2) 초등학생도 이해할 수 있도록 아주 쉽게 설명해주세요. 전문 용어는 피하고 일상적인 말로 바꿔서 설명하세요.
+당신은 부동산 뉴스를 어린아이도 쉽게 이해할 수 있도록 설명하는 전문가입니다.
+
+다음 기사를 분석해주세요:
 
 기사 제목: ${title}
 기사 내용: ${content}
 카테고리: ${category}
+
+다음 두 부분으로 나누어 답변해주세요:
+
+1) 📰 뉴스 요약 (3-4줄)
+- 기사의 핵심 내용을 간단명료하게 요약
+- 전문 용어는 최대한 피하고 일반인이 이해할 수 있는 표현 사용
+
+2) 📖 쉬운 설명 (2-3줄)
+- 초등학생도 이해할 수 있는 수준으로 설명
+- 복잡한 경제 용어나 부동산 전문 용어는 모두 일상적인 말로 바꿔서 설명
+- "이 뉴스가 우리 일상에 어떤 영향을 주는지", "왜 중요한지"를 중심으로 설명
+- 예시: "집값이 오른다는 것은 우리가 집을 살 때 더 많은 돈을 내야 한다는 뜻이에요. 하지만 이미 집을 가진 사람들은 집값이 올라서 좋을 수도 있어요."
+
+주의사항:
+- 절대 전문 용어나 어려운 경제 용어를 그대로 사용하지 마세요
+- "REITs", "LTV", "DTI", "종부세" 등의 전문 용어는 반드시 쉬운 말로 바꿔서 설명하세요
+- 어린아이가 이해할 수 있는 구체적인 예시를 들어주세요
+- 친근하고 따뜻한 톤으로 설명해주세요
 
 응답 형식:
 📰 뉴스 요약
@@ -1589,7 +1624,6 @@ export async function summarizeWithGlossary(title: string, content: string, cate
 
 📖 쉬운 설명
 [초등학생도 이해할 수 있는 아주 쉬운 설명 - 2-3줄]
-(예: "이 뉴스는 집값이 어떻게 변하는지, 우리가 알아야 할 중요한 점은 무엇인지 쉽게 설명해요.")
 `;
 
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`, {
@@ -1625,7 +1659,7 @@ export async function summarizeWithGlossary(title: string, content: string, cate
     const defaultSummary = generateDefaultSummary(content, category)
     return { 
       summary: defaultSummary, 
-      glossary: '📖 쉬운 설명\n• 이 뉴스는 부동산과 관련된 중요한 정보를 담고 있어요.' 
+      glossary: '📖 쉬운 설명\n• 이 뉴스는 우리가 살고 있는 집과 관련된 중요한 소식이에요.\n• 전문가들이 사용하는 어려운 말 대신 우리가 일상에서 사용하는 쉬운 말로 설명해드려요.' 
     }
     
   } catch (error) {
@@ -1633,7 +1667,7 @@ export async function summarizeWithGlossary(title: string, content: string, cate
     const defaultSummary = generateDefaultSummary(content, category)
     return { 
       summary: defaultSummary, 
-      glossary: '📖 쉬운 설명\n• 이 뉴스는 부동산과 관련된 중요한 정보를 담고 있어요.' 
+      glossary: '📖 쉬운 설명\n• 이 뉴스는 우리가 살고 있는 집과 관련된 중요한 소식이에요.\n• 전문가들이 사용하는 어려운 말 대신 우리가 일상에서 사용하는 쉬운 말로 설명해드려요.' 
     }
   }
 }
@@ -1643,12 +1677,12 @@ export function generateDefaultSummary(content: string, category: string): strin
   const firstTwo = sentences.slice(0, 2).join('. ') + '.'
   
   const categoryMessages = {
-    '초보자용': '부동산 초보자도 쉽게 이해할 수 있는 중요한 정보입니다.',
-    '신혼부부용': '내 집 마련을 준비하는 신혼부부에게 유용한 정보입니다.',
-    '투자자용': '부동산 투자 관점에서 주목해야 할 시장 변화입니다.'
+    '초보자용': '이 뉴스는 부동산을 처음 접하는 분들도 쉽게 이해할 수 있도록 중요한 정보를 담고 있어요.',
+    '신혼부부용': '내 집 마련을 꿈꾸는 신혼부부에게 도움이 되는 소중한 정보예요.',
+    '투자자용': '부동산에 관심 있는 분들이 알아두면 좋은 시장 변화 소식이에요.'
   }
   
-  return `${firstTwo} ${categoryMessages[category as keyof typeof categoryMessages] || '부동산 시장의 중요한 변화입니다.'}`
+  return `${firstTwo} ${categoryMessages[category as keyof typeof categoryMessages] || '부동산과 관련된 중요한 소식이에요.'}`
 }
 
 // 실제 뉴스 API에서 뉴스 가져오기 (폴백 완전 제거)

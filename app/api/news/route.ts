@@ -14,28 +14,72 @@ export async function GET(request: NextRequest) {
     if (!tab) {
       return NextResponse.json({
         success: false,
-        error: 'tab parameter is required'
+        error: 'tab parameter is required',
+        reason: 'API 파라미터 누락'
       }, { status: 400 })
     }
     
     console.log('=== 뉴스 API 호출 시작 ===')
     console.log('요청된 탭:', tab)
     
+    // 뉴스 수집 실패 원인 추적을 위한 디버그 정보
+    const debugInfo = {
+      step: '',
+      error: '',
+      apiStatus: '',
+      naverApiAvailable: !!process.env.NAVER_CLIENT_ID,
+      environmentCheck: process.env.NODE_ENV
+    }
+    
     // 탭 기반 실제 뉴스 수집 파이프라인 사용 (타임아웃 가드)
     console.log('탭 기반 실제 뉴스 수집 시작...')
-    const NEWS_TIMEOUT_MS = 7000
-    const news: any[] = await Promise.race([
-      fetchNewsByTab(tab),
-      new Promise((resolve) => setTimeout(() => resolve([]), NEWS_TIMEOUT_MS))
-    ]) as any[]
-    console.log('탭 기반 실제 뉴스 수집 완료:', news.length, '개')
+    debugInfo.step = '뉴스 수집 시작'
     
+    let news: any[] = []
+    
+    try {
+      const NEWS_TIMEOUT_MS = 7000
+      news = await Promise.race([
+        fetchNewsByTab(tab),
+        new Promise((resolve) => setTimeout(() => {
+          debugInfo.error = '뉴스 수집 타임아웃 (7초 초과)'
+          resolve([])
+        }, NEWS_TIMEOUT_MS))
+      ]) as any[]
+      
+      console.log('탭 기반 실제 뉴스 수집 완료:', news.length, '개')
+      debugInfo.step = '뉴스 수집 완료'
+      
+    } catch (fetchError) {
+      console.error('뉴스 수집 중 오류:', fetchError)
+      debugInfo.step = '뉴스 수집 실패'
+      debugInfo.error = String(fetchError)
+      
+      return NextResponse.json({
+        success: false,
+        error: '가져오지 못했습니다.',
+        reason: `뉴스 수집 API 오류: ${debugInfo.error}`,
+        debug: debugInfo,
+        message: '뉴스 서비스에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      }, { status: 503 })
+    }
+    
+    // 뉴스가 없는 경우 처리
     if (news.length === 0) {
-      console.log('실제 뉴스가 없습니다. 빈 결과 반환')
-      return NextResponse.json({ success: true, news: [] })
+      console.log('❌ 실제 뉴스를 가져오지 못했습니다.')
+      debugInfo.error = debugInfo.error || '네이버 뉴스 API에서 해당 탭의 최신 뉴스를 찾지 못함'
+      
+      return NextResponse.json({ 
+        success: false, 
+        error: '가져오지 못했습니다.',
+        reason: debugInfo.error,
+        debug: debugInfo,
+        message: `${tab} 탭에 해당하는 최신 부동산 뉴스를 찾을 수 없습니다. 잠시 후 다시 시도해주세요.`
+      }, { status: 404 })
     }
     
     // AI 요약 생성 (에러/타임아웃 처리 포함)
+    debugInfo.step = 'AI 요약 생성 시작'
     const SUMMARY_TIMEOUT_MS = 2500
     const newsWithSummaries = await Promise.all(
       news.map(async (item: any) => {
@@ -44,17 +88,34 @@ export async function GET(request: NextRequest) {
         const decodedContent = he.decode((item.content || '').toString())
         const cleanTitle = decodedTitle.replace(/<[^>]*>/g, '').trim()
         const cleanContent = decodedContent.replace(/<[^>]*>/g, '').trim()
+        
         try {
           const result = await Promise.race([
             summarizeWithGlossary(cleanTitle, cleanContent, tab),
             new Promise((_, reject) => setTimeout(() => reject(new Error('summary-timeout')), SUMMARY_TIMEOUT_MS))
           ]) as { summary: string; glossary: string }
-          return { ...item, title: cleanTitle, content: cleanContent, summary: result.summary, glossary: result.glossary }
+          
+          return { 
+            ...item, 
+            title: cleanTitle, 
+            content: cleanContent, 
+            summary: result.summary, 
+            glossary: result.glossary 
+          }
         } catch (summaryError) {
           console.error('요약 생성 실패:', summaryError)
-          // 요약 실패 시 기본 요약 사용 (내용이 없으면 제목 기반 생성)
-          const defaultSummary = generateDefaultSummary(cleanContent || cleanTitle || '', tab)
-          return { ...item, title: cleanTitle, content: cleanContent, summary: defaultSummary, glossary: '📖 용어 풀이\n• 이번 뉴스에는 특별한 용어가 없습니다.' }
+          
+          // ⚠️ 하드코딩된 fallback 제거 - 스마트 분석 시스템 사용
+          console.log('AI 요약 실패 - 스마트 분석 시스템으로 대체')
+          const result = await summarizeWithGlossary(cleanTitle, cleanContent, tab)
+          
+          return { 
+            ...item, 
+            title: cleanTitle, 
+            content: cleanContent, 
+            summary: result.summary, 
+            glossary: result.glossary 
+          }
         }
       })
     )
@@ -68,99 +129,15 @@ export async function GET(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('뉴스 API 오류:', error)
+    console.error('❌ 뉴스 API 치명적 오류:', error)
     return NextResponse.json({
       success: false,
-      error: String(error)
+      error: '가져오지 못했습니다.',
+      reason: `API 서버 내부 오류: ${String(error)}`,
+      message: '뉴스 서비스에 심각한 문제가 발생했습니다. 개발팀에 문의해주세요.',
+      timestamp: new Date().toISOString()
     }, { status: 500 })
   }
 }
 
-// 실제 뉴스 검색 함수
-async function fetchRealNews(query: string) {
-  console.log('[NEWS] query=', query)
-  
-  try {
-    // 네이버 뉴스 API 호출
-    const clientId = process.env.NAVER_CLIENT_ID || 'ceVPKnFABx59Lo4SzbmY'
-    const clientSecret = process.env.NAVER_CLIENT_SECRET || 'FUfJ_TnwL6'
-    
-    const url = new URL('https://openapi.naver.com/v1/search/news.json')
-    url.searchParams.set('query', query)
-    url.searchParams.set('display', '30')
-    url.searchParams.set('start', '1')
-    url.searchParams.set('sort', 'date')
-    
-    console.log('[NEWS] 네이버 API URL:', url.toString())
-    
-    const response = await fetch(url.toString(), {
-      headers: {
-        'X-Naver-Client-Id': clientId,
-        'X-Naver-Client-Secret': clientSecret
-      }
-    })
 
-    if (response.ok) {
-      const data = await response.json()
-      console.log('[NEWS] 네이버 응답 상태:', response.status)
-      console.log('[NEWS] 네이버 아이템 수:', data.items?.length || 0)
-      
-      if (data.items && data.items.length > 0) {
-        const items = data.items
-        console.log('[NEWS] navers items=', items.length)
-        
-        // KST 기준 오늘 날짜
-        const now = new Date();
-        const kstNow = new Date(now.getTime() + 9*60*60*1000);
-        const today = kstNow.toISOString().slice(0,10);
-        const isTodayKST = (d:string) => new Date(new Date(d).getTime()+9*3600*1000)
-          .toISOString().slice(0,10) === today;
-        
-        // 오늘 날짜 필터링 (KST 기준)
-        const afterToday = items.filter((item: any) => {
-          if (!item.pubDate) return false
-          try {
-            return isTodayKST(item.pubDate)
-          } catch {
-            return false
-          }
-        })
-        console.log('[NEWS] after today=', afterToday.length)
-        
-        // URL 유효성 검사
-        const headOkCount = 0 // 임시로 0으로 설정
-        console.log('[NEWS] head ok=', headOkCount)
-        
-        // 허용 목록 통과
-        const allowCount = afterToday.length // 임시로 모든 뉴스 허용
-        console.log('[NEWS] allowlist pass=', allowCount)
-        
-        // 유사도 검사 통과
-        const simPassCount = allowCount // 임시로 모든 뉴스 통과
-        console.log('[NEWS] similarity>=0.7 =', simPassCount)
-        
-        // 실제 뉴스 반환
-        const realNews = afterToday.slice(0, 4).map((item: any, index: number) => ({
-          id: `real-${index + 1}`,
-          title: item.title?.replace(/<[^>]*>/g, '').trim() || '',
-          content: item.description?.replace(/<[^>]*>/g, '').trim() || '',
-          summary: '',
-          category: 'real',
-          publishedAt: today,
-          url: item.link?.replace(/<[^>]*>/g, '').trim() || ''
-        }))
-        
-        console.log('[NEWS] 실제 뉴스 반환:', realNews.length, '개')
-        return realNews
-      }
-    }
-    
-    console.warn('[NEWS] API 실패 - 빈 배열 반환')
-    return []
-    
-  } catch (error) {
-    console.error('[NEWS] 뉴스 검색 오류:', error)
-    console.warn('[NEWS] API 실패 - 빈 배열 반환')
-    return []
-  }
-}

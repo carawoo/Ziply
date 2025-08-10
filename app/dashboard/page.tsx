@@ -32,6 +32,7 @@ export default function Dashboard() {
   const [userGroup, setUserGroup] = useState<UserGroup>(null)
   const [activeTab, setActiveTab] = useState('')
   const [news, setNews] = useState<NewsItem[]>([])
+  const [newsError, setNewsError] = useState<{ message: string; reason: string; debug?: any } | null>(null)
 
   // 선택된 그룹에 따른 동적 탭 생성
   const getTabsForGroup = (group: UserGroup) => {
@@ -140,6 +141,8 @@ export default function Dashboard() {
 
   const loadNews = async (tab: string, group?: UserGroup) => {
     setNewsLoading(true)
+    setNewsError(null) // 이전 오류 상태 초기화
+    
     try {
       console.log('뉴스 로딩 시작:', tab)
       
@@ -150,22 +153,39 @@ export default function Dashboard() {
       const data = await response.json()
       
       if (!data.success) {
-        throw new Error(data.error || '뉴스 로딩 실패')
+        // API에서 온 오류 정보를 그대로 사용
+        setNewsError({
+          message: data.message || data.error || '가져오지 못했습니다.',
+          reason: data.reason || '알 수 없는 오류',
+          debug: data.debug
+        })
+        setNews([])
+        return
       }
       
       console.log('가져온 뉴스 개수:', data.news.length)
       
       if (data.news.length === 0) {
         console.log('뉴스가 없습니다. 실시간 결과가 비어 있습니다')
+        setNewsError({
+          message: '현재 해당 카테고리의 최신 뉴스가 없습니다.',
+          reason: '뉴스 API에서 조건에 맞는 기사를 찾지 못함'
+        })
         setNews([])
-        setNewsLoading(false)
         return
       }
       
+      // 성공적으로 뉴스를 가져온 경우
       console.log('요약 완료된 뉴스 개수:', data.news.length)
       setNews(data.news)
+      setNewsError(null) // 성공 시 오류 상태 초기화
+      
     } catch (error) {
-      console.error('뉴스 로딩 오류:', error)
+      console.error('뉴스 로딩 치명적 오류:', error)
+      setNewsError({
+        message: '네트워크 연결에 문제가 발생했습니다.',
+        reason: `클라이언트 오류: ${String(error)}`
+      })
       setNews([])
     } finally {
       setNewsLoading(false)
@@ -729,7 +749,101 @@ export default function Dashboard() {
 
               {/* 뉴스 카드들 */}
               <div style={{ display: 'grid', gap: '20px' }} id="news-list">
-                {news.map((item, index) => (
+                {newsError ? (
+                  // 오류 표시 카드
+                  <div style={{
+                    background: 'linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%)',
+                    borderRadius: 'var(--radius-xl)',
+                    padding: '40px',
+                    textAlign: 'center',
+                    border: '2px solid #fecaca'
+                  }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>📰</div>
+                    <h3 style={{ 
+                      color: '#dc2626', 
+                      fontSize: '20px', 
+                      fontWeight: '700',
+                      marginBottom: '12px'
+                    }}>
+                      {newsError.message}
+                    </h3>
+                    <p style={{ 
+                      color: '#7f1d1d', 
+                      fontSize: '16px',
+                      lineHeight: '1.6',
+                      marginBottom: '16px'
+                    }}>
+                      <strong>원인:</strong> {newsError.reason}
+                    </p>
+                    <button
+                      onClick={() => loadNews(activeTab)}
+                      style={{
+                        background: '#dc2626',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 'var(--radius-lg)',
+                        padding: '12px 24px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all var(--transition-base)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#b91c1c'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#dc2626'
+                      }}
+                    >
+                      🔄 다시 시도
+                    </button>
+                    {/* 개발용 디버그 정보 (숨김) */}
+                    {newsError.debug && process.env.NODE_ENV === 'development' && (
+                      <details style={{ marginTop: '20px', textAlign: 'left' }}>
+                        <summary style={{ cursor: 'pointer', color: '#7f1d1d' }}>
+                          개발용 디버그 정보
+                        </summary>
+                        <pre style={{ 
+                          background: '#f3f4f6', 
+                          padding: '12px', 
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          overflow: 'auto',
+                          marginTop: '8px'
+                        }}>
+                          {JSON.stringify(newsError.debug, null, 2)}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
+                ) : news.length === 0 ? (
+                  // 빈 상태 카드 (fallback이 아닌 실제 빈 상태)
+                  <div style={{
+                    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                    borderRadius: 'var(--radius-xl)',
+                    padding: '40px',
+                    textAlign: 'center',
+                    border: '2px solid #bae6fd'
+                  }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
+                    <h3 style={{ 
+                      color: '#0369a1', 
+                      fontSize: '20px', 
+                      fontWeight: '700',
+                      marginBottom: '12px'
+                    }}>
+                      아직 표시할 뉴스가 없어요
+                    </h3>
+                    <p style={{ 
+                      color: '#075985', 
+                      fontSize: '16px',
+                      lineHeight: '1.6'
+                    }}>
+                      탭을 선택하면 맞춤형 뉴스를 가져와 드릴게요!
+                    </p>
+                  </div>
+                ) : (
+                  news.map((item, index) => (
                   <div key={item.id} style={{
                     background: 'white',
                     borderRadius: 'var(--radius-xl)',
@@ -855,7 +969,8 @@ export default function Dashboard() {
                       </a>
                     </div>
                   </div>
-                ))}
+                ))
+                )}
               </div>
 
               {/* 초보자 전용 Q&A 섹션 */}

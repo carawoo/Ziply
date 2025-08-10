@@ -67,20 +67,31 @@ const fetchNewsByTab = async (tab) => {
   return Array.isArray(data.news) ? data.news : []
 }
 
-// 뉴스레터 HTML 생성 (간단 템플릿)
+// 뉴스레터 HTML 생성 (용어 풀이 포함)
 const buildNewsletterHtml = (byTab) => {
   const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
   const sectionHtml = Object.entries(byTab).map(([tab, items]) => {
-    const list = items.slice(0, 4).map((n, idx) => `
-      <div style="margin-bottom:16px;padding:16px;background:#f9fafb;border-radius:8px;border-left:4px solid #4f46e5;">
-        <h3 style="margin:0 0 8px 0;color:#111827;font-size:16px;">${idx === 0 ? '🔥' : idx === 1 ? '📈' : idx === 2 ? '💡' : '🎯'} ${n.title}</h3>
-        <p style="margin:0 0 10px 0;color:#4b5563;line-height:1.6;font-size:14px;">${(n.summary || n.content || '').toString().slice(0, 300)}</p>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="color:#9ca3af;font-size:12px;">${new Date(n.publishedAt || Date.now()).toLocaleDateString('ko-KR')}</span>
-          <a href="${n.url || '#'}" style="color:#4f46e5;text-decoration:none;font-size:12px;font-weight:600;">원문 보기 →</a>
+    const list = items.slice(0, 4).map((n, idx) => {
+      // 용어 풀이가 있는 경우에만 표시
+      const glossarySection = n.glossary ? `
+        <div style="margin-top: 10px; padding: 10px; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #0ea5e9;">
+          <div style="color: #0c4a6e; font-size: 12px; font-weight: 600; margin-bottom: 4px;">📖 용어 풀이</div>
+          <div style="color: #0369a1; font-size: 11px; line-height: 1.4; white-space: pre-line;">${n.glossary}</div>
         </div>
-      </div>
-    `).join('')
+      ` : '';
+
+      return `
+        <div style="margin-bottom:16px;padding:16px;background:#f9fafb;border-radius:8px;border-left:4px solid #4f46e5;">
+          <h3 style="margin:0 0 8px 0;color:#111827;font-size:16px;">${idx === 0 ? '🔥' : idx === 1 ? '📈' : idx === 2 ? '💡' : '🎯'} ${n.title}</h3>
+          <p style="margin:0 0 10px 0;color:#4b5563;line-height:1.6;font-size:14px;">${(n.summary || n.content || '').toString().slice(0, 300)}</p>
+          ${glossarySection}
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+            <span style="color:#9ca3af;font-size:12px;">${new Date(n.publishedAt || Date.now()).toLocaleDateString('ko-KR')}</span>
+            <a href="${n.url || '#'}" style="color:#4f46e5;text-decoration:none;font-size:12px;font-weight:600;">원문 보기 →</a>
+          </div>
+        </div>
+      `;
+    }).join('')
     return `
       <div style="margin-bottom:24px;">
         <h2 style="margin:0 0 12px 0;color:#111827;font-size:18px;">${tab}</h2>

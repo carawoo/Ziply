@@ -181,27 +181,38 @@ export const sendUnsubscribeConfirmation = async (email: string) => {
   }
 }
 
-// 뉴스레터 HTML 생성
+// 뉴스레터 HTML 생성 (용어 풀이 포함)
 const createNewsletterHTML = (newsItems: any[], date: string) => {
-  const newsHTML = newsItems.map((news, index) => `
-    <div style="margin-bottom: 24px; padding: 20px; background: #f9fafb; border-radius: 8px; border-left: 4px solid #4f46e5;">
-      <h3 style="margin: 0 0 8px 0; color: #1f2937; font-size: 16px;">
-        ${index === 0 ? '🔥' : index === 1 ? '📈' : index === 2 ? '💡' : '🎯'} ${news.title}
-      </h3>
-      <p style="margin: 0 0 12px 0; color: #6b7280; line-height: 1.6; font-size: 14px;">
-        ${news.summary || news.content}
-      </p>
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="color: #9ca3af; font-size: 12px;">
-          ${new Date(news.publishedAt).toLocaleDateString('ko-KR')}
-        </span>
-        <a href="${news.url || '#'}" 
-           style="color: #4f46e5; text-decoration: none; font-size: 12px; font-weight: 600;">
-          원문 보기 →
-        </a>
+  const newsHTML = newsItems.map((news, index) => {
+    // 용어 풀이가 있는 경우에만 표시
+    const glossarySection = news.glossary ? `
+      <div style="margin-top: 12px; padding: 12px; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #0ea5e9;">
+        <div style="color: #0c4a6e; font-size: 13px; font-weight: 600; margin-bottom: 6px;">📖 용어 풀이</div>
+        <div style="color: #0369a1; font-size: 12px; line-height: 1.5; white-space: pre-line;">${news.glossary}</div>
       </div>
-    </div>
-  `).join('')
+    ` : '';
+
+    return `
+      <div style="margin-bottom: 24px; padding: 20px; background: #f9fafb; border-radius: 8px; border-left: 4px solid #4f46e5;">
+        <h3 style="margin: 0 0 8px 0; color: #1f2937; font-size: 16px;">
+          ${index === 0 ? '🔥' : index === 1 ? '📈' : index === 2 ? '💡' : '🎯'} ${news.title}
+        </h3>
+        <p style="margin: 0 0 12px 0; color: #6b7280; line-height: 1.6; font-size: 14px;">
+          ${news.summary || news.content}
+        </p>
+        ${glossarySection}
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+          <span style="color: #9ca3af; font-size: 12px;">
+            ${new Date(news.publishedAt).toLocaleDateString('ko-KR')}
+          </span>
+          <a href="${news.url || '#'}" 
+             style="color: #4f46e5; text-decoration: none; font-size: 12px; font-weight: 600;">
+            원문 보기 →
+          </a>
+        </div>
+      </div>
+    `;
+  }).join('')
 
   return `
   <!DOCTYPE html>
@@ -262,7 +273,7 @@ export const sendNewsletter = async (email: string) => {
 
   try {
     // 동적 import로 서버 사이드에서만 실행
-    const { fetchNewsByTab, summarizeNews } = await import('./ai')
+    const { fetchNewsByTab, summarizeWithGlossary } = await import('./ai')
 
     // 오늘 날짜 문자열 생성
     const today = new Date().toLocaleDateString('ko-KR', {
@@ -289,12 +300,17 @@ export const sendNewsletter = async (email: string) => {
       }
     }
 
-    // 요약 본문 준비 (요약 키가 없으면 생성)
+    // 요약 본문 준비 (용어 풀이 포함)
     const newsWithSummaries = await Promise.all(
       collected.map(async (news) => {
-        if (news.summary && news.summary.trim().length > 0) return news
-        const summary = await summarizeNews(news.content || '', news.category || '정책뉴스')
-        return { ...news, summary }
+        if (news.summary && news.summary.trim().length > 0) {
+          // 기존 요약이 있으면 용어 풀이만 추가
+          const glossaryResult = await summarizeWithGlossary(news.title, news.content || '', news.category || '정책뉴스')
+          return { ...news, glossary: glossaryResult.glossary }
+        }
+        // 새로운 요약과 용어 풀이 생성
+        const result = await summarizeWithGlossary(news.title, news.content || '', news.category || '정책뉴스')
+        return { ...news, summary: result.summary, glossary: result.glossary }
       })
     )
 

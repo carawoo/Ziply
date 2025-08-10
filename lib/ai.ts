@@ -1421,7 +1421,7 @@ export async function summarizeNews(content: string, category: string): Promise<
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4o-mini',
           messages: [
             {
               role: 'system',
@@ -1433,7 +1433,7 @@ export async function summarizeNews(content: string, category: string): Promise<
             }
           ],
           max_tokens: 200,
-          temperature: 0.7
+          temperature: 0.3
         })
       })
 
@@ -1471,6 +1471,133 @@ export async function summarizeNews(content: string, category: string): Promise<
   } catch (error) {
     console.error('AI 요약 오류:', error)
     return generateDefaultSummary(content, category)
+  }
+}
+
+// 용어 풀이가 포함된 뉴스 요약 (초보자 친화적)
+export async function summarizeWithGlossary(title: string, content: string, category: string): Promise<{ summary: string; glossary: string }> {
+  try {
+    // OpenAI API 사용
+    if (process.env.OPENAI_API_KEY) {
+      const prompt = `
+다음은 부동산 관련 기사입니다.
+1) 기사의 핵심 내용을 3~4줄로 요약하세요.
+2) 요약 중 초보자가 어려워할 만한 부동산 용어를 찾아, '용어: 쉬운 설명' 형식으로 해설하세요.
+3) 용어 설명은 '📖 용어 풀이' 섹션으로 따로 모아주세요.
+
+기사 제목: ${title}
+기사 내용: ${content}
+카테고리: ${category}
+
+응답 형식:
+📰 뉴스 요약
+[3-4줄 요약]
+
+📖 용어 풀이
+• 용어1: 쉬운 설명
+• 용어2: 쉬운 설명
+(용어가 없으면 "이번 뉴스에는 특별한 용어가 없습니다."라고 표시)
+`;
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: 500,
+          temperature: 0.3
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const result = data.choices[0].message.content
+        
+        // 응답을 요약과 용어 풀이로 분리
+        const summaryMatch = result.match(/📰 뉴스 요약\s*([\s\S]*?)(?=📖 용어 풀이|$)/)
+        const glossaryMatch = result.match(/📖 용어 풀이\s*([\s\S]*?)$/)
+        
+        const summary = summaryMatch ? summaryMatch[1].trim() : result
+        const glossary = glossaryMatch ? glossaryMatch[1].trim() : ''
+        
+        return { summary, glossary }
+      }
+    }
+
+    // Gemini API 사용 (대체)
+    if (process.env.GEMINI_API_KEY) {
+      const prompt = `
+다음은 부동산 관련 기사입니다.
+1) 기사의 핵심 내용을 3~4줄로 요약하세요.
+2) 요약 중 초보자가 어려워할 만한 부동산 용어를 찾아, '용어: 쉬운 설명' 형식으로 해설하세요.
+3) 용어 설명은 '📖 용어 풀이' 섹션으로 따로 모아주세요.
+
+기사 제목: ${title}
+기사 내용: ${content}
+카테고리: ${category}
+
+응답 형식:
+📰 뉴스 요약
+[3-4줄 요약]
+
+📖 용어 풀이
+• 용어1: 쉬운 설명
+• 용어2: 쉬운 설명
+(용어가 없으면 "이번 뉴스에는 특별한 용어가 없습니다."라고 표시)
+`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }]
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const result = data.candidates[0].content.parts[0].text
+        
+        // 응답을 요약과 용어 풀이로 분리
+        const summaryMatch = result.match(/📰 뉴스 요약\s*([\s\S]*?)(?=📖 용어 풀이|$)/)
+        const glossaryMatch = result.match(/📖 용어 풀이\s*([\s\S]*?)$/)
+        
+        const summary = summaryMatch ? summaryMatch[1].trim() : result
+        const glossary = glossaryMatch ? glossaryMatch[1].trim() : ''
+        
+        return { summary, glossary }
+      }
+    }
+
+    // API가 없거나 실패한 경우 기본 요약
+    const defaultSummary = generateDefaultSummary(content, category)
+    return { 
+      summary: defaultSummary, 
+      glossary: '📖 용어 풀이\n• 이번 뉴스에는 특별한 용어가 없습니다.' 
+    }
+    
+  } catch (error) {
+    console.error('AI 용어 풀이 요약 오류:', error)
+    const defaultSummary = generateDefaultSummary(content, category)
+    return { 
+      summary: defaultSummary, 
+      glossary: '📖 용어 풀이\n• 이번 뉴스에는 특별한 용어가 없습니다.' 
+    }
   }
 }
 

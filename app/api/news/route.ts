@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { fetchNewsByTab, summarizeNews, generateDefaultSummary } from '@/lib/ai'
+import { fetchNewsByTab, summarizeWithGlossary, generateDefaultSummary } from '@/lib/ai'
 import he from 'he'
 
 // 캐시 끄기
@@ -45,16 +45,16 @@ export async function GET(request: NextRequest) {
         const cleanTitle = decodedTitle.replace(/<[^>]*>/g, '').trim()
         const cleanContent = decodedContent.replace(/<[^>]*>/g, '').trim()
         try {
-          const summary = await Promise.race([
-            summarizeNews(cleanContent, tab),
+          const result = await Promise.race([
+            summarizeWithGlossary(cleanTitle, cleanContent, tab),
             new Promise((_, reject) => setTimeout(() => reject(new Error('summary-timeout')), SUMMARY_TIMEOUT_MS))
-          ]) as string
-          return { ...item, title: cleanTitle, content: cleanContent, summary }
+          ]) as { summary: string; glossary: string }
+          return { ...item, title: cleanTitle, content: cleanContent, summary: result.summary, glossary: result.glossary }
         } catch (summaryError) {
           console.error('요약 생성 실패:', summaryError)
           // 요약 실패 시 기본 요약 사용 (내용이 없으면 제목 기반 생성)
           const defaultSummary = generateDefaultSummary(cleanContent || cleanTitle || '', tab)
-          return { ...item, title: cleanTitle, content: cleanContent, summary: defaultSummary }
+          return { ...item, title: cleanTitle, content: cleanContent, summary: defaultSummary, glossary: '📖 용어 풀이\n• 이번 뉴스에는 특별한 용어가 없습니다.' }
         }
       })
     )

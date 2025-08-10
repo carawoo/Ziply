@@ -181,42 +181,42 @@ export default function LoanFaq({ items, embedded = false }: Props) {
             )
           })}
         </ul>
+      )}
 
-        {/* 페이지네이션 */}
-        {totalPages > 1 && (
-          <div className={styles.pagination}>
-            <button
-              className={styles.pageButton}
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              type="button"
-            >
-              ← 이전
-            </button>
-            
-            <div className={styles.pageNumbers}>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  className={`${styles.pageNumber} ${currentPage === page ? styles.active : ''}`}
-                  onClick={() => handlePageChange(page)}
-                  type="button"
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-
-            <button
-              className={styles.pageButton}
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              type="button"
-            >
-              다음 →
-            </button>
+      {/* 페이지네이션 */}
+      {totalPages > 1 && (
+        <div className={styles.pagination}>
+          <button
+            className={styles.pageButton}
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            type="button"
+          >
+            ← 이전
+          </button>
+          
+          <div className={styles.pageNumbers}>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                className={`${styles.pageNumber} ${currentPage === page ? styles.active : ''}`}
+                onClick={() => handlePageChange(page)}
+                type="button"
+              >
+                {page}
+              </button>
+            ))}
           </div>
-        )}
+
+          <button
+            className={styles.pageButton}
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            type="button"
+          >
+            다음 →
+          </button>
+        </div>
       )}
     </div>
   )

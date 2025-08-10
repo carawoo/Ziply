@@ -251,19 +251,25 @@ export async function fetchMultiSourceNews(category: string): Promise<NewsItem[]
   
   // 7. 국내 뉴스 우선 필터링 (해외 뉴스 제외)
   const domesticNews = realEstateNews.filter(item => {
-    // 해외 관련 키워드가 제목에 있으면 제외
-    const foreignKeywords = ['미국', '중국', '일본', '유럽', '글로벌', '해외', '외국', '트럼프', '바이든', '시진핑']
+    // 해외 관련 키워드가 제목에 있으면 제외 (더 강화)
+    const foreignKeywords = ['미국', '중국', '일본', '유럽', '글로벌', '해외', '외국', '트럼프', '바이든', '시진핑', '연준', 'FED', '달러', '엔화', '위안화', '유로']
     const hasForeignKeyword = foreignKeywords.some(keyword => 
       item.title.includes(keyword)
     )
     
     // 국내 지역 키워드가 있으면 우선 포함
-    const domesticKeywords = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종', '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주', '한국', '국내']
+    const domesticKeywords = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종', '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주', '한국', '국내', '지방', '지역']
     const hasDomesticKeyword = domesticKeywords.some(keyword => 
       item.title.includes(keyword) || item.content.includes(keyword)
     )
     
-    return !hasForeignKeyword || hasDomesticKeyword
+    // 해외 키워드가 있으면 무조건 제외 (국내 키워드가 있어도)
+    if (hasForeignKeyword) {
+      return false
+    }
+    
+    // 국내 키워드가 있으면 포함
+    return hasDomesticKeyword
   })
   
   console.log(`국내 뉴스 필터링 후: ${domesticNews.length}개`)

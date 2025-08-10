@@ -9,6 +9,8 @@
     "lint": "next lint",
     "cron": "node cron/send-newsletter.js",
     "test:unsubscribe": "node __tests__/unsubscribe.test.js",
+    "test": "jest",
+    "test:ai": "jest __tests__/ai-summary.test.ts",
     "generate-vapid": "npx web-push generate-vapid-keys"
   },
   "dependencies": {
@@ -27,6 +29,7 @@
   },
   "devDependencies": {
     "@types/he": "^1.2.3",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.19.9",
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^18.3.23",
@@ -34,6 +37,8 @@
     "@types/web-push": "^3.6.4",
     "eslint": "^8",
     "eslint-config-next": "14.0.0",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.1",
     "typescript": "^5"
   }
 }

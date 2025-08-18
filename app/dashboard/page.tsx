@@ -53,8 +53,10 @@ export default function Dashboard() {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
-        window.location.href = '/'
-        return
+        if (typeof window !== 'undefined') {
+          window.location.href = '/';
+        }
+        return;
       }
       
       setUser(user)
@@ -198,8 +200,10 @@ export default function Dashboard() {
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/'
+    await supabase.auth.signOut();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
   }
 
   // 사용자 그룹 선택 UI 컴포넌트

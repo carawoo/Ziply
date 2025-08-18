@@ -48,7 +48,7 @@ export default function AuthCallbackPage() {
           if (data.session) {
             addDebugInfo(`사용자 ID: ${data.session.user.id}`)
             setTimeout(() => {
-              router.replace(next)
+              router.replace(next);
             }, 1000)
             return
           }
@@ -67,12 +67,12 @@ export default function AuthCallbackPage() {
         if (data.session) {
           addDebugInfo('기존 세션 발견, 리다이렉트 중...')
           setTimeout(() => {
-            router.replace(next)
+            router.replace(next);
           }, 1000)
         } else {
           addDebugInfo('세션 없음, 홈으로 리다이렉트')
           setTimeout(() => {
-            router.replace('/')
+            router.replace('/');
           }, 2000)
         }
       } catch (err: any) {
@@ -103,7 +103,11 @@ export default function AuthCallbackPage() {
       
       {errorMessage && (
         <button 
-          onClick={() => window.location.href = '/'} 
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.location.href = '/';
+            }
+          }} 
           style={{ marginTop: '20px', padding: '10px 20px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
         >
           홈으로 돌아가기

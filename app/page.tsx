@@ -54,8 +54,11 @@ export default function Home() {
         // 이미 로그인이면 대시보드로
         if (user) {
           addDebugInfo('대시보드로 리다이렉트 중...');
+          // 더 안전한 리다이렉트 방식
           setTimeout(() => {
-            window.location.href = '/dashboard';
+            if (typeof window !== 'undefined') {
+              window.location.href = '/dashboard';
+            }
           }, 500); // 0.5초 딜레이
           return;
         }
@@ -87,7 +90,11 @@ export default function Home() {
       addDebugInfo(`인증 상태 변경: ${event}`);
       setUser(session?.user ?? null);
       if (event === 'SIGNED_IN') {
-        window.location.href = '/dashboard';
+        setTimeout(() => {
+          if (typeof window !== 'undefined') {
+            window.location.href = '/dashboard';
+          }
+        }, 500);
       }
     });
 
@@ -99,7 +106,9 @@ export default function Home() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`
+          redirectTo: typeof window !== 'undefined' 
+            ? `${window.location.origin}/auth/callback?next=/dashboard`
+            : 'https://ziply-nine.vercel.app/auth/callback?next=/dashboard'
         }
       });
       if (error) {
@@ -145,7 +154,11 @@ export default function Home() {
           ))}
         </details>
         <button 
-          onClick={() => window.location.reload()} 
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.location.reload();
+            }
+          }} 
           style={{ marginTop: '20px', padding: '10px 20px' }}
         >
           새로고침

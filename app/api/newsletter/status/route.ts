@@ -1,34 +1,33 @@
+import 'server-only'
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
+export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL as string
-  const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) as string
-  if (!url || !key) throw new Error('Supabase env not configured')
-  return createClient(url, key)
-}
-
 export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url)
-    const email = searchParams.get('email')?.trim().toLowerCase()
-    if (!email) return NextResponse.json({ success: false, error: 'email is required' }, { status: 400 })
+  const { searchParams } = new URL(req.url)
+  const email = searchParams.get('email')?.trim().toLowerCase()
 
-    const supabase = getSupabaseAdmin()
-    const { data, error } = await supabase
-      .from('newsletter_subscribers')
-      .select('email, is_active')
-      .eq('email', email)
-      .maybeSingle()
-
-    if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
-    return NextResponse.json({ success: true, data })
-  } catch (e: any) {
-    return NextResponse.json({ success: false, error: e?.message || 'unknown error' }, { status: 500 })
+  // 1) 헬스 체크: email 없이 호출하면 OK만 리턴
+  if (!email) {
+    return NextResponse.json({ ok: true, service: 'ziply', time: new Date().toISOString() })
   }
+
+  // 2) 이메일 조회
+  const { data, error } = await supabaseAdmin
+    .from('newsletter_subscribers') // 스키마에 맞춰 컬럼명 맞추기
+    .select('email, created_at')     // is_active 없으면 created_at로
+    .eq('email', email)
+    .maybeSingle()
+
+  if (error) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+  }
+  return NextResponse.json({ success: true, data })
 }
 
-
+export async function HEAD() {
+  return new Response(null, { status: 200 })
+}

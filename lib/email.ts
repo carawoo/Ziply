@@ -1,23 +1,28 @@
+import 'server-only';
+
 // 이메일 전송기 설정 (서버 사이드 전용)
-const createTransporter = async () => {
+export const createTransporter = async () => {
   // 서버 사이드에서만 nodemailer import
-  const nodemailer = await import('nodemailer')
-  
-  const protocol = String(process.env.EMAIL_PROTOCOL || '').toLowerCase() // 'ssl' | 'tls' | ''(auto)
-  const port = parseInt(process.env.EMAIL_PORT || (protocol === 'ssl' ? '465' : '587'))
-  const secure = protocol === 'ssl' || (String(process.env.EMAIL_SECURE || '').toLowerCase() === 'true') || port === 465
-  
+  const nodemailer = await import('nodemailer');
+
+  const protocol = String(process.env.EMAIL_PROTOCOL || '').toLowerCase(); // 'ssl' | 'tls' | ''(auto)
+  const port = parseInt(process.env.EMAIL_PORT || (protocol === 'ssl' ? '465' : '587'));
+  const secure =
+    protocol === 'ssl' ||
+    (String(process.env.EMAIL_SECURE || '').toLowerCase() === 'true') ||
+    port === 465;
+
   // 환경변수 정리 및 검증
-  const emailUser = String(process.env.EMAIL_USER || '').trim()
-  const emailPass = String(process.env.EMAIL_PASS || '').replace(/\s+/g, '')
-  
-  console.log('📧 이메일 설정 확인:')
-  console.log(`- Host: ${process.env.EMAIL_HOST}`)
-  console.log(`- Port: ${port}`)
-  console.log(`- Secure: ${secure}`)
-  console.log(`- User: ${emailUser}`)
-  console.log(`- Pass length: ${emailPass.length}자`)
-  
+  const emailUser = String(process.env.EMAIL_USER || '').trim();
+  const emailPass = String(process.env.EMAIL_PASS || '').replace(/\s+/g, '');
+
+  console.log('📧 이메일 설정 확인:');
+  console.log(`- Host: ${process.env.EMAIL_HOST}`);
+  console.log(`- Port: ${port}`);
+  console.log(`- Secure: ${secure}`);
+  console.log(`- User: ${emailUser}`);
+  console.log(`- Pass length: ${emailPass.length}자`);
+
   return nodemailer.default.createTransport({
     host: process.env.EMAIL_HOST,
     port,
@@ -27,8 +32,8 @@ const createTransporter = async () => {
       user: emailUser,
       pass: emailPass,
     },
-  })
-}
+  });
+};
 
 // 구독 완료 알림 이메일 HTML 생성
 const createSubscriptionConfirmationHTML = (email: string) => {
@@ -89,37 +94,36 @@ const createSubscriptionConfirmationHTML = (email: string) => {
         </tr>
       </table>
     </body>
-  </html>`
-}
+  </html>`;
+};
 
 // 구독 완료 알림 이메일 발송 (서버 사이드 전용)
 export const sendSubscriptionConfirmation = async (email: string) => {
   // 서버 사이드에서만 실행
   if (typeof window !== 'undefined') {
-    console.warn('sendSubscriptionConfirmation은 서버 사이드에서만 실행되어야 합니다.')
-    return null
+    console.warn('sendSubscriptionConfirmation은 서버 사이드에서만 실행되어야 합니다.');
+    return null;
   }
 
   try {
-    const transporter = await createTransporter()
-    const htmlContent = createSubscriptionConfirmationHTML(email)
-    
+    const transporter = await createTransporter();
+    const htmlContent = createSubscriptionConfirmationHTML(email);
+
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
       subject: '[Ziply] 뉴스레터 구독 완료',
       html: htmlContent,
-    }
+    };
 
-    const result = await transporter.sendMail(mailOptions)
-    console.log(`구독 완료 이메일 발송: ${email}`)
-    return result
-
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`구독 완료 이메일 발송: ${email}`);
+    return result;
   } catch (error) {
-    console.error(`구독 완료 이메일 발송 실패 (${email}):`, error)
-    throw error
+    console.error(`구독 완료 이메일 발송 실패 (${email}):`, error);
+    throw error;
   }
-}
+};
 
 // 구독 취소 알림 이메일 HTML 생성 (Toss-style)
 const createUnsubscribeConfirmationHTML = (email: string) => {
@@ -157,42 +161,45 @@ const createUnsubscribeConfirmationHTML = (email: string) => {
         </tr>
       </table>
     </body>
-  </html>`
-}
+  </html>`;
+};
 
 // 구독 취소 알림 이메일 발송
 export const sendUnsubscribeConfirmation = async (email: string) => {
-  if (typeof window !== 'undefined') return null
+  if (typeof window !== 'undefined') return null;
   try {
-    const transporter = await createTransporter()
-    const htmlContent = createUnsubscribeConfirmationHTML(email)
+    const transporter = await createTransporter();
+    const htmlContent = createUnsubscribeConfirmationHTML(email);
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
       subject: '[Ziply] 구독 취소가 완료되었습니다',
       html: htmlContent,
-    }
-    const result = await transporter.sendMail(mailOptions)
-    console.log(`구독 취소 이메일 발송: ${email}`)
-    return result
+    };
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`구독 취소 이메일 발송: ${email}`);
+    return result;
   } catch (error) {
-    console.error(`구독 취소 이메일 발송 실패 (${email}):`, error)
-    return null
+    console.error(`구독 취소 이메일 발송 실패 (${email}):`, error);
+    return null;
   }
-}
+};
 
 // 뉴스레터 HTML 생성 (용어 풀이 포함)
-const createNewsletterHTML = (newsItems: any[], date: string) => {
-  const newsHTML = newsItems.map((news, index) => {
-    // 쉬운 설명이 있는 경우에만 표시
-    const glossarySection = news.glossary ? `
+export const createNewsletterHTML = (newsItems: any[], date: string) => {
+  const newsHTML = newsItems
+    .map((news, index) => {
+      // 쉬운 설명이 있는 경우에만 표시
+      const glossarySection = news.glossary
+        ? `
       <div style="margin-top: 12px; padding: 12px; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #0ea5e9;">
         <div style="color: #0c4a6e; font-size: 13px; font-weight: 600; margin-bottom: 6px;">📖 쉬운 설명</div>
         <div style="color: #0369a1; font-size: 12px; line-height: 1.5; white-space: pre-line;">${news.glossary}</div>
       </div>
-    ` : '';
+    `
+        : '';
 
-    return `
+      return `
       <div style="margin-bottom: 24px; padding: 20px; background: #f9fafb; border-radius: 8px; border-left: 4px solid #4f46e5;">
         <h3 style="margin: 0 0 8px 0; color: #1f2937; font-size: 16px;">
           ${index === 0 ? '🔥' : index === 1 ? '📈' : index === 2 ? '💡' : '🎯'} ${news.title}
@@ -212,7 +219,8 @@ const createNewsletterHTML = (newsItems: any[], date: string) => {
         </div>
       </div>
     `;
-  }).join('')
+    })
+    .join('');
 
   return `
   <!DOCTYPE html>
@@ -257,43 +265,43 @@ const createNewsletterHTML = (newsItems: any[], date: string) => {
         </tr>
       </table>
     </body>
-  </html>`
-}
+  </html>`;
+};
 
 // 뉴스레터 발송 함수 (서버 사이드 전용)
 export const sendNewsletter = async (email: string) => {
   // 서버 사이드에서만 실행
   if (typeof window !== 'undefined') {
-    console.warn('sendNewsletter는 서버 사이드에서만 실행되어야 합니다.')
-    return null
+    console.warn('sendNewsletter는 서버 사이드에서만 실행되어야 합니다.');
+    return null;
   }
 
   try {
     // 동적 import로 서버 사이드에서만 실행
-    const { fetchNewsByTab, summarizeWithGlossary } = await import('./ai')
+    const { fetchNewsByTab, summarizeWithGlossary } = await import('./ai');
 
     // 오늘 날짜 문자열 생성
     const today = new Date().toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
-    })
+      day: 'numeric',
+    });
 
     // 그룹/탭별 맞춤 뉴스 수집 (현 개발 파이프라인 유지)
-    const tabs = ['정책뉴스', '시장분석', '지원혜택', '초보자용', '신혼부부용', '투자자용']
-    const collected: any[] = []
+    const tabs = ['정책뉴스', '시장분석', '지원혜택', '초보자용', '신혼부부용', '투자자용'];
+    const collected: any[] = [];
 
     for (const tab of tabs) {
       try {
-        const items = await fetchNewsByTab(tab)
+        const items = await fetchNewsByTab(tab);
         // 섹션당 최대 4개, 섹션 정보가 드러나도록 제목에 탭 라벨 프리픽스
         const topItems = items.slice(0, 4).map((n) => ({
           ...n,
-          title: `${tab} | ${n.title}`
-        }))
-        collected.push(...topItems)
+          title: `${tab} | ${n.title}`,
+        }));
+        collected.push(...topItems);
       } catch (e) {
-        console.error(`[sendNewsletter] ${tab} 수집 실패:`, e)
+        console.error(`[sendNewsletter] ${tab} 수집 실패:`, e);
       }
     }
 
@@ -302,48 +310,55 @@ export const sendNewsletter = async (email: string) => {
       collected.map(async (news) => {
         if (news.summary && news.summary.trim().length > 0) {
           // 기존 요약이 있으면 용어 풀이만 추가
-          const glossaryResult = await summarizeWithGlossary(news.title, news.content || '', news.category || '정책뉴스')
-          return { ...news, glossary: glossaryResult.glossary }
+          const glossaryResult = await summarizeWithGlossary(
+            news.title,
+            news.content || '',
+            news.category || '정책뉴스'
+          );
+          return { ...news, glossary: glossaryResult.glossary };
         }
         // 새로운 요약과 용어 풀이 생성
-        const result = await summarizeWithGlossary(news.title, news.content || '', news.category || '정책뉴스')
-        return { ...news, summary: result.summary, glossary: result.glossary }
+        const result = await summarizeWithGlossary(
+          news.title,
+          news.content || '',
+          news.category || '정책뉴스'
+        );
+        return { ...news, summary: result.summary, glossary: result.glossary };
       })
-    )
+    );
 
     // 이메일 HTML 생성 (구독 취소 링크에 수신자 이메일 삽입)
-    let htmlContent = createNewsletterHTML(newsWithSummaries, today)
-    htmlContent = htmlContent.replace(/\{\{EMAIL\}\}/g, email)
+    let htmlContent = createNewsletterHTML(newsWithSummaries, today);
+    htmlContent = htmlContent.replace(/\{\{EMAIL\}\}/g, email);
 
     // 이메일 전송
-    const transporter = await createTransporter()
+    const transporter = await createTransporter();
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
       subject: `[Ziply] ${today} 오늘의 부동산 뉴스`,
       html: htmlContent,
-    }
+    };
 
-    const result = await transporter.sendMail(mailOptions)
-    console.log(`뉴스레터 발송 완료: ${email}`)
-    return result
-
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`뉴스레터 발송 완료: ${email}`);
+    return result;
   } catch (error) {
-    console.error(`뉴스레터 발송 실패 (${email}):`, error)
-    throw error
+    console.error(`뉴스레터 발송 실패 (${email}):`, error);
+    throw error;
   }
-}
+};
 
 // 테스트 이메일 발송 (서버 사이드 전용)
 export const sendTestEmail = async (email: string) => {
   // 서버 사이드에서만 실행
   if (typeof window !== 'undefined') {
-    console.warn('sendTestEmail은 서버 사이드에서만 실행되어야 합니다.')
-    return null
+    console.warn('sendTestEmail은 서버 사이드에서만 실행되어야 합니다.');
+    return null;
   }
 
   try {
-    const transporter = await createTransporter()
+    const transporter = await createTransporter();
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
@@ -352,15 +367,14 @@ export const sendTestEmail = async (email: string) => {
         <h1>이메일 설정이 정상적으로 작동합니다! 🎉</h1>
         <p>Ziply의 이메일 발송 기능이 정상적으로 설정되었습니다.</p>
         <p>매일 아침 7시에 뉴스레터를 받아보실 수 있습니다.</p>
-      `
-    }
+      `,
+    };
 
-    const result = await transporter.sendMail(mailOptions)
-    console.log('테스트 이메일 발송 완료')
-    return result
-
+    const result = await transporter.sendMail(mailOptions);
+    console.log('테스트 이메일 발송 완료');
+    return result;
   } catch (error) {
-    console.error('테스트 이메일 발송 실패:', error)
-    throw error
+    console.error('테스트 이메일 발송 실패:', error);
+    throw error;
   }
-}
+};

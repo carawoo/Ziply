@@ -1,76 +1,66 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import { User } from '@supabase/supabase-js'
+import { useEffect, useState } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase-client'; // ✅ 경로 수정
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      // 이미 로그인된 사용자는 대시보드로 리다이렉트
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // 이미 로그인이면 대시보드로
       if (user) {
-        window.location.href = '/dashboard'
-        return
+        window.location.href = '/dashboard';
+        return;
       }
-      
-      setUser(user)
-      setLoading(false)
-    }
 
-    getUser()
+      setUser(user);
+      setLoading(false);
+    };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null)
-        if (event === 'SIGNED_IN') {
-          window.location.href = '/dashboard'
-        }
+    init();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (event === 'SIGNED_IN') {
+        window.location.href = '/dashboard';
       }
-    )
+    });
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleKakaoLogin = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
-          // OAuth 완료 후 Supabase가 code를 콜백으로 전달 → 우리 콜백 페이지에서 세션 교환
           redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`
         }
-      })
-      
+      });
       if (error) {
-        console.error('카카오 로그인 오류:', error)
-        alert('로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+        console.error('카카오 로그인 오류:', error);
+        alert('로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       }
-    } catch (error) {
-      console.error('로그인 오류:', error)
-      alert('로그인 중 오류가 발생했습니다.')
+    } catch (e) {
+      console.error('로그인 오류:', e);
+      alert('로그인 중 오류가 발생했습니다.');
     }
-  }
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-  }
+  };
 
   if (loading) {
     return (
       <div className="loading">
         <div className="spinner"></div>
       </div>
-    )
+    );
   }
 
-  // 로그인된 사용자는 이미 대시보드로 리다이렉트됨
-
+  // 로그인된 사용자는 이미 리다이렉트됨
   return (
     <div>
       <header className="header">
@@ -83,18 +73,21 @@ export default function Home() {
 
       <div className="hero">
         <div className="container">
-          <h1>부동산이 어려우신가요?<br />Ziply와 함께 <span style={{ color: 'var(--primary-600)' }}>쉽게</span> 시작하세요</h1>
+          <h1>
+            부동산이 어려우신가요?<br />
+            Ziply와 함께 <span style={{ color: 'var(--primary-600)' }}>쉽게</span> 시작하세요
+          </h1>
           <p>
             복잡한 부동산 시장, 이제 걱정하지 마세요.<br />
             AI가 매일 선별한 맞춤형 뉴스로 똑똑하게 투자하세요.
           </p>
-          
+
           <div style={{ marginTop: '48px' }}>
-            <button 
+            <button
               onClick={handleKakaoLogin}
               className="button button-kakao"
-              style={{ 
-                fontSize: '20px', 
+              style={{
+                fontSize: '20px',
                 padding: '20px 40px',
                 fontWeight: '700',
                 borderRadius: '16px',
@@ -115,7 +108,7 @@ export default function Home() {
                 딱 맞는 정보만 골라서 제공
               </p>
             </div>
-            
+
             <div className="feature-card">
               <span className="feature-icon">🤖</span>
               <h3 className="feature-title">AI 똑똑한 요약</h3>
@@ -124,7 +117,7 @@ export default function Home() {
                 핵심 포인트는 명확하게 정리
               </p>
             </div>
-            
+
             <div className="feature-card">
               <span className="feature-icon">📧</span>
               <h3 className="feature-title">매일 아침 7시 배송</h3>
@@ -135,161 +128,196 @@ export default function Home() {
             </div>
           </div>
 
-          <div style={{ 
-            marginTop: '80px', 
-            padding: '40px', 
-            background: 'white', 
-            borderRadius: 'var(--radius-2xl)',
-            boxShadow: 'var(--shadow-lg)',
-            border: '1px solid var(--gray-200)'
-          }}>
+          <div
+            style={{
+              marginTop: '80px',
+              padding: '40px',
+              background: 'white',
+              borderRadius: 'var(--radius-2xl)',
+              boxShadow: 'var(--shadow-lg)',
+              border: '1px solid var(--gray-200)'
+            }}
+          >
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <h2 style={{ 
-                fontSize: '32px', 
-                fontWeight: '800', 
-                marginBottom: '16px',
-                color: 'var(--gray-900)'
-              }}>
+              <h2
+                style={{
+                  fontSize: '32px',
+                  fontWeight: '800',
+                  marginBottom: '16px',
+                  color: 'var(--gray-900)'
+                }}
+              >
                 이런 분들께 추천해요
               </h2>
-              <p style={{ 
-                fontSize: '18px', 
-                color: 'var(--gray-600)',
-                lineHeight: '1.6'
-              }}>
+              <p
+                style={{
+                  fontSize: '18px',
+                  color: 'var(--gray-600)',
+                  lineHeight: '1.6'
+                }}
+              >
                 Ziply는 부동산이 처음인 모든 분들을 위해 만들어졌어요
               </p>
             </div>
 
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-              gap: '24px' 
-            }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '24px'
+              }}
+            >
               <div style={{ textAlign: 'center', padding: '24px' }}>
-                <div style={{ 
-                  fontSize: '48px', 
-                  marginBottom: '16px',
-                  background: 'var(--primary-50)',
-                  borderRadius: '50%',
-                  width: '80px',
-                  height: '80px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 16px'
-                }}>🏠</div>
-                <h3 style={{ 
-                  fontWeight: '700', 
-                  marginBottom: '8px', 
-                  color: 'var(--gray-900)',
-                  fontSize: '18px'
-                }}>
+                <div
+                  style={{
+                    fontSize: '48px',
+                    marginBottom: '16px',
+                    background: 'var(--primary-50)',
+                    borderRadius: '50%',
+                    width: '80px',
+                    height: '80px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px'
+                  }}
+                >
+                  🏠
+                </div>
+                <h3
+                  style={{
+                    fontWeight: '700',
+                    marginBottom: '8px',
+                    color: 'var(--gray-900)',
+                    fontSize: '18px'
+                  }}
+                >
                   생애 첫 집 준비
                 </h3>
-                <p style={{ 
-                  color: 'var(--gray-600)', 
-                  lineHeight: '1.6',
-                  fontSize: '15px'
-                }}>
-                  내 집 마련이 막막한<br />20-30대를 위한 가이드
+                <p
+                  style={{
+                    color: 'var(--gray-600)',
+                    lineHeight: '1.6',
+                    fontSize: '15px'
+                  }}
+                >
+                  내 집 마련이 막막한<br />
+                  20-30대를 위한 가이드
                 </p>
               </div>
 
               <div style={{ textAlign: 'center', padding: '24px' }}>
-                <div style={{ 
-                  fontSize: '48px', 
-                  marginBottom: '16px',
-                  background: 'var(--primary-50)',
-                  borderRadius: '50%',
-                  width: '80px',
-                  height: '80px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 16px'
-                }}>💑</div>
-                <h3 style={{ 
-                  fontWeight: '700', 
-                  marginBottom: '8px', 
-                  color: 'var(--gray-900)',
-                  fontSize: '18px'
-                }}>
+                <div
+                  style={{
+                    fontSize: '48px',
+                    marginBottom: '16px',
+                    background: 'var(--primary-50)',
+                    borderRadius: '50%',
+                    width: '80px',
+                    height: '80px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px'
+                  }}
+                >
+                  💑
+                </div>
+                <h3
+                  style={{
+                    fontWeight: '700',
+                    marginBottom: '8px',
+                    color: 'var(--gray-900)',
+                    fontSize: '18px'
+                  }}
+                >
                   신혼부부 특별공급
                 </h3>
-                <p style={{ 
-                  color: 'var(--gray-600)', 
-                  lineHeight: '1.6',
-                  fontSize: '15px'
-                }}>
-                  각종 혜택과 지원 정책을<br />놓치지 않게 알려드려요
+                <p
+                  style={{
+                    color: 'var(--gray-600)',
+                    lineHeight: '1.6',
+                    fontSize: '15px'
+                  }}
+                >
+                  각종 혜택과 지원 정책을<br />
+                  놓치지 않게 알려드려요
                 </p>
               </div>
 
               <div style={{ textAlign: 'center', padding: '24px' }}>
-                <div style={{ 
-                  fontSize: '48px', 
-                  marginBottom: '16px',
-                  background: 'var(--primary-50)',
-                  borderRadius: '50%',
-                  width: '80px',
-                  height: '80px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 16px'
-                }}>📈</div>
-                <h3 style={{ 
-                  fontWeight: '700', 
-                  marginBottom: '8px', 
-                  color: 'var(--gray-900)',
-                  fontSize: '18px'
-                }}>
+                <div
+                  style={{
+                    fontSize: '48px',
+                    marginBottom: '16px',
+                    background: 'var(--primary-50)',
+                    borderRadius: '50%',
+                    width: '80px',
+                    height: '80px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px'
+                  }}
+                >
+                  📈
+                </div>
+                <h3
+                  style={{
+                    fontWeight: '700',
+                    marginBottom: '8px',
+                    color: 'var(--gray-900)',
+                    fontSize: '18px'
+                  }}
+                >
                   스마트한 투자
                 </h3>
-                <p style={{ 
-                  color: 'var(--gray-600)', 
-                  lineHeight: '1.6',
-                  fontSize: '15px'
-                }}>
-                  시장 동향을 파악하고<br />기회를 놓치지 마세요
+                <p
+                  style={{
+                    color: 'var(--gray-600)',
+                    lineHeight: '1.6',
+                    fontSize: '15px'
+                  }}
+                >
+                  시장 동향을 파악하고<br />
+                  기회를 놓치지 마세요
                 </p>
               </div>
             </div>
           </div>
 
-          <div style={{ 
-            marginTop: '60px',
-            textAlign: 'center'
-          }}>
-            <p style={{ 
-              fontSize: '16px', 
-              color: 'var(--gray-500)',
-              marginBottom: '24px'
-            }}>
+          <div
+            style={{
+              marginTop: '60px',
+              textAlign: 'center'
+            }}
+          >
+            <p
+              style={{
+                fontSize: '16px',
+                color: 'var(--gray-500)',
+                marginBottom: '24px'
+              }}
+            >
               이미 <strong style={{ color: 'var(--primary-600)' }}>1,000+</strong>명이 Ziply와 함께 성공적인 부동산 여정을 시작했어요
             </p>
-            
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              gap: '32px',
-              alignItems: 'center',
-              flexWrap: 'wrap'
-            }}>
-              <div style={{ color: 'var(--gray-400)', fontSize: '14px' }}>
-                ✓ 무료 서비스
-              </div>
-              <div style={{ color: 'var(--gray-400)', fontSize: '14px' }}>
-                ✓ 언제든 구독 해지
-              </div>
-              <div style={{ color: 'var(--gray-400)', fontSize: '14px' }}>
-                ✓ 개인정보 보호
-              </div>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '32px',
+                alignItems: 'center',
+                flexWrap: 'wrap'
+              }}
+            >
+              <div style={{ color: 'var(--gray-400)', fontSize: '14px' }}>✓ 무료 서비스</div>
+              <div style={{ color: 'var(--gray-400)', fontSize: '14px' }}>✓ 언제든 구독 해지</div>
+              <div style={{ color: 'var(--gray-400)', fontSize: '14px' }}>✓ 개인정보 보호</div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

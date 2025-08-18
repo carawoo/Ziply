@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-client'
 import { User } from '@supabase/supabase-js'
 import { NewsItem } from '@/lib/ai'
 import dynamic from 'next/dynamic'

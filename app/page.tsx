@@ -7,24 +7,76 @@ import { supabase } from '@/lib/supabase-client'; // ✅ 경로 수정
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
   useEffect(() => {
-    const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      // 이미 로그인이면 대시보드로
-      if (user) {
-        window.location.href = '/dashboard';
-        return;
-      }
-
-      setUser(user);
-      setLoading(false);
+    const addDebugInfo = (info: string) => {
+      setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${info}`]);
     };
 
+    const init = async () => {
+      try {
+        addDebugInfo('Supabase 클라이언트 초기화 시작');
+        
+        // Supabase 클라이언트가 정상적으로 생성되었는지 확인
+        if (!supabase) {
+          throw new Error('Supabase 클라이언트가 초기화되지 않았습니다');
+        }
+        
+        addDebugInfo('Supabase 클라이언트 확인 완료');
+        
+        // 타임아웃 설정 (10초)
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('요청 시간 초과 (10초)')), 10000);
+        });
+        
+        const userPromise = supabase.auth.getUser();
+        const { data: { user }, error } = await Promise.race([userPromise, timeoutPromise]) as any;
+        
+        if (error) {
+          addDebugInfo(`Supabase 오류: ${error.message}`);
+          setError(`인증 오류: ${error.message}`);
+          setLoading(false);
+          return;
+        }
+
+        addDebugInfo(`사용자 정보 조회 완료: ${user ? '로그인됨' : '로그인 안됨'}`);
+
+        // 이미 로그인이면 대시보드로
+        if (user) {
+          addDebugInfo('대시보드로 리다이렉트 중...');
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 500); // 0.5초 딜레이
+          return;
+        }
+
+        setUser(user);
+        setLoading(false);
+        addDebugInfo('페이지 로딩 완료');
+      } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : '알 수 없는 오류';
+        addDebugInfo(`초기화 에러: ${errorMsg}`);
+        setError(`초기화 오류: ${errorMsg}`);
+        setLoading(false);
+        
+        // 5초 후에 자동으로 fallback UI 표시
+        setTimeout(() => {
+          if (loading) {
+            addDebugInfo('타임아웃으로 인한 fallback UI 표시');
+            setLoading(false);
+            setError('연결이 지연되고 있습니다. 새로고침을 시도해주세요.');
+          }
+        }, 5000);
+      }
+    };
+
+    addDebugInfo('페이지 시작');
     init();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      addDebugInfo(`인증 상태 변경: ${event}`);
       setUser(session?.user ?? null);
       if (event === 'SIGNED_IN') {
         window.location.href = '/dashboard';
@@ -54,8 +106,42 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="loading">
+      <div className="loading" style={{ padding: '20px', textAlign: 'center' }}>
         <div className="spinner"></div>
+        <div style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
+          <div>로딩 중...</div>
+          {debugInfo.length > 0 && (
+            <details style={{ marginTop: '10px', textAlign: 'left' }}>
+              <summary>디버그 정보</summary>
+              {debugInfo.map((info, i) => (
+                <div key={i} style={{ fontSize: '12px', margin: '2px 0' }}>{info}</div>
+              ))}
+            </details>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <div style={{ color: 'red', marginBottom: '20px' }}>
+          <h3>오류가 발생했습니다</h3>
+          <p>{error}</p>
+        </div>
+        <details style={{ textAlign: 'left', marginTop: '20px' }}>
+          <summary>디버그 정보</summary>
+          {debugInfo.map((info, i) => (
+            <div key={i} style={{ fontSize: '12px', margin: '2px 0' }}>{info}</div>
+          ))}
+        </details>
+        <button 
+          onClick={() => window.location.reload()} 
+          style={{ marginTop: '20px', padding: '10px 20px' }}
+        >
+          새로고침
+        </button>
       </div>
     );
   }

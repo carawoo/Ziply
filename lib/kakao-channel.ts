@@ -62,11 +62,11 @@ ${newsSummary}
   const buttons = [
     {
       title: '웹사이트 방문',
-      link: '${SITE_URL}/'
+      link: 'https://ziply-nine.vercel.app/'
     },
     {
       title: '대시보드 보기',
-      link: '${SITE_URL}//dashboard'
+      link: 'https://ziply-nine.vercel.app/dashboard'
     }
   ]
 

@@ -38,7 +38,7 @@ export async function GET(req: Request) {
     try { await sendUnsubscribeConfirmation(email) } catch {}
 
     if (redirect) {
-      const baseUrl = process.env.APP_BASE_URL || '${SITE_URL}/'
+      const baseUrl = process.env.APP_BASE_URL || 'https://ziply-nine.vercel.app/'
       const url = `${baseUrl.replace(/\/$/, '')}/newsletter?unsubscribed=1`
       return NextResponse.redirect(url)
     }
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
     try { await sendUnsubscribeConfirmation(email) } catch {}
 
     if (redirect) {
-      const baseUrl = process.env.APP_BASE_URL || '${SITE_URL}/'
+      const baseUrl = process.env.APP_BASE_URL || 'https://ziply-nine.vercel.app/'
       const url = `${baseUrl.replace(/\/$/, '')}/newsletter?unsubscribed=1`
       return NextResponse.redirect(url)
     }

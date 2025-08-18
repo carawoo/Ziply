@@ -66,14 +66,14 @@ export const sendKakaoNewsletter = async (
     date: date,
     news_count: newsItems.length.toString(),
     news_summary: newsSummary,
-    website_url: '${SITE_URL}/'
+    website_url: 'https://ziply-nine.vercel.app/'
   }
 
   const buttons = [
     {
       name: '웹사이트 방문',
       type: 'WL',
-      url: '${SITE_URL}/'
+      url: 'https://ziply-nine.vercel.app/'
     }
   ]
 

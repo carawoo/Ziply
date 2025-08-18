@@ -53,7 +53,7 @@ const createTransporter = () => {
 }
 
 // 기본 사이트 URL (API 호출용)
-const BASE_URL = process.env.APP_BASE_URL || '${SITE_URL}/'
+const BASE_URL = process.env.APP_BASE_URL || 'https://ziply-nine.vercel.app/'
 
 // 탭별 뉴스 수집 (Next API 사용)
 const fetchNewsByTab = async (tab) => {

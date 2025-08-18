@@ -43,7 +43,7 @@ export const sendPushNotification = (
       // 알림 클릭 시 웹사이트로 이동
       notification.onclick = () => {
         window.focus()
-        window.open('${SITE_URL}//', '_blank')
+        window.open('https://ziply-nine.vercel.app/', '_blank')
         notification.close()
       }
 
@@ -75,7 +75,7 @@ export const sendNewsletterPushNotification = (newsItems: any[]) => {
     tag: 'newsletter', // 같은 태그의 알림은 하나만 표시
     requireInteraction: false,
     data: {
-      url: '${SITE_URL}//dashboard/'
+      url: 'https://ziply-nine.vercel.app/dashboard/'
     }
   })
 }

@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       icon: '/favicon.ico',
       badge: '/favicon.ico',
       data: data || {
-        url: '${SITE_URL}//dashboard'
+        url: 'https://ziply-nine.vercel.app/dashboard'
       }
     })
 

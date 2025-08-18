@@ -46,7 +46,7 @@ self.addEventListener('push', (event) => {
     badge: '/favicon.ico',
     tag: 'newsletter',
     data: {
-      url: 'https://ziply-nine.vercel.app/dashboard'
+      url: '${SITE_URL}//dashboard'
     }
   }
 
@@ -74,7 +74,7 @@ self.addEventListener('notificationclick', (event) => {
   
   event.notification.close()
 
-  const urlToOpen = event.notification.data?.url || 'https://ziply-nine.vercel.app'
+  const urlToOpen = event.notification.data?.url || '${SITE_URL}/'
 
   event.waitUntil(
     clients.matchAll({

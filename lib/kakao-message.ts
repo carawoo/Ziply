@@ -66,14 +66,14 @@ export const sendKakaoNewsletter = async (
     date: date,
     news_count: newsItems.length.toString(),
     news_summary: newsSummary,
-    website_url: 'https://your-app.vercel.app'
+    website_url: '${SITE_URL}/'
   }
 
   const buttons = [
     {
       name: '웹사이트 방문',
       type: 'WL',
-      url: 'https://your-app.vercel.app'
+      url: '${SITE_URL}/'
     }
   ]
 

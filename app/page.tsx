@@ -18,6 +18,7 @@ export default function Home() {
     const init = async () => {
       try {
         addDebugInfo('Supabase 클라이언트 초기화 시작');
+        addDebugInfo(`환경변수 확인 - URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL ? '설정됨' : '누락'}, Key: ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '설정됨' : '누락'}`);
         
         // Supabase 클라이언트가 정상적으로 생성되었는지 확인
         if (!supabase) {
@@ -26,16 +27,23 @@ export default function Home() {
         
         addDebugInfo('Supabase 클라이언트 확인 완료');
         
-        // 타임아웃 설정 (10초)
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('요청 시간 초과 (10초)')), 10000);
-        });
+        // 세션 상태를 먼저 확인
+        const { data: { session } } = await supabase.auth.getSession();
+        addDebugInfo(`세션 상태: ${session ? '존재함' : '없음'}`);
         
-        const userPromise = supabase.auth.getUser();
-        const { data: { user }, error } = await Promise.race([userPromise, timeoutPromise]) as any;
+        // 사용자 정보 조회 (세션이 없어도 시도)
+        const { data: { user }, error } = await supabase.auth.getUser();
         
         if (error) {
           addDebugInfo(`Supabase 오류: ${error.message}`);
+          // Auth session missing은 정상적인 상황 (로그인하지 않은 사용자)
+          if (error.message === 'Auth session missing!') {
+            addDebugInfo('로그인하지 않은 사용자 - 정상적으로 메인 페이지 표시');
+            setUser(null);
+            setLoading(false);
+            return;
+          }
+          // 다른 오류의 경우에만 에러 표시
           setError(`인증 오류: ${error.message}`);
           setLoading(false);
           return;

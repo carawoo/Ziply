@@ -23,13 +23,14 @@ export async function GET(req: Request) {
   const force = searchParams.get('force') === '1'
   const limit = Number(searchParams.get('limit') || '0') // 0 = 제한없음
   const only  = searchParams.get('to')?.trim().toLowerCase() // 특정 주소만 발송 테스트
+  const testDate = searchParams.get('date') // 테스트용 날짜
 
   // vercel-cron 외 접근 차단(테스트 때는 force=1)
   if (!force && !ua.includes('vercel-cron/1.0')) {
     return NextResponse.json({ ok: true, skipped: true, reason: 'not vercel cron' })
   }
 
-  const dateKey = kstDateKey()
+  const dateKey = testDate || kstDateKey()
 
   // 멱등 잠금: dry 모드일 때는 DB 잠금/기록 생략
   if (!dry) {
@@ -49,10 +50,11 @@ export async function GET(req: Request) {
     emails = [only]
   } else {
     // ⚠️ 여기서 'newsletter_subscribers' 사용 (이전 'subscribers' 아님)
-    // is_active 컬럼이 없을 수도 있으니 존재 가정 안 함
+    // is_active = true인 구독자만 발송 대상으로 선정
     const q = supabaseAdmin
       .from('newsletter_subscribers')
       .select('email')
+      .eq('is_active', true)
       .order('created_at', { ascending: true })
 
     // 제한이 있으면 적용

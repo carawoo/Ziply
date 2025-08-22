@@ -16,6 +16,8 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        {/* Google Search Console Verification */}
+        <meta name="google-site-verification" content="9dSayXBf_fc1PjSmzxfDlLOiD7TMs619acnfKV5AevE" />
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2510776388416939"

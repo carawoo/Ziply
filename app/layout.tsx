@@ -27,7 +27,7 @@ export default function RootLayout({
         <script
           defer
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
-          integrity="sha384-Ti3hJxDA0Uo7YzH6W8Jk0reOqHcqWl3o7I5a5V7u0x4K4rK74XwQnTqv1o0QvNw2"
+          integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4"
           crossOrigin="anonymous"
         />
       </head>

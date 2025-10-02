@@ -549,8 +549,121 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="loading">
-        <div className="spinner"></div>
+      <div style={{ 
+        background: 'linear-gradient(135deg, var(--gray-50) 0%, white 100%)', 
+        minHeight: '100vh',
+        padding: '40px 20px'
+      }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          {/* 헤더 스켈레톤 */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: '40px',
+            padding: '20px 0'
+          }}>
+            <div style={{ 
+              width: '120px', 
+              height: '32px', 
+              background: 'var(--gray-200)', 
+              borderRadius: '8px',
+              animation: 'pulse 2s infinite'
+            }}></div>
+            <div style={{ 
+              width: '80px', 
+              height: '32px', 
+              background: 'var(--gray-200)', 
+              borderRadius: '8px',
+              animation: 'pulse 2s infinite'
+            }}></div>
+          </div>
+
+          {/* 환영 메시지 스켈레톤 */}
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <div style={{ 
+              width: '300px', 
+              height: '40px', 
+              background: 'var(--gray-200)', 
+              borderRadius: '8px',
+              margin: '0 auto 16px',
+              animation: 'pulse 2s infinite'
+            }}></div>
+            <div style={{ 
+              width: '200px', 
+              height: '20px', 
+              background: 'var(--gray-200)', 
+              borderRadius: '6px',
+              margin: '0 auto',
+              animation: 'pulse 2s infinite'
+            }}></div>
+          </div>
+
+          {/* 뉴스 카드 스켈레톤 */}
+          <div style={{ display: 'grid', gap: '24px' }}>
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} style={{ 
+                background: 'white',
+                borderRadius: 'var(--radius-xl)',
+                padding: '24px',
+                boxShadow: 'var(--shadow-sm)',
+                border: '1px solid var(--gray-200)'
+              }}>
+                <div style={{ 
+                  width: '70%', 
+                  height: '24px', 
+                  background: 'var(--gray-200)', 
+                  borderRadius: '6px',
+                  marginBottom: '12px',
+                  animation: 'pulse 2s infinite'
+                }}></div>
+                <div style={{ 
+                  width: '100%', 
+                  height: '16px', 
+                  background: 'var(--gray-100)', 
+                  borderRadius: '4px',
+                  marginBottom: '8px',
+                  animation: 'pulse 2s infinite'
+                }}></div>
+                <div style={{ 
+                  width: '80%', 
+                  height: '16px', 
+                  background: 'var(--gray-100)', 
+                  borderRadius: '4px',
+                  marginBottom: '16px',
+                  animation: 'pulse 2s infinite'
+                }}></div>
+                <div style={{ 
+                  width: '60px', 
+                  height: '32px', 
+                  background: 'var(--gray-200)', 
+                  borderRadius: '6px',
+                  animation: 'pulse 2s infinite'
+                }}></div>
+              </div>
+            ))}
+          </div>
+
+          {/* 로딩 메시지 */}
+          <div style={{ 
+            textAlign: 'center', 
+            marginTop: '40px',
+            color: 'var(--gray-600)'
+          }}>
+            <div style={{ 
+              fontSize: '16px',
+              marginBottom: '8px'
+            }}>
+              🔄 최신 부동산 뉴스를 준비하고 있어요
+            </div>
+            <div style={{ 
+              fontSize: '14px',
+              color: 'var(--gray-500)'
+            }}>
+              AI가 당신에게 딱 맞는 뉴스를 골라드릴게요
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -677,16 +790,131 @@ export default function Dashboard() {
           </div>
 
           {newsLoading ? (
-            <div className="loading">
-              <div className="spinner"></div>
-              <p style={{ 
-                marginTop: '24px', 
-                color: 'var(--gray-600)',
-                fontSize: '18px',
-                fontWeight: '500'
+            <div style={{ 
+              background: 'white',
+              borderRadius: 'var(--radius-xl)',
+              padding: '40px',
+              textAlign: 'center',
+              boxShadow: 'var(--shadow-sm)',
+              border: '1px solid var(--gray-200)'
+            }}>
+              {/* 진행 상태 표시 */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                marginBottom: '24px'
               }}>
-                {activeTab} 맞춤 뉴스를 AI가 요약하고 있어요...
-              </p>
+                <div style={{ 
+                  width: '40px', 
+                  height: '40px', 
+                  border: '3px solid var(--primary-100)',
+                  borderTop: '3px solid var(--primary-600)',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                  marginRight: '16px'
+                }}></div>
+                <div>
+                  <div style={{ 
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    color: 'var(--gray-900)',
+                    marginBottom: '4px'
+                  }}>
+                    {activeTab} 맞춤 뉴스를 AI가 요약하고 있어요...
+                  </div>
+                  <div style={{ 
+                    fontSize: '14px',
+                    color: 'var(--gray-600)'
+                  }}>
+                    최신 뉴스를 분석하고 당신에게 맞는 정보만 골라드릴게요
+                  </div>
+                </div>
+              </div>
+
+              {/* 진행 단계 표시 */}
+              <div style={{ 
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '16px',
+                marginBottom: '24px'
+              }}>
+                <div style={{ 
+                  background: 'var(--primary-50)',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  border: '1px solid var(--primary-200)'
+                }}>
+                  <div style={{ 
+                    fontSize: '20px',
+                    marginBottom: '4px'
+                  }}>📡</div>
+                  <div style={{ 
+                    fontSize: '12px',
+                    color: 'var(--primary-700)',
+                    fontWeight: '500'
+                  }}>뉴스 수집</div>
+                </div>
+                <div style={{ 
+                  background: 'var(--gray-50)',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  border: '1px solid var(--gray-200)'
+                }}>
+                  <div style={{ 
+                    fontSize: '20px',
+                    marginBottom: '4px'
+                  }}>🤖</div>
+                  <div style={{ 
+                    fontSize: '12px',
+                    color: 'var(--gray-600)',
+                    fontWeight: '500'
+                  }}>AI 분석</div>
+                </div>
+                <div style={{ 
+                  background: 'var(--gray-50)',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  border: '1px solid var(--gray-200)'
+                }}>
+                  <div style={{ 
+                    fontSize: '20px',
+                    marginBottom: '4px'
+                  }}>✨</div>
+                  <div style={{ 
+                    fontSize: '12px',
+                    color: 'var(--gray-600)',
+                    fontWeight: '500'
+                  }}>요약 생성</div>
+                </div>
+              </div>
+
+              {/* 유용한 팁 표시 */}
+              <div style={{ 
+                background: 'var(--gray-50)',
+                borderRadius: '12px',
+                padding: '16px',
+                border: '1px solid var(--gray-200)'
+              }}>
+                <div style={{ 
+                  fontSize: '14px',
+                  color: 'var(--gray-700)',
+                  lineHeight: '1.5',
+                  marginBottom: '8px'
+                }}>
+                  💡 <strong>잠깐!</strong> 로딩 중에 이런 정보도 확인해보세요:
+                </div>
+                <div style={{ 
+                  fontSize: '12px',
+                  color: 'var(--gray-600)',
+                  textAlign: 'left',
+                  lineHeight: '1.4'
+                }}>
+                  • 부동산 정책 변화는 보통 월 초에 발표됩니다<br/>
+                  • 시장 분석은 주 1-2회 업데이트됩니다<br/>
+                  • 지원혜택은 분기별로 새로운 제도가 나옵니다
+                </div>
+              </div>
             </div>
           ) : (
             <div>

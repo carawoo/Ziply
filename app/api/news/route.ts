@@ -31,21 +31,58 @@ export async function GET(request: NextRequest) {
       environmentCheck: process.env.NODE_ENV
     }
     
-    // 탭 기반 실제 뉴스 수집 파이프라인 사용 (타임아웃 가드)
-    console.log('탭 기반 실제 뉴스 수집 시작...')
-    debugInfo.step = '뉴스 수집 시작'
+    // Ziply API 우선 사용, 실패 시 기존 방식 사용
+    console.log('Ziply API 우선 사용 시작...')
+    debugInfo.step = 'Ziply API 호출 시작'
     
     let news: any[] = []
     
     try {
-      const NEWS_TIMEOUT_MS = 5000 // 5초로 단축 (로딩 속도 개선)
-      news = await Promise.race([
-        fetchNewsByTab(tab),
-        new Promise((resolve) => setTimeout(() => {
-          debugInfo.error = '뉴스 수집 타임아웃 (5초 초과)'
-          resolve([])
-        }, NEWS_TIMEOUT_MS))
-      ]) as any[]
+      // 1차: Ziply API 시도
+      const ZIPLY_TIMEOUT_MS = 3000 // 3초 타임아웃
+      try {
+        const ziplyResponse = await Promise.race([
+          fetch(`https://ziply-nine.vercel.app/api/public/newsletter?category=${encodeURIComponent(tab)}&limit=4&format=json`),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('ziply-timeout')), ZIPLY_TIMEOUT_MS)
+          )
+        ]) as Response
+        
+        if (ziplyResponse.ok) {
+          const ziplyData = await ziplyResponse.json()
+          if (ziplyData.success && ziplyData.data?.newsletter?.items) {
+            news = ziplyData.data.newsletter.items.map((item: any) => ({
+              id: item.id,
+              title: item.title,
+              summary: item.summary,
+              content: item.content,
+              url: item.url,
+              publishedAt: item.publishedAt,
+              category: item.category,
+              source: item.source,
+              glossary: item.glossary
+            }))
+            console.log('✅ Ziply API 성공:', news.length, '개 뉴스')
+            debugInfo.step = 'Ziply API 성공'
+          }
+        }
+      } catch (ziplyError) {
+        console.log('⚠️ Ziply API 실패, 기존 방식 사용:', ziplyError)
+        debugInfo.step = 'Ziply API 실패, 기존 방식 사용'
+      }
+      
+      // 2차: Ziply API 실패 시 기존 방식 사용
+      if (news.length === 0) {
+        const NEWS_TIMEOUT_MS = 5000 // 5초로 단축 (로딩 속도 개선)
+        news = await Promise.race([
+          fetchNewsByTab(tab),
+          new Promise((resolve) => setTimeout(() => {
+            debugInfo.error = '뉴스 수집 타임아웃 (5초 초과)'
+            resolve([])
+          }, NEWS_TIMEOUT_MS))
+        ]) as any[]
+        debugInfo.step = '기존 방식 사용'
+      }
       
       console.log('탭 기반 실제 뉴스 수집 완료:', news.length, '개')
       debugInfo.step = '뉴스 수집 완료'

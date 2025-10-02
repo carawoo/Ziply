@@ -3,8 +3,8 @@ import { fetchNewsByTab, summarizeWithGlossary } from '@/lib/ai'
 import he from 'he'
 
 // 다른 서비스에서 사용할 수 있는 공개 뉴스레터 API
-// 캐시 설정: 30분마다 갱신
-export const revalidate = 1800 // 30분
+// 캐시 설정: 10분마다 갱신 (로딩 속도 개선)
+export const revalidate = 600 // 10분
 
 export async function GET(request: NextRequest) {
   try {
@@ -80,7 +80,8 @@ export async function GET(request: NextRequest) {
       }, { status: 404 })
     }
     
-    // AI 요약 및 용어 풀이 생성
+    // AI 요약 및 용어 풀이 생성 (타임아웃 적용으로 로딩 속도 개선)
+    const SUMMARY_TIMEOUT_MS = 2000 // 2초 타임아웃
     const processedNews = await Promise.all(
       newsItems.map(async (item) => {
         try {
@@ -90,7 +91,13 @@ export async function GET(request: NextRequest) {
           const cleanTitle = decodedTitle.replace(/<[^>]*>/g, '').trim()
           const cleanContent = decodedContent.replace(/<[^>]*>/g, '').trim()
           
-          const result = await summarizeWithGlossary(cleanTitle, cleanContent, item.category || category)
+          // 타임아웃 적용으로 빠른 응답
+          const result = await Promise.race([
+            summarizeWithGlossary(cleanTitle, cleanContent, item.category || category),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('summary-timeout')), SUMMARY_TIMEOUT_MS)
+            )
+          ]) as { summary: string; glossary: string }
           
           return {
             id: item.id || Math.random().toString(36).substr(2, 9),
@@ -105,10 +112,15 @@ export async function GET(request: NextRequest) {
           }
         } catch (error) {
           console.error('뉴스 처리 실패:', error)
+          // 타임아웃 시 기본 요약 제공
+          const fallbackSummary = item.content ? 
+            item.content.substring(0, 200) + '...' : 
+            '요약을 생성할 수 없습니다.'
+          
           return {
             id: item.id || Math.random().toString(36).substr(2, 9),
             title: item.title || '',
-            summary: item.summary || item.content || '',
+            summary: item.summary || fallbackSummary,
             content: item.content || '',
             url: item.url,
             publishedAt: item.publishedAt || new Date().toISOString(),
@@ -126,7 +138,7 @@ export async function GET(request: NextRequest) {
       return new NextResponse(htmlContent, {
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'public, max-age=1800' // 30분 캐시
+          'Cache-Control': 'public, max-age=600, stale-while-revalidate=300' // 10분 캐시, 백그라운드 갱신
         }
       })
     }
@@ -159,7 +171,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json(response, {
       headers: {
-        'Cache-Control': 'public, max-age=1800', // 30분 캐시
+        'Cache-Control': 'public, max-age=600, stale-while-revalidate=300', // 10분 캐시, 백그라운드 갱신
         'Access-Control-Allow-Origin': '*', // CORS 허용
         'Access-Control-Allow-Methods': 'GET',
         'Access-Control-Allow-Headers': 'Content-Type'

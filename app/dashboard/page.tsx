@@ -148,10 +148,16 @@ export default function Dashboard() {
     try {
       console.log('뉴스 로딩 시작:', tab)
       
-      // 내부 API를 통해 뉴스 가져오기 (캐시 끄기)
+      // 내부 API를 통해 뉴스 가져오기 (타임아웃 적용)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 8000) // 8초 타임아웃
+      
       const response = await fetch(`/api/news?tab=${encodeURIComponent(tab)}`, { 
-        cache: 'no-store' 
+        cache: 'no-store',
+        signal: controller.signal
       })
+      
+      clearTimeout(timeoutId)
       const data = await response.json()
       
       if (!data.success) {

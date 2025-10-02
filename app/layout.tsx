@@ -16,6 +16,8 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        {/* Favicon */}
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         {/* Google Search Console Verification */}
         <meta name="google-site-verification" content="9dSayXBf_fc1PjSmzxfDlLOiD7TMs619acnfKV5AevE" />
         <script
@@ -27,7 +29,6 @@ export default function RootLayout({
         <script
           defer
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
-          integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4"
           crossOrigin="anonymous"
         />
       </head>

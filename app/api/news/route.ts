@@ -38,11 +38,11 @@ export async function GET(request: NextRequest) {
     let news: any[] = []
     
     try {
-      const NEWS_TIMEOUT_MS = 5000 // 5초로 단축 (로딩 속도 개선)
+      const NEWS_TIMEOUT_MS = 15000 // 15초로 증가 (안정성 개선)
       news = await Promise.race([
         fetchNewsByTab(tab),
         new Promise((resolve) => setTimeout(() => {
-          debugInfo.error = '뉴스 수집 타임아웃 (5초 초과)'
+          debugInfo.error = '뉴스 수집 타임아웃 (15초 초과)'
           resolve([])
         }, NEWS_TIMEOUT_MS))
       ]) as any[]
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
     
     // AI 요약 생성 (에러/타임아웃 처리 포함)
     debugInfo.step = 'AI 요약 생성 시작'
-    const SUMMARY_TIMEOUT_MS = 1500 // 1.5초로 단축 (로딩 속도 개선)
+    const SUMMARY_TIMEOUT_MS = 3000 // 3초로 증가 (안정성 개선)
     const newsWithSummaries = await Promise.all(
       news.map(async (item: any) => {
         // HTML 엔티티 디코딩 및 태그 제거

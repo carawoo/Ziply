@@ -154,7 +154,7 @@ export default function Dashboard() {
           cache: 'no-store'
         }),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), 12000)
+          setTimeout(() => reject(new Error('Request timeout')), 20000)
         )
       ]) as Response
       

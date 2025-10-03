@@ -2,6 +2,69 @@ import dayjs from 'dayjs'
 
 // 폴백 완전 제거 - 실제 API 데이터만 사용
 
+// 강력한 HTML 엔티티 디코딩 함수
+function decodeHtmlEntities(text: string): string {
+  if (!text) return text
+  
+  // 기본 HTML 엔티티 수동 디코딩
+  const entityMap: { [key: string]: string } = {
+    '&quot;': '"',
+    '&apos;': "'",
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&nbsp;': ' ',
+    '&#39;': "'",
+    '&#x27;': "'",
+    '&#x2F;': '/',
+    '&#x60;': '`',
+    '&#x3D;': '=',
+    '&#x2B;': '+',
+    '&#x2D;': '-',
+    '&#x28;': '(',
+    '&#x29;': ')',
+    '&#x5B;': '[',
+    '&#x5D;': ']',
+    '&#x7B;': '{',
+    '&#x7D;': '}',
+    '&#x3A;': ':',
+    '&#x3B;': ';',
+    '&#x2C;': ',',
+    '&#x2E;': '.',
+    '&#x21;': '!',
+    '&#x3F;': '?',
+    '&#x40;': '@',
+    '&#x23;': '#',
+    '&#x24;': '$',
+    '&#x25;': '%',
+    '&#x5E;': '^',
+    '&#x2A;': '*',
+    '&#x5F;': '_',
+    '&#x7E;': '~',
+    '&#x5C;': '\\',
+    '&#x7C;': '|'
+  }
+  
+  let decoded = text
+  
+  // 수동 엔티티 치환
+  Object.entries(entityMap).forEach(([entity, char]) => {
+    decoded = decoded.replace(new RegExp(entity, 'g'), char)
+  })
+  
+  // 숫자 엔티티 디코딩 (&#123; 형태)
+  decoded = decoded.replace(/&#(\d+);/g, (match, dec) => {
+    return String.fromCharCode(parseInt(dec, 10))
+  })
+  
+  // 16진수 엔티티 디코딩 (&#x1A; 형태)
+  decoded = decoded.replace(/&#x([0-9A-Fa-f]+);/g, (match, hex) => {
+    return String.fromCharCode(parseInt(hex, 16))
+  })
+  
+  return decoded
+}
+
 // 전문 용어를 쉬운 말로 바꾸는 함수
 function removeTechnicalTerms(text: string): string {
   const termReplacements: { [key: string]: string } = {
@@ -1457,8 +1520,8 @@ export async function fetchNaverNewsAPI(category: string): Promise<NewsItem[]> {
         
         for (const item of data.items) {
           const cleanUrl = item.link?.replace(/<[^>]*>/g, '').trim()
-          const cleanTitle = item.title?.replace(/<[^>]*>/g, '').trim()
-          const cleanContent = item.description?.replace(/<[^>]*>/g, '').trim()
+          const cleanTitle = decodeHtmlEntities(item.title?.replace(/<[^>]*>/g, '').trim() || '')
+          const cleanContent = decodeHtmlEntities(item.description?.replace(/<[^>]*>/g, '').trim() || '')
           
           // URL이 유효하고 중복되지 않은 경우만 추가 (네이버 뉴스 URL도 허용)
           if (cleanUrl && 

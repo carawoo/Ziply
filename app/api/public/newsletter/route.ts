@@ -2,6 +2,69 @@ import { NextRequest, NextResponse } from 'next/server'
 import { fetchNewsByTab, summarizeWithGlossary } from '@/lib/ai'
 import he from 'he'
 
+// 강력한 HTML 엔티티 디코딩 함수
+function decodeHtmlEntities(text: string): string {
+  if (!text) return text
+  
+  // 기본 HTML 엔티티 수동 디코딩
+  const entityMap: { [key: string]: string } = {
+    '&quot;': '"',
+    '&apos;': "'",
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&nbsp;': ' ',
+    '&#39;': "'",
+    '&#x27;': "'",
+    '&#x2F;': '/',
+    '&#x60;': '`',
+    '&#x3D;': '=',
+    '&#x2B;': '+',
+    '&#x2D;': '-',
+    '&#x28;': '(',
+    '&#x29;': ')',
+    '&#x5B;': '[',
+    '&#x5D;': ']',
+    '&#x7B;': '{',
+    '&#x7D;': '}',
+    '&#x3A;': ':',
+    '&#x3B;': ';',
+    '&#x2C;': ',',
+    '&#x2E;': '.',
+    '&#x21;': '!',
+    '&#x3F;': '?',
+    '&#x40;': '@',
+    '&#x23;': '#',
+    '&#x24;': '$',
+    '&#x25;': '%',
+    '&#x5E;': '^',
+    '&#x2A;': '*',
+    '&#x5F;': '_',
+    '&#x7E;': '~',
+    '&#x5C;': '\\',
+    '&#x7C;': '|'
+  }
+  
+  let decoded = text
+  
+  // 수동 엔티티 치환
+  Object.entries(entityMap).forEach(([entity, char]) => {
+    decoded = decoded.replace(new RegExp(entity, 'g'), char)
+  })
+  
+  // 숫자 엔티티 디코딩 (&#123; 형태)
+  decoded = decoded.replace(/&#(\d+);/g, (match, dec) => {
+    return String.fromCharCode(parseInt(dec, 10))
+  })
+  
+  // 16진수 엔티티 디코딩 (&#x1A; 형태)
+  decoded = decoded.replace(/&#x([0-9A-Fa-f]+);/g, (match, hex) => {
+    return String.fromCharCode(parseInt(hex, 16))
+  })
+  
+  return decoded
+}
+
 // 다른 서비스에서 사용할 수 있는 공개 뉴스레터 API
 // 캐시 설정: 10분마다 갱신 (로딩 속도 개선)
 export const revalidate = 600 // 10분
@@ -86,10 +149,10 @@ export async function GET(request: NextRequest) {
       newsItems.map(async (item) => {
         try {
           // HTML 엔티티 디코딩 및 태그 제거
-          const decodedTitle = he.decode((item.title || '').toString())
-          const decodedContent = he.decode((item.content || '').toString())
-          const cleanTitle = decodedTitle.replace(/<[^>]*>/g, '').trim()
-          const cleanContent = decodedContent.replace(/<[^>]*>/g, '').trim()
+          const rawTitle = (item.title || '').toString()
+          const rawContent = (item.content || '').toString()
+          const cleanTitle = decodeHtmlEntities(rawTitle.replace(/<[^>]*>/g, '').trim())
+          const cleanContent = decodeHtmlEntities(rawContent.replace(/<[^>]*>/g, '').trim())
           
           // 타임아웃 적용으로 빠른 응답
           const result = await Promise.race([

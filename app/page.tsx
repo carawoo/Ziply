@@ -9,6 +9,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [showNoticeModal, setShowNoticeModal] = useState(true);
 
   useEffect(() => {
     const addDebugInfo = (info: string) => {
@@ -19,21 +20,21 @@ export default function Home() {
       try {
         addDebugInfo('Supabase 클라이언트 초기화 시작');
         addDebugInfo(`환경변수 확인 - URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL ? '설정됨' : '누락'}, Key: ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '설정됨' : '누락'}`);
-        
+
         // Supabase 클라이언트가 정상적으로 생성되었는지 확인
         if (!supabase) {
           throw new Error('Supabase 클라이언트가 초기화되지 않았습니다');
         }
-        
+
         addDebugInfo('Supabase 클라이언트 확인 완료');
-        
+
         // 세션 상태를 먼저 확인
         const { data: { session } } = await supabase.auth.getSession();
         addDebugInfo(`세션 상태: ${session ? '존재함' : '없음'}`);
-        
+
         // 사용자 정보 조회 (세션이 없어도 시도)
         const { data: { user }, error } = await supabase.auth.getUser();
-        
+
         if (error) {
           addDebugInfo(`Supabase 오류: ${error.message}`);
           // Auth session missing은 정상적인 상황 (로그인하지 않은 사용자)
@@ -71,7 +72,7 @@ export default function Home() {
         addDebugInfo(`초기화 에러: ${errorMsg}`);
         setError(`초기화 오류: ${errorMsg}`);
         setLoading(false);
-        
+
         // 5초 후에 자동으로 fallback UI 표시
         setTimeout(() => {
           if (loading) {
@@ -106,7 +107,7 @@ export default function Home() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
-          redirectTo: typeof window !== 'undefined' 
+          redirectTo: typeof window !== 'undefined'
             ? `${window.location.origin}/auth/callback?next=/dashboard`
             : 'https://ziply-nine.vercel.app/auth/callback?next=/dashboard'
         }
@@ -153,12 +154,12 @@ export default function Home() {
             <div key={i} style={{ fontSize: '12px', margin: '2px 0' }}>{info}</div>
           ))}
         </details>
-        <button 
+        <button
           onClick={() => {
             if (typeof window !== 'undefined') {
               window.location.reload();
             }
-          }} 
+          }}
           style={{ marginTop: '20px', padding: '10px 20px' }}
         >
           새로고침
@@ -170,6 +171,134 @@ export default function Home() {
   // 로그인된 사용자는 이미 리다이렉트됨
   return (
     <div>
+      {/* Service Discontinuation Modal */}
+      {showNoticeModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px'
+          }}
+          onClick={() => setShowNoticeModal(false)}
+        >
+          <div
+            style={{
+              maxWidth: '500px',
+              width: '100%',
+              background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+              borderRadius: '24px',
+              border: '3px solid #fbbf24',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+              padding: '48px 40px',
+              textAlign: 'center',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: '64px', marginBottom: '24px' }}>📢</div>
+            <h2
+              style={{
+                fontSize: '28px',
+                fontWeight: '800',
+                color: '#92400e',
+                marginBottom: '16px',
+                lineHeight: '1.3'
+              }}
+            >
+              서비스 종료 안내
+            </h2>
+            <p
+              style={{
+                fontSize: '17px',
+                color: '#78350f',
+                lineHeight: '1.7',
+                marginBottom: '12px',
+                fontWeight: '500'
+              }}
+            >
+              해당 서비스는 사용률이 낮아,<br />
+              더 이상 뉴스레터를 전송하지 않습니다.
+            </p>
+            <p
+              style={{
+                fontSize: '17px',
+                color: '#78350f',
+                lineHeight: '1.7',
+                marginBottom: '24px',
+                fontWeight: '500'
+              }}
+            >
+              그동안 이용해 주셔서 감사합니다.
+            </p>
+            <div
+              style={{
+                padding: '16px 24px',
+                background: 'rgba(255, 255, 255, 0.8)',
+                borderRadius: '12px',
+                marginBottom: '32px'
+              }}
+            >
+              <p
+                style={{
+                  fontSize: '15px',
+                  color: '#92400e',
+                  margin: 0,
+                  fontWeight: '600'
+                }}
+              >
+                자세한 문의사항은{' '}
+                <a
+                  href="mailto:carawoo96@gmail.com"
+                  style={{
+                    color: '#b45309',
+                    fontWeight: '700',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  carawoo96@gmail.com
+                </a>
+              </p>
+            </div>
+            <button
+              onClick={() => setShowNoticeModal(false)}
+              style={{
+                width: '100%',
+                padding: '16px 32px',
+                fontSize: '18px',
+                fontWeight: '700',
+                backgroundColor: '#f59e0b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#d97706';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(245, 158, 11, 0.4)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#f59e0b';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.3)';
+              }}
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
       <header className="header">
         <div className="container">
           <nav className="nav">
@@ -198,11 +327,14 @@ export default function Home() {
                 padding: '20px 40px',
                 fontWeight: '700',
                 borderRadius: '16px',
-                minHeight: '64px'
+                minHeight: '64px',
+                opacity: 0.5,
+                cursor: 'not-allowed'
               }}
+              disabled
             >
               <span style={{ fontSize: '24px' }}>💬</span>
-              카카오로 3초 만에 시작하기
+              서비스가 종료되었습니다
             </button>
           </div>
 
